@@ -187,3 +187,5 @@ After the site has a URL, add it to the API's `CORS_ORIGINS`.
 | 7 | Brevo emails, Firebase push, daily deal and expiry cron jobs, notification preferences | |
 | 8 | Android app (Expo), Install Referrer attribution, offline cache, signed .aab | |
 | 9 | Sentry, uptime checks, backups, load test, policy pages, Google Play listing | |
+#   o f f e r b u z z  
+ 
