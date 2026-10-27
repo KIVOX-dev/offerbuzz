@@ -49,7 +49,7 @@ jobs:
           cache-from: type=gha,scope=api
           cache-to: type=gha,scope=api,mode=max
       # The Catalyst CLI warns about vulnerable Node 24.18; use a patched current Node 22 for the CLI.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Install Catalyst CLI
