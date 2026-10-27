@@ -16,11 +16,17 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown;
   const headers = new Headers(init.headers);
   if (init.json !== undefined) headers.set('content-type', 'application/json');
   if (init.token) headers.set('authorization', `Bearer ${init.token}`);
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers,
-    body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...init,
+      headers,
+      body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
+    });
+  } catch {
+    // network failure, server down, or the browser blocked the reply (CORS)
+    throw new ApiRequestError(0, 'NETWORK', 'Cannot reach the server right now. Please try again in a moment.');
+  }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => null);
   if (!res.ok) {

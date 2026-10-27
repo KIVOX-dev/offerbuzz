@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiRequestError, sendOtp, verifyOtp, type AuthMode } from '@/lib/api';
 import { homeFor, saveSession } from '@/lib/session';
+import { BackButton } from './BackButton';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -68,9 +69,11 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
 
   return (
     <div className="surface mx-auto w-full max-w-sm p-4">
-      <button onClick={onBack} className="min-h-touch text-small font-semibold text-muted">
-        &larr; Change role
-      </button>
+      {step === 'code' ? (
+        <BackButton onClick={() => { setStep('details'); setCode(''); setError(undefined); }}>Edit email</BackButton>
+      ) : (
+        <BackButton onClick={onBack}>Change role</BackButton>
+      )}
       <h2 className="mt-1 text-section font-bold">{roleLabel} account</h2>
 
       <div role="tablist" className="mt-3 grid grid-cols-2 rounded-md bg-purple-100 p-1">
@@ -133,9 +136,6 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
           {devOtp && <p className="text-small text-muted">Dev mode code: {devOtp}</p>}
           <button className="btn-primary w-full" disabled={busy || code.length !== 6}>
             {busy ? 'Verifying...' : 'Verify and continue'}
-          </button>
-          <button type="button" className="btn-outline w-full" onClick={() => { setStep('details'); setCode(''); }}>
-            Use a different email
           </button>
         </form>
       )}

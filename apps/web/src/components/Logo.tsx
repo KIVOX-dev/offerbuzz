@@ -11,6 +11,7 @@ export function Logo({ height = 40 }: { height?: number }) {
         width={Math.round((height * 720) / 325)}
         height={height}
         priority
+        className="rounded-md"
       />
     </Link>
   );
