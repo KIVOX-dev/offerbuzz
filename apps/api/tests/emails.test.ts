@@ -50,3 +50,17 @@ describe('email templates', () => {
     expect(templateById('deals-digest').kind).toBe('marketing');
   });
 });
+
+describe('campaign export', () => {
+  it('black friday campaign html has no params left but keeps the unsubscribe link', async () => {
+    const { campaignHtml } = await import('../src/emails/templates');
+    const html = campaignHtml(templateById('black-friday')) as string;
+    expect(html).not.toMatch(/\{\{\s*params\./);
+    expect(html).toContain('{{ unsubscribe }}');
+    expect(html).toContain('60%');
+  });
+  it('transactional templates have no campaign variant', async () => {
+    const { campaignHtml } = await import('../src/emails/templates');
+    expect(campaignHtml(templateById('login-code'))).toBeNull();
+  });
+});

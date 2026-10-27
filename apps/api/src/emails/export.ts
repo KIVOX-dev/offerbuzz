@@ -5,12 +5,16 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { TEMPLATES, rawHtml } from './templates';
+import { TEMPLATES, campaignHtml, rawHtml } from './templates';
 
 const outDir = path.resolve(__dirname, '../../../../infra/brevo-templates');
 fs.mkdirSync(outDir, { recursive: true });
 
-for (const tpl of TEMPLATES) fs.writeFileSync(path.join(outDir, `${tpl.id}.html`), rawHtml(tpl));
+for (const tpl of TEMPLATES) {
+  fs.writeFileSync(path.join(outDir, `${tpl.id}.html`), rawHtml(tpl));
+  const campaign = campaignHtml(tpl);
+  if (campaign) fs.writeFileSync(path.join(outDir, `${tpl.id}.campaign.html`), campaign);
+}
 
 const rows = TEMPLATES.map(
   (t) => `| \`${t.id}.html\` | ${t.kind} | ${t.phase} | ${t.subject.replace(/\|/g, '\\|')} | ${t.params.map((p) => `\`${p}\``).join(', ')} |`,

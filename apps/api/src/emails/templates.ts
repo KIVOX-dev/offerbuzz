@@ -15,6 +15,8 @@ export interface EmailTemplate {
   block?: EmailBlock;
   /** Full custom HTML (campaigns with their own design). */
   html?: string;
+  /** Marketing only: fixed values for a Brevo Campaign, where {{ params.x }} is not filled in. */
+  campaignDefaults?: Record<string, string>;
 }
 
 
@@ -161,6 +163,7 @@ export const TEMPLATES: EmailTemplate[] = [
     subject: 'Black Friday: up to {{ params.discount }}% off on OfferBuzz',
     params: ['discount', 'url'],
     html: BLACK_FRIDAY_HTML,
+    campaignDefaults: { discount: '60', url: 'https://offerbuzz.vercel.app' },
   },
   t(
     'deals-digest',
@@ -198,6 +201,10 @@ export const templateById = (id: string): EmailTemplate => {
 
 /** Raw HTML with {{ params.x }} placeholders still in place (what gets pasted into Brevo). */
 export const rawHtml = (tpl: EmailTemplate): string => tpl.html ?? layout(tpl.subject, tpl.block as EmailBlock);
+
+/** Campaign-ready HTML: params replaced by fixed defaults, Brevo's {{ unsubscribe }} left in place. */
+export const campaignHtml = (tpl: EmailTemplate): string | null =>
+  tpl.campaignDefaults ? fill(rawHtml(tpl), tpl.campaignDefaults, true) : null;
 
 /** Params whose value is trusted HTML built by our own code, not user input. */
 const HTML_PARAMS = new Set(['dealsHtml']);
