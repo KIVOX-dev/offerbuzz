@@ -27,6 +27,10 @@ One time setup:
 2. GitHub repo -> Settings -> Secrets and variables -> Actions:
    - Secret `CATALYST_TOKEN` = the token
    - Variable `API_URL` = the API base URL above (used for the post-deploy `/health` check)
+   - Variables are optional. The workflow defaults to the ids in `.catalystrc`: project `89175000000043001` and
+     `CATALYST_ORG_ID` = `60092523722`. In CI mode the CLI reads `--org` as the Development *environment* id, not the Zoho
+     organisation id (found in `lib/command_needs/rc.js` of zcatalyst-cli). If you ever set these variables, the org value
+     must not equal the project id.
 3. Optional: Settings -> Environments -> `catalyst-dev` -> add required reviewers for a manual approval gate.
 4. Revoke a leaked or old token with `catalyst token:list` then `catalyst token:revoke <id>`.
 

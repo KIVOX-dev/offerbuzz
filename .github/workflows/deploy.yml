@@ -28,11 +28,18 @@ jobs:
       CATALYST_TOKEN: ${{ secrets.CATALYST_TOKEN }}
       # Repository variable: base URL of the deployed API, e.g. https://offerbuzz-api-xxxx.development.catalystappsail.in
       API_URL: ${{ vars.API_URL }}
+      # Neither id is secret; both come from .catalystrc. In CI mode the Catalyst CLI treats --org as the *environment* id
+      # (Development = 60092523722), not the Zoho organisation id, and it must differ from the project id.
+      CATALYST_PROJECT_ID: ${{ vars.CATALYST_PROJECT_ID || '89175000000043001' }}
+      CATALYST_ORG_ID: ${{ vars.CATALYST_ORG_ID || '60092523722' }}
     steps:
-      - name: Check required secret
+      - name: Check required secret and variables
         run: |
           if [ -z "$CATALYST_TOKEN" ]; then
             echo "::error::Missing repository secret CATALYST_TOKEN"; exit 1
+          fi
+          if [ "$CATALYST_ORG_ID" = "$CATALYST_PROJECT_ID" ]; then
+            echo "::error::CATALYST_ORG_ID must be the environment id (60092523722), not the project id"; exit 1
           fi
       - uses: actions/checkout@v4
         with:
@@ -61,6 +68,8 @@ jobs:
           --source docker://offerbuzz-api:latest
           --port 3001
           --token "$CATALYST_TOKEN"
+          --org "$CATALYST_ORG_ID"
+          --project "$CATALYST_PROJECT_ID"
           --non-interactive
       - name: Smoke test deployed API
         run: |
