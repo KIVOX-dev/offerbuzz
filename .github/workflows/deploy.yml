@@ -43,7 +43,7 @@ jobs:
           if [ "$CATALYST_ORG_ID" = "$CATALYST_PROJECT_ID" ]; then
             echo "::error::CATALYST_ORG_ID must be the environment id (60092523722), not the project id"; exit 1
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: docker/setup-buildx-action@v3
