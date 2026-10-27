@@ -32,6 +32,8 @@ jobs:
       # (Development = 60092523722), not the Zoho organisation id, and it must differ from the project id.
       CATALYST_PROJECT_ID: ${{ vars.CATALYST_PROJECT_ID || '89175000000043001' }}
       CATALYST_ORG_ID: ${{ vars.CATALYST_ORG_ID || '60092523722' }}
+      # The CLI also reads these names directly; keeping both paths means a changed flag parser cannot break the deploy.
+      CATALYST_ORG: ${{ vars.CATALYST_ORG_ID || '60092523722' }}
     steps:
       - name: Check required secret and variables
         run: |
