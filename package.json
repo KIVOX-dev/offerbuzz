@@ -1,0 +1,21 @@
+{
+  "name": "offerbuzz",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:shared": "npm run build -w @offerbuzz/shared",
+    "dev:api": "npm run build:shared && npm run dev -w @offerbuzz/api",
+    "dev:web": "npm run build:shared && npm run dev -w @offerbuzz/web",
+    "build": "npm run build:shared && npm run build -w @offerbuzz/api && npm run build -w @offerbuzz/web",
+    "test": "npm run build:shared && npm run test -w @offerbuzz/api",
+    "typecheck": "npm run build:shared && npm run typecheck -w @offerbuzz/api && npm run typecheck -w @offerbuzz/web",
+    "seed:admin": "npm run seed:admin -w @offerbuzz/api"
+  }
+}

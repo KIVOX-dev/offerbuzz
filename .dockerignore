@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.next
+.git
+.github
+.env
+.env.*
+!.env.example
+**/tests
+**/*.test.ts
+**/.DS_Store
+apps/mobile
+infra
+*.md

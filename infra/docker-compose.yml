@@ -1,0 +1,50 @@
+# Local development only. Production uses MongoDB Atlas and Catalyst AppSail.
+# Run from the repo root:  docker compose -f infra/docker-compose.yml up
+name: offerbuzz
+services:
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: [mongo-data:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # One-off job: installs dependencies once into the shared bind mount so api and web don't race.
+  install:
+    image: node:20-alpine
+    working_dir: /app
+    volumes: [../:/app]
+    command: sh -c "npm ci && npm run build:shared"
+    restart: "no"
+
+  api:
+    image: node:20-alpine
+    working_dir: /app
+    volumes: [../:/app]
+    env_file: [../.env]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/offerbuzz
+      PORT: "3001"
+    ports: ["3001:3001"]
+    command: npm run dev -w @offerbuzz/api
+    depends_on:
+      mongo: { condition: service_healthy }
+      install: { condition: service_completed_successfully }
+
+  web:
+    image: node:20-alpine
+    working_dir: /app
+    volumes: [../:/app]
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+      PORT_WEB: "3000"
+    ports: ["3000:3000"]
+    command: npm run dev -w @offerbuzz/web
+    depends_on:
+      install: { condition: service_completed_successfully }
+
+volumes:
+  mongo-data:

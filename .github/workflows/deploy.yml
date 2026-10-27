@@ -1,0 +1,38 @@
+name: Deploy
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+# Required repository secrets/variables are listed in infra/catalyst/README.md.
+# NOTE: the Catalyst CLI login step and the image hand-off are marked TODO because they must be
+# confirmed against Catalyst's current docs before the first deploy (see infra/catalyst/README.md).
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        run: docker buildx build --platform linux/amd64 -f apps/api/Dockerfile -t offerbuzz-api:latest --load .
+      - name: Build web image
+        run: >
+          docker buildx build --platform linux/amd64 -f apps/web/Dockerfile -t offerbuzz-web:latest
+          --build-arg NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+          --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ vars.NEXT_PUBLIC_GOOGLE_CLIENT_ID }} --load .
+      - name: Install Catalyst CLI
+        run: npm install -g zcatalyst-cli
+      - name: Catalyst login
+        run: echo "TODO - authenticate the CLI non-interactively (token from Catalyst console)"; exit 1
+        # env: { CATALYST_TOKEN: ${{ secrets.CATALYST_TOKEN }} }
+      - name: Deploy API
+        run: catalyst deploy appsail --name offerbuzz-api --source docker://offerbuzz-api:latest --port 3001
+      - name: Deploy web
+        run: catalyst deploy appsail --name offerbuzz-site --source docker://offerbuzz-web:latest --port 3000
