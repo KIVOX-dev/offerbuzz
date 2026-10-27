@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "seed:admin": "tsx src/seedAdmin.ts"
+    "seed:admin": "tsx src/seedAdmin.ts",
+    "emails:export": "tsx src/emails/export.ts"
   },
   "dependencies": {
     "@offerbuzz/shared": "*",

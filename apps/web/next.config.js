@@ -7,4 +7,6 @@ module.exports = {
   outputFileTracingRoot: path.join(__dirname, '../../'),
   transpilePackages: ['@offerbuzz/shared'],
   poweredByHeader: false,
+  // Brand images are pre-sized PNGs; skipping the optimizer avoids needing `sharp` in the standalone image.
+  images: { unoptimized: true },
 };

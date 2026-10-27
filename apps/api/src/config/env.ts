@@ -30,7 +30,6 @@ const schema = z
     BREVO_API_KEY: z.string().optional(),
     BREVO_SENDER_EMAIL: z.string().default('no-reply@offerbuzz.co'),
     BREVO_SENDER_NAME: z.string().default('OfferBuzz'),
-    BREVO_SMS_SENDER: z.string().default('OFFRBZ'),
     ADMIN_EMAIL: z.string().optional(),
     ADMIN_PASSWORD: z.string().optional(),
   })

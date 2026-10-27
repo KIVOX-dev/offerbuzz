@@ -16,6 +16,7 @@
     "build": "npm run build:shared && npm run build -w @offerbuzz/api && npm run build -w @offerbuzz/web",
     "test": "npm run build:shared && npm run test -w @offerbuzz/api",
     "typecheck": "npm run build:shared && npm run typecheck -w @offerbuzz/api && npm run typecheck -w @offerbuzz/web",
-    "seed:admin": "npm run seed:admin -w @offerbuzz/api"
+    "seed:admin": "npm run seed:admin -w @offerbuzz/api",
+    "emails:export": "npm run emails:export -w @offerbuzz/api"
   }
 }

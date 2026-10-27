@@ -8,8 +8,8 @@ import { User, type UserDoc } from '../../models/User';
 import { Otp } from '../../models/Otp';
 import { RefreshToken } from '../../models/RefreshToken';
 import { signAccessToken } from '../../middleware/auth';
-import { sendOtpMessage } from '../../services/brevo';
-import { badRequest, forbidden, tooMany, unauthorized } from '../../utils/errors';
+import { sendOtpEmail } from '../../services/brevo';
+import { HttpError, badRequest, forbidden, tooMany, unauthorized } from '../../utils/errors';
 
 const sha256 = (v: string) => crypto.createHash('sha256').update(v).digest('hex');
 const hmac = (v: string) => crypto.createHmac('sha256', env().OTP_SECRET).update(v).digest('hex');
@@ -72,7 +72,7 @@ async function createUser(fields: Partial<UserDoc> & { role: SelfServeRole }) {
  * Finds the user or registers one. A plain customer may upgrade to merchant or intermediary by
  * choosing that role on the login screen; any other existing role is never changed from here.
  */
-async function findOrCreate(match: { phone: string } | { email: string }, role: SelfServeRole, extra: Partial<UserDoc> = {}) {
+async function findOrCreate(match: { email: string }, role: SelfServeRole, extra: Partial<UserDoc> = {}) {
   let user = await User.findOne(match);
   let isNewUser = false;
   if (!user) {
@@ -97,7 +97,21 @@ async function respond(user: UserDoc, isNewUser: boolean): Promise<AuthResponse>
 
 // ---- OTP -------------------------------------------------------------------------------------
 
-export async function sendOtp(identifier: string) {
+/**
+ * Sign in only works for an existing account and sign up only for a new one, so people get a clear message
+ * instead of silently creating a second account by mistyping. (This reveals whether an email is registered;
+ * accepted for usability, and the OTP rate limits bound enumeration.) The one exception: a plain customer may
+ * "sign up" again as vendor or intermediary, which upgrades the account.
+ */
+export async function sendOtp(identifier: string, mode: 'signin' | 'signup' = 'signin', role?: SelfServeRole) {
+  const account = await User.findOne({ email: identifier }).select('role');
+  if (mode === 'signin' && !account) {
+    throw new HttpError(404, 'ACCOUNT_NOT_FOUND', 'No account found with this email. Please sign up first.');
+  }
+  const upgrading = account?.role === 'customer' && role !== undefined && role !== 'customer';
+  if (mode === 'signup' && account && !upgrading) {
+    throw new HttpError(409, 'ACCOUNT_EXISTS', 'This email is already registered. Please sign in.');
+  }
   const existing = await Otp.findOne({ identifier });
   const now = Date.now();
   if (existing) {
@@ -115,12 +129,18 @@ export async function sendOtp(identifier: string) {
     },
     { upsert: true },
   );
-  await sendOtpMessage(identifier, code);
+  await sendOtpEmail(identifier, code);
   return { sent: true, resendIn: OTP.resendSeconds, ...(env().OTP_DEV_MODE ? { devOtp: code } : {}) };
 }
 
-export async function verifyOtp(input: { phone?: string; email?: string; code: string; role?: SelfServeRole; name?: string }) {
-  const identifier = (input.phone ?? input.email) as string;
+export async function verifyOtp(input: {
+  email: string;
+  code: string;
+  mode?: 'signin' | 'signup';
+  role?: SelfServeRole;
+  name?: string;
+}) {
+  const identifier = input.email;
   const record = await Otp.findOne({ identifier });
   if (!record || record.expiresAt.getTime() < Date.now()) throw badRequest('Code expired, request a new one', 'OTP_EXPIRED');
   if (record.attempts >= OTP.maxAttempts) {
@@ -135,8 +155,15 @@ export async function verifyOtp(input: { phone?: string; email?: string; code: s
   }
   await record.deleteOne(); // single use
 
-  const match = input.phone ? { phone: input.phone } : { email: input.email as string };
-  const { user, isNewUser } = await findOrCreate(match, input.role ?? 'customer', input.name ? { name: input.name } : {});
+  if (input.mode !== 'signup') {
+    // sign in: never creates an account, never changes the role
+    const user = await User.findOne({ email: input.email });
+    if (!user) throw new HttpError(404, 'ACCOUNT_NOT_FOUND', 'No account found with this email. Please sign up first.');
+    if (user.status === 'blocked') throw forbidden('This account has been blocked', 'ACCOUNT_BLOCKED');
+    if (user.role === 'admin') throw forbidden('Admins sign in from the admin login page', 'ADMIN_LOGIN_ONLY');
+    return respond(user, false);
+  }
+  const { user, isNewUser } = await findOrCreate({ email: input.email }, input.role ?? 'customer', input.name ? { name: input.name } : {});
   return respond(user, isNewUser);
 }
 

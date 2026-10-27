@@ -30,10 +30,13 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown;
   return data as T;
 }
 
-export const sendOtp = (phone: string) =>
-  api<{ sent: boolean; resendIn: number; devOtp?: string }>('/auth/send-otp', { method: 'POST', json: { phone } });
+export type AuthMode = 'signin' | 'signup';
+type LoginRole = 'merchant' | 'intermediary' | 'customer';
 
-export const verifyOtp = (body: { phone: string; code: string; role?: 'merchant' | 'intermediary' | 'customer' }) =>
+export const sendOtp = (email: string, mode: AuthMode, role?: LoginRole) =>
+  api<{ sent: boolean; resendIn: number; devOtp?: string }>('/auth/send-otp', { method: 'POST', json: { email, mode, role } });
+
+export const verifyOtp = (body: { email: string; code: string; mode: AuthMode; role?: LoginRole; name?: string }) =>
   api<AuthResponse>('/auth/verify-otp', { method: 'POST', json: body });
 
 export const googleLogin = (idToken: string, role?: 'merchant' | 'intermediary') =>

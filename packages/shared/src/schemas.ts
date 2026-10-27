@@ -8,33 +8,32 @@ export function normalizePhone(input: string): string | null {
   return m ? `+91${m[1]}` : null;
 }
 
-const phone = z
-  .string()
-  .transform((v, ctx) => {
-    const n = normalizePhone(v);
-    if (!n) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid 10 digit mobile number' });
-    return n as string;
-  });
+/** Phone numbers are profile data (shop contact, intermediary details), not a login method. */
+export const phoneSchema = z.string().transform((v, ctx) => {
+  const n = normalizePhone(v);
+  if (!n) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid 10 digit mobile number' });
+  return n as string;
+});
 
-const email = z.string().trim().toLowerCase().email();
-
-/** Exactly one of phone or email identifies the person. */
-const identifier = z
-  .object({ phone: phone.optional(), email: email.optional() })
-  .refine((v) => Boolean(v.phone) !== Boolean(v.email), { message: 'Provide either phone or email' });
+const email = z.string().trim().toLowerCase().email('Enter a valid email address');
 
 const role = z.enum(SELF_SERVE_ROLES);
 
-export const sendOtpSchema = identifier;
+/** `signup` creates an account (name required); `signin` only works for an existing account. */
+const mode = z.enum(['signin', 'signup']).default('signin');
+const name = z.string().trim().min(2, 'Enter your name').max(80);
+
+/** Login codes are sent by email only. */
+export const sendOtpSchema = z.object({ email, mode, role: role.optional() });
 export const verifyOtpSchema = z
   .object({
-    phone: phone.optional(),
-    email: email.optional(),
+    email,
     code: z.string().regex(new RegExp(`^\\d{${OTP.length}}$`), `Code must be ${OTP.length} digits`),
+    mode,
     role: role.optional(),
-    name: z.string().trim().min(1).max(80).optional(),
+    name: name.optional(),
   })
-  .refine((v) => Boolean(v.phone) !== Boolean(v.email), { message: 'Provide either phone or email' });
+  .refine((v) => v.mode !== 'signup' || Boolean(v.name), { message: 'Enter your name', path: ['name'] });
 
 export const googleSchema = z.object({ idToken: z.string().min(10), role: role.optional() });
 export const refreshSchema = z.object({ refreshToken: z.string().min(20) });

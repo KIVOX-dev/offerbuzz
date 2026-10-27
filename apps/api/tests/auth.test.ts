@@ -9,8 +9,8 @@ let svc: typeof import('../src/modules/auth/auth.service');
 let User: typeof import('../src/models/User').User;
 let Otp: typeof import('../src/models/Otp').Otp;
 
-const PHONE = '9876543210';
-const E164 = '+919876543210';
+const EMAIL = 'shopper@example.com';
+const NAME = 'Test Shopper';
 
 beforeAll(async () => {
   mongod = await MongoMemoryServer.create();
@@ -42,12 +42,20 @@ beforeEach(async () => {
   }
 });
 
-async function loginWithOtp(body: Record<string, unknown> = {}) {
-  const sent = await request(app).post('/api/v1/auth/send-otp').send({ phone: PHONE });
+const send = (body: Record<string, unknown>) => request(app).post('/api/v1/auth/send-otp').send(body);
+const verify = (body: Record<string, unknown>) => request(app).post('/api/v1/auth/verify-otp').send(body);
+
+/** Full sign up: request a code, then verify it. `extra` is merged into both requests. */
+async function signUp(extra: Record<string, unknown> = {}, email = EMAIL) {
+  const sent = await send({ email, mode: 'signup', ...extra });
   expect(sent.status).toBe(200);
-  return request(app)
-    .post('/api/v1/auth/verify-otp')
-    .send({ phone: PHONE, code: sent.body.devOtp, ...body });
+  return verify({ email, code: sent.body.devOtp, mode: 'signup', name: NAME, ...extra });
+}
+
+async function signIn(email = EMAIL) {
+  const sent = await send({ email, mode: 'signin' });
+  expect(sent.status).toBe(200);
+  return verify({ email, code: sent.body.devOtp, mode: 'signin' });
 }
 
 describe('health', () => {
@@ -58,92 +66,149 @@ describe('health', () => {
   });
 });
 
-describe('phone OTP login', () => {
-  it('registers a new customer by default and returns tokens', async () => {
-    const res = await loginWithOtp();
+describe('sign up', () => {
+  it('creates a customer with name and email and returns tokens', async () => {
+    const res = await signUp();
     expect(res.status).toBe(200);
     expect(res.body.isNewUser).toBe(true);
-    expect(res.body.user).toMatchObject({ role: 'customer', phone: E164, status: 'active' });
+    expect(res.body.user).toMatchObject({ role: 'customer', email: EMAIL, name: NAME, status: 'active' });
     expect(res.body.user.referralCode).toMatch(/^[A-Z2-9]{8}$/);
     expect(res.body.accessToken).toBeTruthy();
     expect(res.body.refreshToken).toBeTruthy();
   });
 
+  it('requires a name', async () => {
+    const sent = await send({ email: EMAIL, mode: 'signup' });
+    const res = await verify({ email: EMAIL, code: sent.body.devOtp, mode: 'signup' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.message).toBe('Enter your name');
+    expect(await User.countDocuments()).toBe(0);
+  });
+
   it('creates intermediaries as pending until the admin approves', async () => {
-    const res = await loginWithOtp({ role: 'intermediary' });
+    const res = await signUp({ role: 'intermediary' });
     expect(res.body.user).toMatchObject({ role: 'intermediary', status: 'pending' });
   });
 
   it('never lets a caller self-assign admin', async () => {
-    const sent = await request(app).post('/api/v1/auth/send-otp').send({ phone: PHONE });
-    const res = await request(app).post('/api/v1/auth/verify-otp').send({ phone: PHONE, code: sent.body.devOtp, role: 'admin' });
+    const res = await send({ email: EMAIL, mode: 'signup', role: 'admin' });
     expect(res.status).toBe(400);
   });
 
-  it('upgrades a customer to merchant, but does not downgrade a merchant', async () => {
-    await loginWithOtp();
+  it('refuses an email that is already registered and points to sign in', async () => {
+    await signUp();
     await Otp.deleteMany({});
-    const up = await loginWithOtp({ role: 'merchant' });
+    const again = await send({ email: EMAIL, mode: 'signup' });
+    expect(again.status).toBe(409);
+    expect(again.body.error.code).toBe('ACCOUNT_EXISTS');
+  });
+
+  it('lets a customer sign up again as merchant (upgrade), but never downgrades a merchant', async () => {
+    await signUp();
+    await Otp.deleteMany({});
+    const up = await signUp({ role: 'merchant' });
+    expect(up.status).toBe(200);
     expect(up.body.user.role).toBe('merchant');
     expect(up.body.isNewUser).toBe(false);
     await Otp.deleteMany({});
-    const again = await loginWithOtp({ role: 'customer' });
-    expect(again.body.user.role).toBe('merchant');
+    // a merchant cannot sign up again as customer or anything else
+    expect((await send({ email: EMAIL, mode: 'signup', role: 'customer' })).status).toBe(409);
+    expect((await send({ email: EMAIL, mode: 'signup', role: 'intermediary' })).status).toBe(409);
+    const back = await signIn();
+    expect(back.body.user.role).toBe('merchant');
   });
 
+  it('normalizes the email to lower case', async () => {
+    const res = await signUp({}, 'Shop@Example.com');
+    expect(res.body.user.email).toBe('shop@example.com');
+  });
+});
+
+describe('sign in', () => {
+  it('works for an existing account and does not create anything', async () => {
+    await signUp();
+    await Otp.deleteMany({});
+    const res = await signIn();
+    expect(res.status).toBe(200);
+    expect(res.body.isNewUser).toBe(false);
+    expect(await User.countDocuments()).toBe(1);
+  });
+
+  it('is the default mode when none is sent', async () => {
+    const res = await send({ email: 'nobody@example.com' });
+    expect(res.status).toBe(404);
+  });
+
+  it('tells an unknown email to sign up first, and creates nothing', async () => {
+    const res = await send({ email: 'nobody@example.com', mode: 'signin' });
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('ACCOUNT_NOT_FOUND');
+    expect(await User.countDocuments()).toBe(0);
+  });
+
+  it('cannot be used to create an account by skipping send-otp mode', async () => {
+    const sent = await send({ email: 'ghost@example.com', mode: 'signup' });
+    const res = await verify({ email: 'ghost@example.com', code: sent.body.devOtp, mode: 'signin' });
+    expect(res.status).toBe(404);
+    expect(await User.countDocuments()).toBe(0);
+  });
+
+  it('blocks blocked accounts', async () => {
+    await signUp();
+    await User.updateMany({}, { status: 'blocked' });
+    await Otp.deleteMany({});
+    const sent = await send({ email: EMAIL, mode: 'signin' });
+    const res = await verify({ email: EMAIL, code: sent.body.devOtp, mode: 'signin' });
+    expect(res.status).toBe(403);
+  });
+
+  it('admins cannot use the OTP flow', async () => {
+    await User.create({ email: EMAIL, role: 'admin', referralCode: svc.generateReferralCode() });
+    const sent = await send({ email: EMAIL, mode: 'signin' });
+    const res = await verify({ email: EMAIL, code: sent.body.devOtp, mode: 'signin' });
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('one time codes', () => {
   it('rejects a wrong code, counts attempts, and burns the code after use', async () => {
-    const sent = await request(app).post('/api/v1/auth/send-otp').send({ phone: PHONE });
+    const sent = await send({ email: EMAIL, mode: 'signup' });
     const wrong = sent.body.devOtp === '000000' ? '111111' : '000000';
-    const bad = await request(app).post('/api/v1/auth/verify-otp').send({ phone: PHONE, code: wrong });
+    const bad = await verify({ email: EMAIL, code: wrong, mode: 'signup', name: NAME });
     expect(bad.status).toBe(400);
     expect(bad.body.error.code).toBe('OTP_INVALID');
-    const ok = await request(app).post('/api/v1/auth/verify-otp').send({ phone: PHONE, code: sent.body.devOtp });
+    const ok = await verify({ email: EMAIL, code: sent.body.devOtp, mode: 'signup', name: NAME });
     expect(ok.status).toBe(200);
-    const replay = await request(app).post('/api/v1/auth/verify-otp').send({ phone: PHONE, code: sent.body.devOtp });
+    const replay = await verify({ email: EMAIL, code: sent.body.devOtp, mode: 'signup', name: NAME });
     expect(replay.status).toBe(400);
   });
 
   it('locks the code after too many wrong attempts', async () => {
-    const sent = await request(app).post('/api/v1/auth/send-otp').send({ phone: PHONE });
+    const sent = await send({ email: EMAIL, mode: 'signup' });
     const wrong = sent.body.devOtp === '000000' ? '111111' : '000000';
-    for (let i = 0; i < 5; i++) await request(app).post('/api/v1/auth/verify-otp').send({ phone: PHONE, code: wrong });
-    const res = await request(app).post('/api/v1/auth/verify-otp').send({ phone: PHONE, code: sent.body.devOtp });
+    for (let i = 0; i < 5; i++) await verify({ email: EMAIL, code: wrong, mode: 'signup', name: NAME });
+    const res = await verify({ email: EMAIL, code: sent.body.devOtp, mode: 'signup', name: NAME });
     expect(res.status).toBe(429);
   });
 
   it('throttles resending a code', async () => {
-    await request(app).post('/api/v1/auth/send-otp').send({ phone: PHONE });
-    const again = await request(app).post('/api/v1/auth/send-otp').send({ phone: PHONE });
+    await send({ email: EMAIL, mode: 'signup' });
+    const again = await send({ email: EMAIL, mode: 'signup' });
     expect(again.status).toBe(429);
   });
 
   it('validates input', async () => {
-    const res = await request(app).post('/api/v1/auth/send-otp').send({ phone: '12345' });
-    expect(res.status).toBe(400);
-    expect(res.body.error.code).toBe('VALIDATION_ERROR');
-    const both = await request(app).post('/api/v1/auth/send-otp').send({ phone: PHONE, email: 'a@b.co' });
-    expect(both.status).toBe(400);
-  });
-
-  it('works for email as well', async () => {
-    const sent = await request(app).post('/api/v1/auth/send-otp').send({ email: 'Shop@Example.com' });
-    const res = await request(app).post('/api/v1/auth/verify-otp').send({ email: 'shop@example.com', code: sent.body.devOtp });
-    expect(res.status).toBe(200);
-    expect(res.body.user.email).toBe('shop@example.com');
-  });
-
-  it('blocks blocked accounts', async () => {
-    await loginWithOtp();
-    await User.updateMany({}, { status: 'blocked' });
-    await Otp.deleteMany({});
-    const res = await loginWithOtp();
-    expect(res.status).toBe(403);
+    const bad = await send({ email: 'not-an-email', mode: 'signup' });
+    expect(bad.status).toBe(400);
+    expect(bad.body.error.code).toBe('VALIDATION_ERROR');
+    expect((await send({ phone: '9876543210' })).status).toBe(400); // phone login is gone
+    expect((await send({ email: EMAIL, mode: 'nope' })).status).toBe(400);
   });
 });
 
 describe('refresh tokens', () => {
   it('rotates, and replaying an old token revokes the whole session', async () => {
-    const login = await loginWithOtp();
+    const login = await signUp();
     const r1 = await request(app).post('/api/v1/auth/refresh').send({ refreshToken: login.body.refreshToken });
     expect(r1.status).toBe(200);
     expect(r1.body.refreshToken).not.toBe(login.body.refreshToken);
@@ -157,7 +222,7 @@ describe('refresh tokens', () => {
   });
 
   it('logout revokes the session', async () => {
-    const login = await loginWithOtp();
+    const login = await signUp();
     const out = await request(app).post('/api/v1/auth/logout').send({ refreshToken: login.body.refreshToken });
     expect(out.status).toBe(204);
     const res = await request(app).post('/api/v1/auth/refresh').send({ refreshToken: login.body.refreshToken });
@@ -168,10 +233,10 @@ describe('refresh tokens', () => {
 describe('role based access', () => {
   it('GET /me requires a token and returns the user', async () => {
     expect((await request(app).get('/api/v1/me')).status).toBe(401);
-    const login = await loginWithOtp();
+    const login = await signUp();
     const me = await request(app).get('/api/v1/me').set('Authorization', `Bearer ${login.body.accessToken}`);
     expect(me.status).toBe(200);
-    expect(me.body.user.phone).toBe(E164);
+    expect(me.body.user.email).toBe(EMAIL);
   });
 
   it('requireRole lets the right role in and keeps others out', async () => {
@@ -183,11 +248,10 @@ describe('role based access', () => {
     const { errorHandler } = await import('../src/middleware/errorHandler');
     const mini = express().use(r).use(errorHandler);
 
-    const customer = await loginWithOtp();
+    const customer = await signUp();
     const denied = await request(mini).get('/admin-only').set('Authorization', `Bearer ${customer.body.accessToken}`);
     expect(denied.status).toBe(403);
 
-    process.env.ADMIN_PASSWORD = 'a-long-admin-password';
     await User.create({
       email: 'admin@offerbuzz.co',
       role: 'admin',
@@ -214,12 +278,6 @@ describe('admin login', () => {
     expect(wrong.status).toBe(401);
     expect(missing.status).toBe(401);
     expect(wrong.body.error.message).toBe(missing.body.error.message);
-  });
-
-  it('admins cannot use the OTP flow', async () => {
-    await User.create({ phone: E164, role: 'admin', referralCode: svc.generateReferralCode() });
-    const res = await loginWithOtp();
-    expect(res.status).toBe(403);
   });
 });
 

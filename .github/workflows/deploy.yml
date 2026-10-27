@@ -1,38 +1,77 @@
-name: Deploy
-on:
-  workflow_dispatch:
-  push:
-    tags: ["v*"]
+name: Deploy API
 
-# Required repository secrets/variables are listed in infra/catalyst/README.md.
-# NOTE: the Catalyst CLI login step and the image hand-off are marked TODO because they must be
-# confirmed against Catalyst's current docs before the first deploy (see infra/catalyst/README.md).
+# Website: deployed by Vercel's Git integration (production on main, previews on PRs). Not handled here.
+# API: after CI succeeds on main, build the image and deploy it to Zoho Catalyst AppSail.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: # manual redeploy of main (skips the CI gate, use for rollbacks/retries)
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   deploy:
+    name: Build image and deploy to Catalyst
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: catalyst-dev # add required reviewers here if you want a manual approval step
+    env:
+      # Repository secret: output of `catalyst token:generate` (see infra/catalyst/README.md)
+      CATALYST_TOKEN: ${{ secrets.CATALYST_TOKEN }}
+      # Repository variable: base URL of the deployed API, e.g. https://offerbuzz-api-xxxx.development.catalystappsail.in
+      API_URL: ${{ vars.API_URL }}
     steps:
+      - name: Check required secret
+        run: |
+          if [ -z "$CATALYST_TOKEN" ]; then
+            echo "::error::Missing repository secret CATALYST_TOKEN"; exit 1
+          fi
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build API image (linux/amd64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: offerbuzz-api:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      # The Catalyst CLI warns about vulnerable Node 24.18; use a patched current Node 22 for the CLI.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - uses: docker/setup-buildx-action@v3
-      - name: Build API image
-        run: docker buildx build --platform linux/amd64 -f apps/api/Dockerfile -t offerbuzz-api:latest --load .
-      - name: Build web image
-        run: >
-          docker buildx build --platform linux/amd64 -f apps/web/Dockerfile -t offerbuzz-web:latest
-          --build-arg NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
-          --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ vars.NEXT_PUBLIC_GOOGLE_CLIENT_ID }} --load .
+          node-version: 22
       - name: Install Catalyst CLI
         run: npm install -g zcatalyst-cli
-      - name: Catalyst login
-        run: echo "TODO - authenticate the CLI non-interactively (token from Catalyst console)"; exit 1
-        # env: { CATALYST_TOKEN: ${{ secrets.CATALYST_TOKEN }} }
-      - name: Deploy API
-        run: catalyst deploy appsail --name offerbuzz-api --source docker://offerbuzz-api:latest --port 3001
-      - name: Deploy web
-        run: catalyst deploy appsail --name offerbuzz-site --source docker://offerbuzz-web:latest --port 3000
+      - name: Deploy to Catalyst AppSail
+        run: >
+          catalyst deploy appsail
+          --name offerbuzz-api
+          --source docker://offerbuzz-api:latest
+          --port 3001
+          --token "$CATALYST_TOKEN"
+          --non-interactive
+      - name: Smoke test deployed API
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "::warning::Repository variable API_URL not set; skipping post-deploy health check"; exit 0
+          fi
+          for i in $(seq 1 18); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/health" || true)
+            echo "attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "::error::API did not become healthy. Check the service logs and environment variables in the Catalyst console."
+          exit 1

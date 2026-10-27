@@ -26,7 +26,17 @@ module.exports = {
         btn: px(tokens.layout.buttonHeightMobile),
       },
       minHeight: { touch: px(tokens.layout.minTouchTarget) },
-      boxShadow: { card: '0 1px 3px rgba(20,33,61,0.08)' },
+      boxShadow: {
+        card: tokens.shadows.card,
+        'card-hover': tokens.shadows.cardHover,
+        glow: tokens.shadows.glow,
+        'glow-sm': tokens.shadows.glowSm,
+      },
+      backgroundImage: {
+        brand: tokens.gradients.brand,
+        'brand-hover': tokens.gradients.brandHover,
+        hero: tokens.gradients.hero,
+      },
     },
   },
   plugins: [],

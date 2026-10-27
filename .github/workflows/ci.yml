@@ -1,21 +1,102 @@
 name: CI
+
 on:
   pull_request:
   push:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  test:
+  verify:
+    name: Typecheck, test, build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
+      - name: Cache MongoDB test binary
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/mongodb-memory-server
+          key: mongo-binaries-${{ runner.os }}-v1
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: https://api.offerbuzz.co/api/v1
+          NEXT_PUBLIC_API_URL: https://api.example.invalid/api/v1
+
+  docker:
+    name: Docker images build and start
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: offerbuzz-api:ci
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - name: Build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: offerbuzz-web:ci
+          build-args: NEXT_PUBLIC_API_URL=https://api.example.invalid/api/v1
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+      - name: Smoke test API container
+        # /health must answer 200 even when MongoDB is unreachable (liveness only).
+        run: |
+          docker run -d --name api -p 3001:3001 \
+            -e MONGODB_URI=mongodb://127.0.0.1:1/ci \
+            -e JWT_ACCESS_SECRET=ci-access-secret-ci-access-secret-0000 \
+            -e OTP_SECRET=ci-otp-secret-ci-otp-secret-00000000 \
+            offerbuzz-api:ci
+          for i in $(seq 1 15); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/health || true)
+            [ "$code" = "200" ] && echo "api healthy" && exit 0
+            sleep 2
+          done
+          docker logs api
+          exit 1
+      - name: Smoke test web container
+        run: |
+          docker run -d --name web -p 3000:3000 offerbuzz-web:ci
+          for i in $(seq 1 15); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/login || true)
+            [ "$code" = "200" ] && echo "web healthy" && exit 0
+            sleep 2
+          done
+          docker logs web
+          exit 1
+
+  audit:
+    name: Dependency audit (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm audit --omit=dev --audit-level=high

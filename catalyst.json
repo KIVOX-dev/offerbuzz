@@ -1,8 +1,8 @@
 {
   "appsail": [
     {
-      "source": "docker://offerbuzz-web:latest",
-      "name": "offerbuzz-site"
+      "source": "docker://offerbuzz-api:latest",
+      "name": "offerbuzz-api"
     }
   ]
 }

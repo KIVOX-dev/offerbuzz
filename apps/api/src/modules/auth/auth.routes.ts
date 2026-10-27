@@ -27,7 +27,7 @@ authRouter.post(
   validate(sendOtpSchema),
   wrap(async (req, res) => {
     const b = req.body as SendOtpInput;
-    res.json(await svc.sendOtp((b.phone ?? b.email) as string));
+    res.json(await svc.sendOtp(b.email, b.mode, b.role));
   }),
 );
 

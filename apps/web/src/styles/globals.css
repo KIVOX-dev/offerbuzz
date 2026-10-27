@@ -4,7 +4,13 @@
 
 @layer base {
   body {
-    @apply bg-page font-sans text-body text-navy antialiased;
+    @apply bg-page font-sans text-body text-ink antialiased;
+  }
+  ::selection {
+    @apply bg-purple-200 text-purple-950;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-purple-400 ring-offset-2;
   }
 }
 
@@ -12,16 +18,61 @@
   .container-page {
     @apply mx-auto w-full max-w-container px-3 sm:px-4 lg:px-6;
   }
+
+  /* ---- buttons: min 44px touch target ---- */
   .btn {
-    @apply inline-flex min-h-touch items-center justify-center rounded-md px-4 text-body font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-touch select-none items-center justify-center gap-2 rounded-md px-4 text-body font-semibold
+      transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
   }
+  /* main action: shaded purple gradient with a soft glow */
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primaryDark;
+    @apply btn bg-brand text-white shadow-glow-sm hover:bg-brand-hover hover:shadow-glow active:brightness-95;
+  }
+  /* tinted: secondary actions on white cards */
+  .btn-secondary {
+    @apply btn bg-purple-100 text-purple-800 hover:bg-purple-200;
   }
   .btn-outline {
-    @apply btn border border-border bg-card text-navy hover:bg-page;
+    @apply btn border border-purple-300 bg-card text-purple-700 hover:border-purple-500 hover:bg-purple-50;
   }
+  .btn-ghost {
+    @apply btn text-purple-700 hover:bg-purple-100;
+  }
+  /* highlight: the logo's yellow, for deal CTAs such as Claim Offer */
+  .btn-accent {
+    @apply btn bg-accent text-ink shadow-card hover:brightness-105;
+  }
+  .btn-danger {
+    @apply btn bg-danger text-white hover:brightness-110;
+  }
+  .btn-sm {
+    @apply min-h-[36px] px-3 text-small;
+  }
+
+  /* ---- forms ---- */
   .input {
-    @apply h-btn w-full rounded-md border border-border bg-card px-3 text-body outline-none focus:border-primary focus:ring-1 focus:ring-primary;
+    @apply h-btn w-full rounded-md border border-purple-200 bg-card px-3 text-body outline-none transition
+      placeholder:text-muted hover:border-purple-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200;
+  }
+
+  /* ---- surfaces and small parts ---- */
+  .surface {
+    @apply rounded-md bg-card shadow-card;
+  }
+  .surface-hover {
+    @apply surface transition duration-200 hover:-translate-y-0.5 hover:shadow-card-hover;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-sm bg-purple-100 px-2 py-1 text-small font-semibold text-purple-800;
+  }
+  .badge-discount {
+    @apply inline-flex items-center rounded-sm bg-brand px-2 py-1 text-small font-bold text-white;
+  }
+  .chip {
+    @apply inline-flex min-h-touch items-center rounded-md border border-purple-200 bg-card px-3 text-small font-medium
+      text-purple-800 transition hover:border-purple-400 hover:bg-purple-50;
+  }
+  .chip-active {
+    @apply border-purple-700 bg-purple-700 text-white hover:bg-purple-800;
   }
 }

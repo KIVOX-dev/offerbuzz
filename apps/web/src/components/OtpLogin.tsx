@@ -2,26 +2,45 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { normalizePhone } from '@offerbuzz/shared';
-import { ApiRequestError, sendOtp, verifyOtp } from '@/lib/api';
+import { ApiRequestError, sendOtp, verifyOtp, type AuthMode } from '@/lib/api';
 import { homeFor, saveSession } from '@/lib/session';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; onBack: () => void }) {
   const router = useRouter();
-  const [phone, setPhone] = useState('');
+  const [mode, setMode] = useState<AuthMode>('signup');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState<'phone' | 'code'>('phone');
+  const [step, setStep] = useState<'details' | 'code'>('details');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<{ code: string; message: string }>();
   const [devOtp, setDevOtp] = useState<string>();
+
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanName = name.trim();
+  const roleLabel = role === 'merchant' ? 'Vendor' : 'Intermediary';
+  const detailsValid = EMAIL_RE.test(cleanEmail) && (mode === 'signin' || cleanName.length >= 2);
+
+  function switchMode(next: AuthMode) {
+    setMode(next);
+    setStep('details');
+    setCode('');
+    setError(undefined);
+  }
 
   async function run(fn: () => Promise<void>) {
     setBusy(true);
-    setError('');
+    setError(undefined);
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof ApiRequestError ? e.message : 'Something went wrong, please try again');
+      setError(
+        e instanceof ApiRequestError
+          ? { code: e.code, message: e.message }
+          : { code: 'UNKNOWN', message: 'Something went wrong, please try again' },
+      );
     } finally {
       setBusy(false);
     }
@@ -29,31 +48,48 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
 
   const requestCode = () =>
     run(async () => {
-      const normalized = normalizePhone(phone);
-      if (!normalized) throw new ApiRequestError(400, 'VALIDATION_ERROR', 'Enter a valid 10 digit mobile number');
-      const res = await sendOtp(normalized);
+      const res = await sendOtp(cleanEmail, mode, role);
       setDevOtp(res.devOtp);
       setStep('code');
     });
 
   const confirm = () =>
     run(async () => {
-      const normalized = normalizePhone(phone) as string;
-      const session = await verifyOtp({ phone: normalized, code, role });
+      const session = await verifyOtp({
+        email: cleanEmail,
+        code,
+        mode,
+        role,
+        name: mode === 'signup' ? cleanName : undefined,
+      });
       saveSession(session);
       router.push(homeFor(session.user.role));
     });
 
   return (
-    <div className="mx-auto w-full max-w-sm rounded-md bg-card p-4 shadow-card">
+    <div className="surface mx-auto w-full max-w-sm p-4">
       <button onClick={onBack} className="min-h-touch text-small font-semibold text-muted">
         &larr; Change role
       </button>
-      <h2 className="mt-1 text-section font-bold">
-        {role === 'merchant' ? 'Vendor' : 'Intermediary'} login
-      </h2>
+      <h2 className="mt-1 text-section font-bold">{roleLabel} account</h2>
 
-      {step === 'phone' ? (
+      <div role="tablist" className="mt-3 grid grid-cols-2 rounded-md bg-purple-100 p-1">
+        {(['signup', 'signin'] as const).map((m) => (
+          <button
+            key={m}
+            role="tab"
+            aria-selected={mode === m}
+            onClick={() => switchMode(m)}
+            className={`min-h-touch rounded-sm text-body font-semibold transition ${
+              mode === m ? 'bg-card text-purple-800 shadow-card' : 'text-purple-700 hover:text-purple-900'
+            }`}
+          >
+            {m === 'signup' ? 'Sign up' : 'Sign in'}
+          </button>
+        ))}
+      </div>
+
+      {step === 'details' ? (
         <form
           className="mt-4 space-y-3"
           onSubmit={(e) => {
@@ -61,16 +97,24 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
             void requestCode();
           }}
         >
-          <label className="block text-small font-semibold" htmlFor="phone">
-            Mobile number
-          </label>
-          <div className="flex gap-2">
-            <span className="flex h-btn items-center rounded-md border border-border bg-page px-3">+91</span>
-            <input id="phone" className="input" inputMode="numeric" autoComplete="tel-national" maxLength={10}
-              value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="9876543210" />
+          {mode === 'signup' && (
+            <div>
+              <label className="mb-1 block text-small font-semibold" htmlFor="name">
+                Your name
+              </label>
+              <input id="name" className="input" autoComplete="name" value={name}
+                onChange={(e) => setName(e.target.value)} placeholder="Full name" maxLength={80} />
+            </div>
+          )}
+          <div>
+            <label className="mb-1 block text-small font-semibold" htmlFor="email">
+              Email (Gmail or any email)
+            </label>
+            <input id="email" className="input" type="email" inputMode="email" autoComplete="email" value={email}
+              onChange={(e) => setEmail(e.target.value)} placeholder="yourname@gmail.com" />
           </div>
-          <button className="btn-primary w-full" disabled={busy || phone.length !== 10}>
-            {busy ? 'Sending...' : 'Send code'}
+          <button className="btn-primary w-full" disabled={busy || !detailsValid}>
+            {busy ? 'Sending...' : mode === 'signup' ? 'Create account' : 'Email me a code'}
           </button>
         </form>
       ) : (
@@ -82,7 +126,7 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
           }}
         >
           <label className="block text-small font-semibold" htmlFor="code">
-            Enter the 6 digit code sent to +91 {phone}
+            Enter the 6 digit code sent to {cleanEmail}
           </label>
           <input id="code" className="input tracking-[0.5em]" inputMode="numeric" autoComplete="one-time-code"
             maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
@@ -90,13 +134,27 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
           <button className="btn-primary w-full" disabled={busy || code.length !== 6}>
             {busy ? 'Verifying...' : 'Verify and continue'}
           </button>
-          <button type="button" className="btn-outline w-full" onClick={() => { setStep('phone'); setCode(''); }}>
-            Use a different number
+          <button type="button" className="btn-outline w-full" onClick={() => { setStep('details'); setCode(''); }}>
+            Use a different email
           </button>
         </form>
       )}
 
-      {error && <p role="alert" className="mt-3 text-small text-danger">{error}</p>}
+      {error && (
+        <div role="alert" className="mt-3 text-small text-danger">
+          {error.message}{' '}
+          {error.code === 'ACCOUNT_NOT_FOUND' && (
+            <button className="font-semibold underline" onClick={() => switchMode('signup')}>
+              Sign up
+            </button>
+          )}
+          {error.code === 'ACCOUNT_EXISTS' && (
+            <button className="font-semibold underline" onClick={() => switchMode('signin')}>
+              Sign in
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
