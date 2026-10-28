@@ -1,9 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
 import {
   ArrowRightIcon,
-  CategoryIcon,
-  type CategoryIconName,
   ChevronRightIcon,
   ClockIcon,
   HeartIcon,
@@ -15,36 +14,39 @@ import {
   UserIcon,
 } from '@/components/Icons';
 
-type Category = { name: string; icon: CategoryIconName; tile: string; text: string; btn: string };
+type Category = {
+  name: string;
+  slug: string; // product art at /categories/<slug>.webp
+  offers: string;
+  from: string; // tile gradient, sampled from the art so the edges blend
+  to: string;
+  text: string;
+  btn: string;
+};
 
-// Categories as listed on offerbuzz.co, each with its own pastel tone.
 const categories: Category[] = [
-  { name: 'Salon & Spa', icon: 'salon', tile: 'bg-pink-50', text: 'text-pink-500', btn: 'bg-pink-500' },
-  { name: 'Fashion', icon: 'fashion', tile: 'bg-rose-50', text: 'text-rose-500', btn: 'bg-rose-500' },
-  { name: 'Mobile & Electronics', icon: 'mobile', tile: 'bg-sky-50', text: 'text-sky-500', btn: 'bg-sky-600' },
-  { name: 'Travels', icon: 'travels', tile: 'bg-cyan-50', text: 'text-cyan-600', btn: 'bg-cyan-600' },
-  { name: 'Home Appliance', icon: 'appliance', tile: 'bg-amber-50', text: 'text-amber-500', btn: 'bg-amber-500' },
-  { name: 'Gifts & Toys', icon: 'gifts', tile: 'bg-fuchsia-50', text: 'text-fuchsia-500', btn: 'bg-fuchsia-500' },
-  { name: 'Fitness & Sports', icon: 'fitness', tile: 'bg-violet-50', text: 'text-violet-500', btn: 'bg-violet-600' },
-  { name: 'Food & Restaurant', icon: 'food', tile: 'bg-red-50', text: 'text-red-500', btn: 'bg-red-500' },
-  { name: 'Education', icon: 'education', tile: 'bg-indigo-50', text: 'text-indigo-500', btn: 'bg-indigo-600' },
-  { name: 'Grocery', icon: 'grocery', tile: 'bg-green-50', text: 'text-green-600', btn: 'bg-green-600' },
-  { name: 'Medical', icon: 'medical', tile: 'bg-emerald-50', text: 'text-emerald-500', btn: 'bg-emerald-600' },
-  { name: 'Cafe & Bakeries', icon: 'cafe', tile: 'bg-orange-50', text: 'text-orange-500', btn: 'bg-orange-500' },
-  { name: 'Automobiles', icon: 'auto', tile: 'bg-teal-50', text: 'text-teal-600', btn: 'bg-teal-600' },
-  { name: 'Baby Products', icon: 'baby', tile: 'bg-blue-50', text: 'text-blue-500', btn: 'bg-blue-600' },
-  { name: 'Real Estate', icon: 'realestate', tile: 'bg-lime-50', text: 'text-lime-600', btn: 'bg-lime-600' },
-  { name: 'Jewellery', icon: 'jewellery', tile: 'bg-yellow-50', text: 'text-yellow-600', btn: 'bg-yellow-500' },
+  { name: 'Grocery', slug: 'grocery', offers: '250+', from: '#e8fae0', to: '#e6f9dd', text: 'text-green-700', btn: 'bg-green-600' },
+  { name: 'Fashion & Clothing', slug: 'fashion', offers: '180+', from: '#fce8ed', to: '#fde8ee', text: 'text-rose-600', btn: 'bg-rose-500' },
+  { name: 'Electronics', slug: 'electronics', offers: '120+', from: '#e4f2fe', to: '#e4f1fd', text: 'text-blue-600', btn: 'bg-blue-600' },
+  { name: 'Home & Living', slug: 'home', offers: '150+', from: '#fef1d0', to: '#fef0ce', text: 'text-amber-600', btn: 'bg-amber-500' },
+  { name: 'Beauty & Personal Care', slug: 'beauty', offers: '120+', from: '#feeeeb', to: '#feedea', text: 'text-red-600', btn: 'bg-red-500' },
+  { name: 'Health & Pharmacy', slug: 'health', offers: '100+', from: '#e1f6eb', to: '#e1f6e9', text: 'text-green-700', btn: 'bg-green-600' },
+  { name: 'Fitness & Sports', slug: 'fitness', offers: '90+', from: '#eaeafe', to: '#eaeafe', text: 'text-indigo-700', btn: 'bg-indigo-600' },
+  { name: 'Baby & Kids', slug: 'baby', offers: '80+', from: '#dbeefe', to: '#daedfd', text: 'text-blue-600', btn: 'bg-blue-600' },
+  { name: 'Food & Beverages', slug: 'food', offers: '110+', from: '#fee4e6', to: '#fee1e3', text: 'text-red-600', btn: 'bg-red-500' },
+  { name: 'Automotive', slug: 'automotive', offers: '60+', from: '#dbf7f7', to: '#d7f5f4', text: 'text-teal-700', btn: 'bg-teal-600' },
+  { name: 'Pets', slug: 'pets', offers: '50+', from: '#fee8d9', to: '#fde7d7', text: 'text-orange-600', btn: 'bg-orange-500' },
+  { name: 'Travel & Lifestyle', slug: 'travel', offers: '70+', from: '#fee6f1', to: '#fee4f0', text: 'text-pink-600', btn: 'bg-pink-500' },
 ];
 
 // Sample deal cards until the Phase 2 API feeds real offers.
 const deals = [
-  { title: 'Flat 30% off on first visit', shop: 'Salon & Spa', off: '30% OFF', cat: 0 },
-  { title: 'Festive fashion sale', shop: 'Fashion', off: 'UP TO 50% OFF', cat: 1 },
-  { title: 'Latest phones, best prices', shop: 'Mobile & Electronics', off: 'UP TO 20% OFF', cat: 2 },
-  { title: 'Weekend getaway packages', shop: 'Travels', off: '15% OFF', cat: 3 },
-  { title: 'Kitchen appliance combo', shop: 'Home Appliance', off: 'UP TO 40% OFF', cat: 4 },
-  { title: 'Buy 1 Get 1 on meals', shop: 'Food & Restaurant', off: 'BOGO', cat: 7 },
+  { title: 'Flat 30% off on skincare', shop: 'Beauty & Personal Care', off: '30% OFF', cat: 4 },
+  { title: 'Festive fashion sale', shop: 'Fashion & Clothing', off: 'UP TO 50% OFF', cat: 1 },
+  { title: 'Latest gadgets, best prices', shop: 'Electronics', off: 'UP TO 20% OFF', cat: 2 },
+  { title: 'Weekend getaway packages', shop: 'Travel & Lifestyle', off: '15% OFF', cat: 11 },
+  { title: 'Living room makeover', shop: 'Home & Living', off: 'UP TO 40% OFF', cat: 3 },
+  { title: 'Buy 1 Get 1 on meals', shop: 'Food & Beverages', off: 'BOGO', cat: 8 },
 ];
 
 const perks = [
@@ -152,17 +154,22 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((c) => (
               <Link
-                key={c.name}
+                key={c.slug}
                 href="/login"
-                className={`group relative flex h-[150px] flex-col justify-between overflow-hidden rounded-md p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-card-hover ${c.tile}`}
+                style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }}
+                className="group relative flex h-[170px] flex-col justify-between overflow-hidden rounded-md p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-card-hover"
               >
-                <h3 className="max-w-[60%] text-body font-extrabold uppercase leading-tight text-ink">{c.name}</h3>
-                <CategoryIcon
-                  name={c.icon}
-                  size={110}
-                  className={`absolute -bottom-2 right-2 opacity-80 transition duration-300 group-hover:scale-110 ${c.text}`}
+                <img
+                  src={`/categories/${c.slug}.webp`}
+                  alt=""
+                  loading="lazy"
+                  className="pointer-events-none absolute inset-y-0 right-0 h-full w-[62%] object-cover object-left transition duration-300 [mask-image:linear-gradient(to_right,transparent,black_22%)] group-hover:scale-105"
                 />
-                <span className={`inline-flex items-center gap-2 text-small font-semibold ${c.text}`}>
+                <div className="relative">
+                  <h3 className="max-w-[55%] text-body font-extrabold uppercase leading-tight text-ink">{c.name}</h3>
+                  <p className="mt-1 text-small text-muted">{c.offers} Offers</p>
+                </div>
+                <span className={`relative inline-flex items-center gap-2 text-small font-semibold ${c.text}`}>
                   View All
                   <span className={`flex h-7 w-7 items-center justify-center rounded-full text-white ${c.btn}`}>
                     <ArrowRightIcon size={16} />
@@ -196,8 +203,11 @@ export default function Home() {
                 >
                   <HeartIcon size={16} />
                 </button>
-                <div className={`flex aspect-[4/3] items-center justify-center ${categories[d.cat].tile}`}>
-                  <CategoryIcon name={categories[d.cat].icon} size={72} className={categories[d.cat].text} />
+                <div
+                  style={{ backgroundImage: `linear-gradient(120deg, ${categories[d.cat].from}, ${categories[d.cat].to})` }}
+                  className="aspect-[4/3] overflow-hidden"
+                >
+                  <img src={`/categories/${categories[d.cat].slug}.webp`} alt="" loading="lazy" className="h-full w-full object-cover" />
                 </div>
                 <div className="space-y-1 p-3">
                   <p className="line-clamp-2 text-small font-semibold">{d.title}</p>
