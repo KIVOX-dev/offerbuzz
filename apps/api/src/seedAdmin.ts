@@ -6,8 +6,9 @@ import { generateReferralCode, hashPassword } from './modules/auth/auth.service'
 
 async function main() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD } = env();
-  if (!ADMIN_EMAIL || !ADMIN_PASSWORD || ADMIN_PASSWORD.length < 12) {
-    throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD (12+ characters) first');
+  // 8 matches the admin sign in form (adminLoginSchema); a longer password is strongly recommended
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD || ADMIN_PASSWORD.length < 8) {
+    throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD (8+ characters) first');
   }
   await connectDb();
   await getSettings(); // creates the settings document with defaults
