@@ -2,13 +2,17 @@ import { Router } from 'express';
 import {
   adminLoginSchema,
   googleSchema,
+  passwordLoginSchema,
   refreshSchema,
+  setPasswordSchema,
   sendOtpSchema,
   verifyOtpSchema,
   type AdminLoginInput,
   type GoogleInput,
+  type PasswordLoginInput,
   type RefreshInput,
   type SendOtpInput,
+  type SetPasswordInput,
   type VerifyOtpInput,
 } from '@offerbuzz/shared';
 import { validate } from '../../middleware/validate';
@@ -58,6 +62,27 @@ authRouter.post(
   wrap(async (req, res) => {
     const b = req.body as AdminLoginInput;
     res.json(await svc.adminLogin(b.email, b.password));
+  }),
+);
+
+authRouter.post(
+  '/auth/login',
+  loginLimiter(),
+  validate(passwordLoginSchema),
+  wrap(async (req, res) => {
+    const b = req.body as PasswordLoginInput;
+    res.json(await svc.passwordLogin(b.email, b.password));
+  }),
+);
+
+authRouter.post(
+  '/auth/set-password',
+  loginLimiter(),
+  authenticate,
+  validate(setPasswordSchema),
+  wrap(async (req, res) => {
+    await svc.setPassword(req.auth!.id, (req.body as SetPasswordInput).password);
+    res.status(204).end();
   }),
 );
 

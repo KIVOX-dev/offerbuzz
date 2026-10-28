@@ -2,19 +2,34 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ApiRequestError, sendOtp, verifyOtp, type AuthMode } from '@/lib/api';
+import type { AuthResponse } from '@offerbuzz/shared';
+import { ApiRequestError, passwordLogin, sendOtp, setPassword, verifyOtp, type AuthMode } from '@/lib/api';
 import { homeFor, saveSession } from '@/lib/session';
 import { BackButton } from './BackButton';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Same rule as the API: 8+ characters with a letter and a number. Returns the problem, or undefined. */
+function passwordProblem(pw: string): string | undefined {
+  if (pw.length < 8) return 'Password must be at least 8 characters';
+  if (!/[A-Za-z]/.test(pw)) return 'Password needs at least one letter';
+  if (!/\d/.test(pw)) return 'Password needs at least one number';
+  return undefined;
+}
 
 export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; onBack: () => void }) {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('signup');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPasswordValue] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState<'details' | 'code'>('details');
+  // signin normally uses a password; "forgot password" switches it to an emailed code
+  const [useCode, setUseCode] = useState(false);
+  const [step, setStep] = useState<'details' | 'code' | 'password'>('details');
+  // verified by the code, but only saved as the login once the password is set
+  const [pending, setPending] = useState<AuthResponse>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ code: string; message: string }>();
   const [devOtp, setDevOtp] = useState<string>();
@@ -22,12 +37,22 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
   const cleanEmail = email.trim().toLowerCase();
   const cleanName = name.trim();
   const roleLabel = role === 'merchant' ? 'Vendor' : 'Intermediary';
-  const detailsValid = EMAIL_RE.test(cleanEmail) && (mode === 'signin' || cleanName.length >= 2);
+  const passwordSignin = mode === 'signin' && !useCode;
+  const detailsValid =
+    EMAIL_RE.test(cleanEmail) &&
+    (mode === 'signup' ? cleanName.length >= 2 : !passwordSignin || password.length > 0);
+  const newPasswordError = password ? passwordProblem(password) : undefined;
+  const mismatch = confirm.length > 0 && confirm !== password;
+  const passwordValid = !passwordProblem(password) && password === confirm;
 
-  function switchMode(next: AuthMode) {
-    setMode(next);
+  function reset(next: { mode?: AuthMode; useCode?: boolean } = {}) {
+    if (next.mode) setMode(next.mode);
+    setUseCode(next.useCode ?? false);
     setStep('details');
     setCode('');
+    setPasswordValue('');
+    setConfirm('');
+    setPending(undefined);
     setError(undefined);
   }
 
@@ -37,15 +62,32 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
     try {
       await fn();
     } catch (e) {
-      setError(
-        e instanceof ApiRequestError
-          ? { code: e.code, message: e.message }
-          : { code: 'UNKNOWN', message: 'Something went wrong, please try again' },
-      );
+      if (e instanceof ApiRequestError && (e.code === 'ACCOUNT_NOT_FOUND' || e.code === 'ACCOUNT_EXISTS')) {
+        // no account: move to Sign up. Already registered: move to Sign in. The typed email stays.
+        reset({ mode: e.code === 'ACCOUNT_NOT_FOUND' ? 'signup' : 'signin' });
+        setError({
+          code: e.code,
+          message:
+            e.code === 'ACCOUNT_NOT_FOUND'
+              ? 'No account found with this email, so we moved you to Sign up. Add your name to create one.'
+              : 'This email is already registered, so we moved you to Sign in.',
+        });
+      } else {
+        setError(
+          e instanceof ApiRequestError
+            ? { code: e.code, message: e.message }
+            : { code: 'UNKNOWN', message: 'Something went wrong, please try again' },
+        );
+      }
     } finally {
       setBusy(false);
     }
   }
+
+  const finish = (session: AuthResponse) => {
+    saveSession(session);
+    router.push(homeFor(session.user.role));
+  };
 
   const requestCode = () =>
     run(async () => {
@@ -54,7 +96,7 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
       setStep('code');
     });
 
-  const confirm = () =>
+  const confirmCode = () =>
     run(async () => {
       const session = await verifyOtp({
         email: cleanEmail,
@@ -63,41 +105,60 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
         role,
         name: mode === 'signup' ? cleanName : undefined,
       });
-      saveSession(session);
-      router.push(homeFor(session.user.role));
+      // new accounts, and anyone resetting a forgotten password, must choose a password next
+      setPending(session);
+      setPasswordValue('');
+      setConfirm('');
+      setStep('password');
     });
+
+  const savePassword = () =>
+    run(async () => {
+      if (!pending) return;
+      await setPassword(pending.accessToken, password);
+      finish({ ...pending, user: { ...pending.user, hasPassword: true } });
+    });
+
+  const signInWithPassword = () =>
+    run(async () => {
+      finish(await passwordLogin(cleanEmail, password));
+    });
+
+  const submitDetails = () => (passwordSignin ? signInWithPassword() : requestCode());
 
   return (
     <div className="surface mx-auto w-full max-w-sm p-4">
-      {step === 'code' ? (
+      {step === 'password' ? null : step === 'code' ? (
         <BackButton onClick={() => { setStep('details'); setCode(''); setError(undefined); }}>Edit email</BackButton>
       ) : (
         <BackButton onClick={onBack}>Change role</BackButton>
       )}
       <h2 className="mt-1 text-section font-bold">{roleLabel} account</h2>
 
-      <div role="tablist" className="mt-3 grid grid-cols-2 rounded-md bg-purple-100 p-1">
-        {(['signup', 'signin'] as const).map((m) => (
-          <button
-            key={m}
-            role="tab"
-            aria-selected={mode === m}
-            onClick={() => switchMode(m)}
-            className={`min-h-touch rounded-sm text-body font-semibold transition ${
-              mode === m ? 'bg-card text-purple-800 shadow-card' : 'text-purple-700 hover:text-purple-900'
-            }`}
-          >
-            {m === 'signup' ? 'Sign up' : 'Sign in'}
-          </button>
-        ))}
-      </div>
+      {step !== 'password' && (
+        <div role="tablist" className="mt-3 grid grid-cols-2 rounded-md bg-purple-100 p-1">
+          {(['signup', 'signin'] as const).map((m) => (
+            <button
+              key={m}
+              role="tab"
+              aria-selected={mode === m}
+              onClick={() => reset({ mode: m })}
+              className={`min-h-touch rounded-sm text-body font-semibold transition ${
+                mode === m ? 'bg-card text-purple-800 shadow-card' : 'text-purple-700 hover:text-purple-900'
+              }`}
+            >
+              {m === 'signup' ? 'Sign up' : 'Sign in'}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {step === 'details' ? (
+      {step === 'details' && (
         <form
           className="mt-4 space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            void requestCode();
+            void submitDetails();
           }}
         >
           {mode === 'signup' && (
@@ -116,16 +177,38 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
             <input id="email" className="input" type="email" inputMode="email" autoComplete="email" value={email}
               onChange={(e) => setEmail(e.target.value)} placeholder="yourname@gmail.com" />
           </div>
+          {passwordSignin && (
+            <div>
+              <label className="mb-1 block text-small font-semibold" htmlFor="password">
+                Password
+              </label>
+              <input id="password" className="input" type="password" autoComplete="current-password" value={password}
+                onChange={(e) => setPasswordValue(e.target.value)} placeholder="Your password" maxLength={128} />
+            </div>
+          )}
           <button className="btn-primary w-full" disabled={busy || !detailsValid}>
-            {busy ? 'Sending...' : mode === 'signup' ? 'Create account' : 'Email me a code'}
+            {busy
+              ? passwordSignin ? 'Signing in...' : 'Sending...'
+              : mode === 'signup' ? 'Create account' : passwordSignin ? 'Sign in' : 'Email me a code'}
           </button>
+          {mode === 'signin' && (
+            <button
+              type="button"
+              className="w-full text-center text-small font-semibold text-purple-700 underline"
+              onClick={() => reset({ mode: 'signin', useCode: !useCode })}
+            >
+              {useCode ? 'Back to password sign in' : 'Forgot password? Email me a code'}
+            </button>
+          )}
         </form>
-      ) : (
+      )}
+
+      {step === 'code' && (
         <form
           className="mt-4 space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            void confirm();
+            void confirmCode();
           }}
         >
           <label className="block text-small font-semibold" htmlFor="code">
@@ -140,19 +223,47 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
         </form>
       )}
 
+      {step === 'password' && (
+        <form
+          className="mt-4 space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void savePassword();
+          }}
+        >
+          <p className="text-small text-muted">
+            Email verified. {mode === 'signup' ? 'Create a password' : 'Choose a new password'} so you can sign in
+            with your email and password next time.
+          </p>
+          <div>
+            <label className="mb-1 block text-small font-semibold" htmlFor="new-password">
+              Password
+            </label>
+            <input id="new-password" className="input" type="password" autoComplete="new-password" value={password}
+              onChange={(e) => setPasswordValue(e.target.value)} placeholder="At least 8 characters" maxLength={128} />
+            {newPasswordError ? (
+              <p className="mt-1 text-small text-danger">{newPasswordError}</p>
+            ) : (
+              <p className="mt-1 text-small text-muted">Use 8 or more characters with a letter and a number.</p>
+            )}
+          </div>
+          <div>
+            <label className="mb-1 block text-small font-semibold" htmlFor="confirm-password">
+              Re-enter password
+            </label>
+            <input id="confirm-password" className="input" type="password" autoComplete="new-password" value={confirm}
+              onChange={(e) => setConfirm(e.target.value)} placeholder="Type it again" maxLength={128} />
+            {mismatch && <p className="mt-1 text-small text-danger">Passwords do not match</p>}
+          </div>
+          <button className="btn-primary w-full" disabled={busy || !passwordValid}>
+            {busy ? 'Saving...' : 'Save password and continue'}
+          </button>
+        </form>
+      )}
+
       {error && (
         <div role="alert" className="mt-3 text-small text-danger">
-          {error.message}{' '}
-          {error.code === 'ACCOUNT_NOT_FOUND' && (
-            <button className="font-semibold underline" onClick={() => switchMode('signup')}>
-              Sign up
-            </button>
-          )}
-          {error.code === 'ACCOUNT_EXISTS' && (
-            <button className="font-semibold underline" onClick={() => switchMode('signin')}>
-              Sign in
-            </button>
-          )}
+          {error.message}
         </div>
       )}
     </div>

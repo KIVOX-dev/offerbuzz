@@ -92,7 +92,8 @@ async function findOrCreate(match: { email: string }, role: SelfServeRole, extra
 
 async function respond(user: UserDoc, isNewUser: boolean): Promise<AuthResponse> {
   const tokens = await issueTokens(user._id, user.role);
-  return { ...tokens, user: toUserDTO(user), isNewUser };
+  const withHash = await User.findById(user._id).select('+passwordHash');
+  return { ...tokens, user: { ...toUserDTO(user), hasPassword: Boolean(withHash?.passwordHash) }, isNewUser };
 }
 
 // ---- OTP -------------------------------------------------------------------------------------
@@ -221,6 +222,35 @@ export async function adminLogin(email: string, password: string) {
   if (!user || !ok) throw unauthorized('Incorrect email or password', 'INVALID_CREDENTIALS');
   if (user.status !== 'active') throw forbidden('This account is disabled', 'ACCOUNT_BLOCKED');
   return respond(user, false);
+}
+
+// ---- Password (vendors and intermediaries) -------------------------------------------------------
+
+/** Email + password sign in for self-serve accounts. Admins keep their own login page. */
+export async function passwordLogin(email: string, password: string) {
+  const user = await User.findOne({ email }).select('+passwordHash');
+  // same wording as the code sign in: no account means the person should sign up (accepted: reveals registration)
+  if (!user) throw new HttpError(404, 'ACCOUNT_NOT_FOUND', 'No account found with this email. Please sign up first.');
+  // compare against a dummy hash when there is no password so timing is the same either way
+  const hash = user.passwordHash ?? '$2a$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidin';
+  const ok = await bcrypt.compare(password, hash);
+  if (!user.passwordHash || !ok) {
+    throw unauthorized('Incorrect email or password. If you forgot it, use "Email me a code".', 'INVALID_CREDENTIALS');
+  }
+  if (user.status === 'blocked') throw forbidden('This account has been blocked', 'ACCOUNT_BLOCKED');
+  if (user.role === 'admin') throw forbidden('Admins sign in from the admin login page', 'ADMIN_LOGIN_ONLY');
+  return respond(user, false);
+}
+
+/** Sets or replaces the password of the signed in user. They just proved the email with a code. */
+export async function setPassword(userId: string, password: string) {
+  const user = await User.findById(userId);
+  if (!user) throw unauthorized('Account unavailable', 'REFRESH_INVALID');
+  if (user.role === 'admin') throw forbidden('Admin passwords are managed separately', 'ADMIN_LOGIN_ONLY');
+  user.passwordHash = await hashPassword(password);
+  await user.save();
+  // a new password signs out every other device
+  await RefreshToken.updateMany({ userId: user._id, revokedAt: { $exists: false } }, { revokedAt: new Date() });
 }
 
 export const hashPassword = (pw: string) => bcrypt.hash(pw, 12);

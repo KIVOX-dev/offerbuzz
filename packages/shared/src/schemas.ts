@@ -39,8 +39,20 @@ export const googleSchema = z.object({ idToken: z.string().min(10), role: role.o
 export const refreshSchema = z.object({ refreshToken: z.string().min(20) });
 export const adminLoginSchema = z.object({ email, password: z.string().min(8).max(128) });
 
+/** Vendor and intermediary passwords: 8+ characters with at least one letter and one number. */
+export const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .max(128, 'Password is too long')
+  .regex(/[A-Za-z]/, 'Password needs at least one letter')
+  .regex(/\d/, 'Password needs at least one number');
+export const setPasswordSchema = z.object({ password: passwordSchema });
+export const passwordLoginSchema = z.object({ email, password: z.string().min(1).max(128) });
+
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type GoogleInput = z.infer<typeof googleSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+export type SetPasswordInput = z.infer<typeof setPasswordSchema>;
+export type PasswordLoginInput = z.infer<typeof passwordLoginSchema>;

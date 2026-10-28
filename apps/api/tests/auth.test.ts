@@ -301,3 +301,81 @@ describe('google sign in', () => {
     svc.setGoogleVerifier();
   });
 });
+
+describe('password', () => {
+  const PW = 'Sunshine123';
+  const setPw = (token: string, password: string) =>
+    request(app).post('/api/v1/auth/set-password').set('authorization', `Bearer ${token}`).send({ password });
+  const login = (email: string, password: string) => request(app).post('/api/v1/auth/login').send({ email, password });
+
+  it('sign up returns hasPassword false until a password is set, then email + password signs in', async () => {
+    const res = await signUp({ role: 'merchant' });
+    expect(res.body.user.hasPassword).toBe(false);
+    expect((await setPw(res.body.accessToken, PW)).status).toBe(204);
+
+    const ok = await login(EMAIL, PW);
+    expect(ok.status).toBe(200);
+    expect(ok.body.user.role).toBe('merchant');
+    expect(ok.body.user.hasPassword).toBe(true);
+    expect(ok.body.accessToken).toBeTruthy();
+    // the hash is never exposed
+    expect(JSON.stringify(ok.body)).not.toContain('$2');
+  });
+
+  it('rejects weak passwords and requires a token to set one', async () => {
+    const res = await signUp({ role: 'merchant' });
+    expect((await setPw(res.body.accessToken, 'short1')).status).toBe(400);
+    expect((await setPw(res.body.accessToken, 'onlyletters')).status).toBe(400);
+    expect((await setPw(res.body.accessToken, '123456789')).status).toBe(400);
+    const noToken = await request(app).post('/api/v1/auth/set-password').send({ password: PW });
+    expect(noToken.status).toBe(401);
+  });
+
+  it('a wrong password or an account without one is INVALID_CREDENTIALS; an unknown email must sign up', async () => {
+    const res = await signUp({ role: 'merchant' });
+    const noPassword = await login(EMAIL, PW);
+    await setPw(res.body.accessToken, PW);
+    const wrong = await login(EMAIL, 'Wrong12345');
+    for (const r of [noPassword, wrong]) {
+      expect(r.status).toBe(401);
+      expect(r.body.error.code).toBe('INVALID_CREDENTIALS');
+    }
+    const unknown = await login('nobody@example.com', PW);
+    expect(unknown.status).toBe(404);
+    expect(unknown.body.error.code).toBe('ACCOUNT_NOT_FOUND');
+    expect(await User.countDocuments({ email: 'nobody@example.com' })).toBe(0);
+  });
+
+  it('forgot password: a code sign in can set a new password, and the old one stops working', async () => {
+    const first = await signUp({ role: 'merchant' });
+    await setPw(first.body.accessToken, PW);
+    const viaCode = await signIn();
+    expect((await setPw(viaCode.body.accessToken, 'Newpass456')).status).toBe(204);
+    expect((await login(EMAIL, PW)).status).toBe(401);
+    expect((await login(EMAIL, 'Newpass456')).status).toBe(200);
+  });
+
+  it('changing the password signs out the other sessions', async () => {
+    const first = await signUp({ role: 'merchant' });
+    await setPw(first.body.accessToken, PW);
+    const old = await login(EMAIL, PW);
+    await setPw(first.body.accessToken, 'Newpass456');
+    const replay = await request(app).post('/api/v1/auth/refresh').send({ refreshToken: old.body.refreshToken });
+    expect(replay.status).toBe(401);
+  });
+
+  it('blocked accounts cannot sign in with a password, and admins are refused here', async () => {
+    const res = await signUp({ role: 'merchant' });
+    await setPw(res.body.accessToken, PW);
+    await User.updateOne({ email: EMAIL }, { status: 'blocked' });
+    expect((await login(EMAIL, PW)).body.error.code).toBe('ACCOUNT_BLOCKED');
+
+    await User.create({
+      email: 'boss@example.com', role: 'admin', status: 'active', referralCode: 'ADMINREF',
+      passwordHash: await svc.hashPassword('Adminpass123'),
+    });
+    const admin = await login('boss@example.com', 'Adminpass123');
+    expect(admin.status).toBe(403);
+    expect(admin.body.error.code).toBe('ADMIN_LOGIN_ONLY');
+  });
+});

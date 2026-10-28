@@ -47,6 +47,12 @@ export const sendOtp = (email: string, mode: AuthMode, role?: LoginRole) =>
 export const verifyOtp = (body: { email: string; code: string; mode: AuthMode; role?: LoginRole; name?: string }) =>
   api<AuthResponse>('/auth/verify-otp', { method: 'POST', json: body });
 
+export const passwordLogin = (email: string, password: string) =>
+  api<AuthResponse>('/auth/login', { method: 'POST', json: { email, password } });
+
+export const setPassword = (token: string, password: string) =>
+  api<void>('/auth/set-password', { method: 'POST', json: { password }, token });
+
 export const googleLogin = (idToken: string, role?: 'merchant' | 'intermediary') =>
   api<AuthResponse>('/auth/google', { method: 'POST', json: { idToken, role } });
 

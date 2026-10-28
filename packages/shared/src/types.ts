@@ -9,6 +9,8 @@ export interface UserDTO {
   status: UserStatus;
   referralCode: string;
   qrUrl?: string;
+  /** true once the user has chosen a password (the hash itself is never sent) */
+  hasPassword?: boolean;
 }
 
 export interface AuthTokens {
