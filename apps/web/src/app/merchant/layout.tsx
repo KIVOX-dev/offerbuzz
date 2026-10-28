@@ -1,3 +1,5 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import { AccountShell, type NavItem } from '@/components/account/AccountShell';
 import { DashboardIcon, PlusIcon, UserIcon } from '@/components/Icons';
