@@ -1,7 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
 import {
+  ArrowRightIcon,
+  CategoryIcon,
+  type CategoryIconName,
   ChevronRightIcon,
   ClockIcon,
   HeartIcon,
@@ -13,26 +15,26 @@ import {
   UserIcon,
 } from '@/components/Icons';
 
-const IMG = 'https://offerbuzz.co/wp-content/uploads/2026/09';
+type Category = { name: string; icon: CategoryIconName; tile: string; text: string; btn: string };
 
-// Categories as listed on offerbuzz.co
-const categories = [
-  { name: 'Salon & Spa', img: 'SALON-600x800.png' },
-  { name: 'Fashion', img: 'FASHION-1-600x800.png' },
-  { name: 'Mobile & Electronics', img: 'MOBILE-600x800.png' },
-  { name: 'Travels', img: 'TRAVELS-5-600x800.png' },
-  { name: 'Home Appliance', img: 'HOME-APPLIANCE-2-600x800.png' },
-  { name: 'Gifts & Toys', img: 'GIFTS-2-600x800.png' },
-  { name: 'Fitness & Sports', img: 'FITNESS-1-600x800.png' },
-  { name: 'Food & Restaurant', img: 'FOOD-RESTURANT-1-600x800.png' },
-  { name: 'Education', img: 'EDUCATION-2-600x800.png' },
-  { name: 'Grocery', img: 'GROCERY-2-600x800.png' },
-  { name: 'Medical', img: 'MEDICAL-2-600x800.png' },
-  { name: 'Cafe & Bakeries', img: 'CAFE-1-600x800.png' },
-  { name: 'Automobiles', img: 'TWO-WHEELER-2-600x800.png' },
-  { name: 'Baby Products', img: 'Baby-Products-600x800.png' },
-  { name: 'Real Estate', img: 'REAL-ESTATE-600x800.png' },
-  { name: 'Jewellery', img: 'JEWELLERY-2-600x800.png' },
+// Categories as listed on offerbuzz.co, each with its own pastel tone.
+const categories: Category[] = [
+  { name: 'Salon & Spa', icon: 'salon', tile: 'bg-pink-50', text: 'text-pink-500', btn: 'bg-pink-500' },
+  { name: 'Fashion', icon: 'fashion', tile: 'bg-rose-50', text: 'text-rose-500', btn: 'bg-rose-500' },
+  { name: 'Mobile & Electronics', icon: 'mobile', tile: 'bg-sky-50', text: 'text-sky-500', btn: 'bg-sky-600' },
+  { name: 'Travels', icon: 'travels', tile: 'bg-cyan-50', text: 'text-cyan-600', btn: 'bg-cyan-600' },
+  { name: 'Home Appliance', icon: 'appliance', tile: 'bg-amber-50', text: 'text-amber-500', btn: 'bg-amber-500' },
+  { name: 'Gifts & Toys', icon: 'gifts', tile: 'bg-fuchsia-50', text: 'text-fuchsia-500', btn: 'bg-fuchsia-500' },
+  { name: 'Fitness & Sports', icon: 'fitness', tile: 'bg-violet-50', text: 'text-violet-500', btn: 'bg-violet-600' },
+  { name: 'Food & Restaurant', icon: 'food', tile: 'bg-red-50', text: 'text-red-500', btn: 'bg-red-500' },
+  { name: 'Education', icon: 'education', tile: 'bg-indigo-50', text: 'text-indigo-500', btn: 'bg-indigo-600' },
+  { name: 'Grocery', icon: 'grocery', tile: 'bg-green-50', text: 'text-green-600', btn: 'bg-green-600' },
+  { name: 'Medical', icon: 'medical', tile: 'bg-emerald-50', text: 'text-emerald-500', btn: 'bg-emerald-600' },
+  { name: 'Cafe & Bakeries', icon: 'cafe', tile: 'bg-orange-50', text: 'text-orange-500', btn: 'bg-orange-500' },
+  { name: 'Automobiles', icon: 'auto', tile: 'bg-teal-50', text: 'text-teal-600', btn: 'bg-teal-600' },
+  { name: 'Baby Products', icon: 'baby', tile: 'bg-blue-50', text: 'text-blue-500', btn: 'bg-blue-600' },
+  { name: 'Real Estate', icon: 'realestate', tile: 'bg-lime-50', text: 'text-lime-600', btn: 'bg-lime-600' },
+  { name: 'Jewellery', icon: 'jewellery', tile: 'bg-yellow-50', text: 'text-yellow-600', btn: 'bg-yellow-500' },
 ];
 
 // Sample deal cards until the Phase 2 API feeds real offers.
@@ -43,6 +45,13 @@ const deals = [
   { title: 'Weekend getaway packages', shop: 'Travels', off: '15% OFF', cat: 3 },
   { title: 'Kitchen appliance combo', shop: 'Home Appliance', off: 'UP TO 40% OFF', cat: 4 },
   { title: 'Buy 1 Get 1 on meals', shop: 'Food & Restaurant', off: 'BOGO', cat: 7 },
+];
+
+const perks = [
+  { icon: TagIcon, text: 'Best offers near you' },
+  { icon: StoreIcon, text: 'Shop local, save more' },
+  { icon: PinIcon, text: 'Discover new stores' },
+  { icon: HeartIcon, text: 'Support small businesses' },
 ];
 
 function SectionHead({ title }: { title: string }) {
@@ -140,21 +149,37 @@ export default function Home() {
         {/* shop by category */}
         <section>
           <SectionHead title="Shop by Category" />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((c) => (
-              <Link key={c.name} href="/login" className="surface-hover group overflow-hidden">
-                <div className="aspect-[3/4] overflow-hidden bg-purple-50">
-                  <img
-                    src={`${IMG}/${c.img}`}
-                    alt={c.name}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <p className="p-2 text-center text-small font-semibold">{c.name}</p>
+              <Link
+                key={c.name}
+                href="/login"
+                className={`group relative flex h-[150px] flex-col justify-between overflow-hidden rounded-md p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-card-hover ${c.tile}`}
+              >
+                <h3 className="max-w-[60%] text-body font-extrabold uppercase leading-tight text-ink">{c.name}</h3>
+                <CategoryIcon
+                  name={c.icon}
+                  size={110}
+                  className={`absolute -bottom-2 right-2 opacity-80 transition duration-300 group-hover:scale-110 ${c.text}`}
+                />
+                <span className={`inline-flex items-center gap-2 text-small font-semibold ${c.text}`}>
+                  View All
+                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-white ${c.btn}`}>
+                    <ArrowRightIcon size={16} />
+                  </span>
+                </span>
               </Link>
             ))}
           </div>
+
+          <ul className="surface mt-4 grid grid-cols-2 gap-4 p-4 md:grid-cols-4">
+            {perks.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3 text-small font-semibold uppercase text-ink">
+                <Icon size={28} className="shrink-0 text-purple-700" />
+                {text}
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* deals */}
@@ -171,8 +196,8 @@ export default function Home() {
                 >
                   <HeartIcon size={16} />
                 </button>
-                <div className="aspect-square overflow-hidden bg-purple-50">
-                  <img src={`${IMG}/${categories[d.cat].img}`} alt="" loading="lazy" className="h-full w-full object-cover" />
+                <div className={`flex aspect-[4/3] items-center justify-center ${categories[d.cat].tile}`}>
+                  <CategoryIcon name={categories[d.cat].icon} size={72} className={categories[d.cat].text} />
                 </div>
                 <div className="space-y-1 p-3">
                   <p className="line-clamp-2 text-small font-semibold">{d.title}</p>

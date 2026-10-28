@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { SVGProps } from 'react';
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
@@ -81,3 +82,85 @@ export const ClockIcon = (p: IconProps) => (
     <path d="M12 7v5l3 2" />
   </Svg>
 );
+
+export const ArrowRightIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </Svg>
+);
+
+const categoryPaths: Record<string, React.ReactNode> = {
+  salon: (
+    <>
+      <circle cx="6" cy="6" r="3" />
+      <circle cx="6" cy="18" r="3" />
+      <path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12" />
+    </>
+  ),
+  fashion: <path d="M8 3 3 6l2 4 3-1v12h8V9l3 1 2-4-5-3a4 4 0 0 1-8 0Z" />,
+  mobile: (
+    <>
+      <rect x="6" y="2" width="12" height="20" rx="2" />
+      <path d="M12 18h.01" />
+    </>
+  ),
+  travels: (
+    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2Z" />
+  ),
+  appliance: (
+    <>
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <circle cx="12" cy="14" r="5" />
+      <path d="M8 6h.01M12 6h.01" />
+    </>
+  ),
+  gifts: (
+    <>
+      <rect x="3" y="8" width="18" height="4" />
+      <path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
+    </>
+  ),
+  fitness: <path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11" />,
+  food: <path d="M3 2v7a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6a2 2 0 0 0 2 2h3Zm0 0v7" />,
+  education: <path d="M22 10 12 5 2 10l10 5 10-5ZM6 12v5c3 3 9 3 12 0v-5" />,
+  grocery: (
+    <>
+      <circle cx="8" cy="21" r="1" />
+      <circle cx="19" cy="21" r="1" />
+      <path d="M2 2h2l2.7 12.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6L22 7H5.1" />
+    </>
+  ),
+  medical: <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z" />,
+  cafe: <path d="M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4ZM6 2v2M10 2v2M14 2v2" />,
+  auto: (
+    <>
+      <path d="M3 17v-5l2-5h12l3 5v5h-1M5 17H3M9 17h6" />
+      <circle cx="7" cy="17" r="2" />
+      <circle cx="17" cy="17" r="2" />
+    </>
+  ),
+  baby: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" />
+    </>
+  ),
+  realestate: (
+    <>
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01" />
+    </>
+  ),
+  jewellery: <path d="M6 3h12l4 6-10 13L2 9ZM11 3 8 9l4 13 4-13-3-6M2 9h20" />,
+};
+
+export type CategoryIconName = keyof typeof categoryPaths;
+
+/** Large outline illustration used on category and deal cards. */
+export function CategoryIcon({ name, ...p }: IconProps & { name: CategoryIconName }) {
+  return (
+    <Svg strokeWidth={1.1} {...p}>
+      {categoryPaths[name]}
+    </Svg>
+  );
+}
