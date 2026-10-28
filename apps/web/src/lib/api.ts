@@ -151,3 +151,7 @@ export const payPayout = (id: string) => authApi<void>(`/admin/payouts/${id}/pay
 export const rejectPayoutRequest = (id: string, note?: string) =>
   authApi<void>(`/admin/payouts/${id}/reject`, { method: 'POST', json: { note } });
 export const getAdminAnalytics = () => authApi<AdminAnalytics>('/admin/analytics');
+
+/** Sends the (already shrunk) photo as the raw request body. */
+export const uploadOfferImage = (id: string, image: Blob) =>
+  authApi<{ offer: OfferDTO }>(`/offers/${id}/image`, { method: 'PUT', body: image, headers: { 'content-type': image.type } });

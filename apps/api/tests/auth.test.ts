@@ -38,7 +38,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   if (mongoose.connection.readyState === 1) {
-    await Promise.all([User.deleteMany({}), Otp.deleteMany({}), mongoose.connection.collection('offers').deleteMany({}), mongoose.connection.collection('walletentries').deleteMany({}), mongoose.connection.collection('subscriptions').deleteMany({}), mongoose.connection.collection('visits').deleteMany({}), mongoose.connection.collection('pagehits').deleteMany({}), mongoose.connection.collection('payoutrequests').deleteMany({}), mongoose.connection.collection('refreshtokens').deleteMany({})]);
+    await Promise.all([User.deleteMany({}), Otp.deleteMany({}), mongoose.connection.collection('offers').deleteMany({}), mongoose.connection.collection('walletentries').deleteMany({}), mongoose.connection.collection('subscriptions').deleteMany({}), mongoose.connection.collection('visits').deleteMany({}), mongoose.connection.collection('offerimages').deleteMany({}), mongoose.connection.collection('pagehits').deleteMany({}), mongoose.connection.collection('payoutrequests').deleteMany({}), mongoose.connection.collection('refreshtokens').deleteMany({})]);
   }
 });
 
@@ -789,5 +789,84 @@ describe('site analytics', () => {
     const vendor = await signUp({ role: 'merchant' }, 'new3@example.com');
     expect((await analytics(vendor.body.accessToken)).status).toBe(403);
     expect((await request(app).get('/api/v1/admin/analytics')).status).toBe(401);
+  });
+});
+
+describe('offer photo', () => {
+  const OFFER = {
+    title: 'Flat 30% off',
+    description: 'Thirty percent off on all services this month.',
+    category: 'Salon and Spa',
+    discountType: 'percent',
+    discountValue: 30,
+    startsAt: '2026-11-01',
+    endsAt: '2026-11-30',
+    area: 'RS Puram, Coimbatore',
+  };
+  // smallest real-looking headers: the API only checks the first bytes
+  const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(200, 1)]);
+  const JPG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(200, 2)]);
+  const WEBP = Buffer.concat([Buffer.from('RIFF'), Buffer.from([1, 0, 0, 0]), Buffer.from('WEBP'), Buffer.alloc(200, 3)]);
+  const authed = (r: request.Test, token: string) => r.set('authorization', `Bearer ${token}`);
+
+  async function vendorWithOffer(email = 'v@example.com') {
+    const v = await signUp({ role: 'merchant' }, email);
+    const offer = (await authed(request(app).post('/api/v1/offers'), v.body.accessToken).send(OFFER)).body.offer;
+    return { token: v.body.accessToken as string, offer };
+  }
+  const put = (token: string, id: string, type: string, body: Buffer) =>
+    authed(request(app).put(`/api/v1/offers/${id}/image`), token).set('content-type', type).send(body);
+
+  it('a vendor attaches a photo, and anyone can fetch it', async () => {
+    const { token, offer } = await vendorWithOffer();
+    expect(offer.imageUrl).toBeUndefined();
+
+    for (const [type, buf] of [['image/png', PNG], ['image/jpeg', JPG], ['image/webp', WEBP]] as const) {
+      const res = await put(token, offer.id, type, buf);
+      expect(res.status).toBe(200);
+      expect(res.body.offer.imageUrl).toBe(`/api/v1/offers/${offer.id}/image`);
+      const got = await request(app).get(`/api/v1/offers/${offer.id}/image`).buffer(true).parse((r, cb) => {
+        const chunks: Buffer[] = [];
+        r.on('data', (c: Buffer) => chunks.push(c));
+        r.on('end', () => cb(null, Buffer.concat(chunks)));
+      });
+      expect(got.status).toBe(200);
+      expect(got.headers['content-type']).toBe(type);
+      expect(got.headers['x-content-type-options']).toBe('nosniff');
+      expect((got.body as Buffer).equals(buf)).toBe(true);
+    }
+
+    const mine = await authed(request(app).get('/api/v1/offers/mine'), token);
+    expect(mine.body.offers[0].imageUrl).toBeTruthy();
+  });
+
+  it('rejects files that are not the image they claim, other types, empty uploads and huge files', async () => {
+    const { token, offer } = await vendorWithOffer();
+    expect((await put(token, offer.id, 'image/png', JPG)).status).toBe(415); // a JPEG pretending to be a PNG
+    expect((await put(token, offer.id, 'image/jpeg', Buffer.from('<script>alert(1)</script>'))).status).toBe(415);
+    expect((await put(token, offer.id, 'image/png', Buffer.alloc(0))).status).toBe(415);
+    expect((await put(token, offer.id, 'text/html', Buffer.from('<h1>x</h1>'))).status).toBe(415);
+    const big = Buffer.concat([PNG, Buffer.alloc(500 * 1024, 4)]);
+    expect((await put(token, offer.id, 'image/png', big)).status).toBe(413);
+    const mine = await authed(request(app).get('/api/v1/offers/mine'), token);
+    expect(mine.body.offers[0].imageUrl).toBeUndefined();
+  });
+
+  it('only the owning vendor can attach a photo, and there is no photo until one is uploaded', async () => {
+    const a = await vendorWithOffer('a@example.com');
+    const b = await signUp({ role: 'merchant' }, 'b@example.com');
+    const customer = await signUp({ role: 'customer' }, 'c@example.com');
+    expect((await put(b.body.accessToken, a.offer.id, 'image/png', PNG)).status).toBe(404);
+    expect((await put(customer.body.accessToken, a.offer.id, 'image/png', PNG)).status).toBe(403);
+    expect((await request(app).put(`/api/v1/offers/${a.offer.id}/image`).set('content-type', 'image/png').send(PNG)).status).toBe(401);
+    expect((await request(app).get(`/api/v1/offers/${a.offer.id}/image`)).status).toBe(404);
+    expect((await request(app).get('/api/v1/offers/not-an-id/image')).status).toBe(404);
+  });
+
+  it('deleting the offer deletes its photo', async () => {
+    const { token, offer } = await vendorWithOffer();
+    await put(token, offer.id, 'image/png', PNG);
+    await authed(request(app).delete(`/api/v1/offers/${offer.id}`), token);
+    expect((await request(app).get(`/api/v1/offers/${offer.id}/image`)).status).toBe(404);
   });
 });

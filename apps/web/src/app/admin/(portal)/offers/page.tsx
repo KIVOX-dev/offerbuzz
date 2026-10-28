@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { AdminOffersResponse, OfferDTO } from '@offerbuzz/shared';
@@ -109,7 +110,8 @@ export default function AdminOffers() {
           {data.offers.map((o) => (
             <li key={o.id} className="surface p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
+                {o.imageUrl && <img src={o.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-md object-cover" />}
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-bold">{o.title}</h3>
                     <span className={`rounded-sm px-2 py-0.5 text-small font-semibold ${STATUS_STYLE[o.status]}`}>{STATUS_LABEL[o.status]}</span>

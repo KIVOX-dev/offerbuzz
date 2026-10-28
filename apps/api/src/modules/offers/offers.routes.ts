@@ -1,11 +1,12 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import mongoose from 'mongoose';
 import { offerInputSchema, type MyOffersResponse, type OfferDTO, type OfferInput } from '@offerbuzz/shared';
 import { authenticate, requireRole } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { wrap } from '../../utils/async';
-import { notFound } from '../../utils/errors';
+import { HttpError, notFound } from '../../utils/errors';
 import { Offer, type OfferDoc } from '../../models/Offer';
+import { OfferImage } from '../../models/OfferImage';
 
 export const offersRouter = Router();
 
@@ -29,6 +30,7 @@ export function toOfferDTO(o: OfferDoc): OfferDTO {
     views: o.views,
     claims: o.claims,
     createdAt: o.createdAt.toISOString(),
+    ...(o.hasImage ? { imageUrl: `/api/v1/offers/${o._id}/image` } : {}),
   };
 }
 
@@ -84,6 +86,53 @@ offersRouter.delete(
     if (!mongoose.isValidObjectId(id)) throw notFound('Offer not found');
     const removed = await Offer.findOneAndDelete({ _id: id, merchantId: req.auth!.id });
     if (!removed) throw notFound('Offer not found');
+    await OfferImage.deleteOne({ offerId: id });
     res.status(204).end();
+  }),
+);
+
+// ---- Offer photo ---------------------------------------------------------------------------------
+
+const MAX_IMAGE_BYTES = 400 * 1024;
+
+/** The first bytes of the file must really be the image type it claims, so nothing else is stored or served as an image. */
+function matchesType(buf: Buffer, type: string): boolean {
+  if (type === 'image/jpeg') return buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  if (type === 'image/png') return buf.length > 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (type === 'image/webp') return buf.length > 12 && buf.subarray(0, 4).toString() === 'RIFF' && buf.subarray(8, 12).toString() === 'WEBP';
+  return false;
+}
+
+// The body is the raw image (Content-Type image/jpeg, image/png or image/webp). The global JSON parser ignores these types.
+offersRouter.put(
+  '/offers/:id/image',
+  ...vendorOnly,
+  express.raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: MAX_IMAGE_BYTES }),
+  wrap(async (req, res) => {
+    const id = String(req.params.id);
+    if (!mongoose.isValidObjectId(id)) throw notFound('Offer not found');
+    const offer = await Offer.findOne({ _id: id, merchantId: req.auth!.id });
+    if (!offer) throw notFound('Offer not found');
+    const type = req.get('content-type')?.split(';')[0]?.trim() ?? '';
+    const body = req.body as unknown;
+    if (!Buffer.isBuffer(body) || body.length === 0) throw new HttpError(415, 'BAD_IMAGE', 'Upload a JPEG, PNG or WebP photo');
+    if (!matchesType(body, type)) throw new HttpError(415, 'BAD_IMAGE', 'That file is not a valid photo');
+    await OfferImage.findOneAndUpdate({ offerId: offer._id }, { contentType: type, data: body }, { upsert: true });
+    offer.hasImage = true;
+    await offer.save();
+    res.json({ offer: toOfferDTO(offer) });
+  }),
+);
+
+// Public: offer photos are shown to every visitor once the offer is live, and are not secret.
+offersRouter.get(
+  '/offers/:id/image',
+  wrap(async (req, res) => {
+    const id = String(req.params.id);
+    if (!mongoose.isValidObjectId(id)) throw notFound('Photo not found');
+    const image = await OfferImage.findOne({ offerId: id });
+    if (!image) throw notFound('Photo not found');
+    res.set({ 'content-type': image.contentType, 'cache-control': 'public, max-age=86400', 'x-content-type-options': 'nosniff' });
+    res.send(image.data);
   }),
 );

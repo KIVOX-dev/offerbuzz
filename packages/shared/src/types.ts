@@ -47,6 +47,8 @@ export interface OfferDTO {
   views: number;
   claims: number;
   createdAt: string;
+  /** relative URL of the offer photo, present only when one was uploaded */
+  imageUrl?: string;
 }
 
 export interface MyOffersResponse {
