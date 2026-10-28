@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import type { Role, UserDTO } from '@offerbuzz/shared';
-import { api } from '@/lib/api';
+import { api, authApi, ApiRequestError } from '@/lib/api';
 import { clearSession, homeFor, loadSession, saveSession } from '@/lib/session';
 import { Logo } from '../Logo';
 import { LogoutIcon } from '../Icons';
@@ -48,6 +48,16 @@ export function AccountShell({
     if (!s) return router.replace(loginPath);
     if (s.user.role !== role) return router.replace(homeFor(s.user.role));
     setUserState(s.user);
+    // the saved copy is from login time: re-read the account so approval, blocks and profile edits show up
+    authApi<{ user: UserDTO }>('/me')
+      .then(({ user: fresh }) => {
+        const merged = { ...s.user, ...fresh };
+        saveSession({ ...s, user: merged });
+        setUserState(merged);
+      })
+      .catch((e) => {
+        if (e instanceof ApiRequestError && e.code === 'SESSION_EXPIRED') router.replace(loginPath);
+      });
   }, [role, router, loginPath]);
 
   const setUser = (u: UserDTO) => {
