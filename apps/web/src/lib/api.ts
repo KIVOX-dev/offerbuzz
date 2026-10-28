@@ -1,4 +1,14 @@
-import type { ApiError, AuthResponse } from '@offerbuzz/shared';
+import type {
+  ApiError,
+  AuthResponse,
+  AuthTokens,
+  MyOffersResponse,
+  OfferDTO,
+  OfferInput,
+  UpdateProfileInput,
+  UserDTO,
+} from '@offerbuzz/shared';
+import { clearSession, loadSession, saveSession } from './session';
 
 // In the browser always call same-origin: next.config.js rewrites /api/v1 to the API. Catalyst's gateway
 // answers CORS preflights without CORS headers, so a direct cross-origin call is always blocked.
@@ -58,3 +68,43 @@ export const googleLogin = (idToken: string, role?: 'merchant' | 'intermediary')
 
 export const adminLogin = (email: string, password: string) =>
   api<AuthResponse>('/auth/admin/login', { method: 'POST', json: { email, password } });
+
+// One refresh at a time: refresh tokens are single use, so two parallel refreshes would look like a replay
+// and revoke the whole session.
+let refreshing: Promise<AuthResponse> | undefined;
+
+function refreshSession(current: AuthResponse): Promise<AuthResponse> {
+  refreshing ??= api<AuthTokens>('/auth/refresh', { method: 'POST', json: { refreshToken: current.refreshToken } })
+    .then((tokens) => {
+      const next = { ...current, ...tokens };
+      saveSession(next);
+      return next;
+    })
+    .catch((e) => {
+      clearSession();
+      throw new ApiRequestError(401, 'SESSION_EXPIRED', 'Your session ended, please sign in again');
+    })
+    .finally(() => {
+      refreshing = undefined;
+    });
+  return refreshing;
+}
+
+/** Calls the API as the signed in user and renews the access token once when it has expired. */
+export async function authApi<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
+  const session = loadSession();
+  if (!session) throw new ApiRequestError(401, 'SESSION_EXPIRED', 'Please sign in');
+  try {
+    return await api<T>(path, { ...init, token: session.accessToken });
+  } catch (e) {
+    if (!(e instanceof ApiRequestError) || e.status !== 401 || e.code !== 'TOKEN_INVALID') throw e;
+    const next = await refreshSession(session);
+    return api<T>(path, { ...init, token: next.accessToken });
+  }
+}
+
+export const getMyOffers = () => authApi<MyOffersResponse>('/offers/mine');
+export const createOffer = (body: OfferInput) => authApi<{ offer: OfferDTO }>('/offers', { method: 'POST', json: body });
+export const deleteOffer = (id: string) => authApi<void>(`/offers/${id}`, { method: 'DELETE' });
+export const updateProfile = (body: UpdateProfileInput) =>
+  authApi<{ user: UserDTO }>('/me', { method: 'PUT', json: body });

@@ -10,6 +10,8 @@ const userSchema = new Schema(
     passwordHash: { type: String, select: false }, // admin accounts only
     role: { type: String, enum: ROLES, required: true, index: true },
     referralCode: { type: String, required: true, unique: true },
+    shopName: { type: String, trim: true },
+    city: { type: String, trim: true },
     qrUrl: String, // filled in by the QR service in Phase 5
     status: { type: String, enum: USER_STATUSES, default: 'active', index: true },
     fcmTokens: { type: [String], default: [] },

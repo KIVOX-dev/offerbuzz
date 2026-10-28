@@ -31,6 +31,8 @@ export function toUserDTO(u: UserDoc): UserDTO {
     status: u.status,
     referralCode: u.referralCode,
     qrUrl: u.qrUrl ?? undefined,
+    shopName: u.shopName ?? undefined,
+    city: u.city ?? undefined,
   };
 }
 

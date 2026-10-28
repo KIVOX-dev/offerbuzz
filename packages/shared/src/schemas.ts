@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { OTP, SELF_SERVE_ROLES } from './constants';
+import { CATEGORIES, DISCOUNT_TYPES, OTP, SELF_SERVE_ROLES } from './constants';
 
 /** Accepts 10 digits, 91XXXXXXXXXX or +91XXXXXXXXXX (Indian mobiles) and returns +91XXXXXXXXXX, or null. */
 export function normalizePhone(input: string): string | null {
@@ -56,3 +56,42 @@ export type RefreshInput = z.infer<typeof refreshSchema>;
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
 export type SetPasswordInput = z.infer<typeof setPasswordSchema>;
 export type PasswordLoginInput = z.infer<typeof passwordLoginSchema>;
+
+// ---- Profile and offers ------------------------------------------------------------------------
+
+/** Every field optional: send only what changed. Empty strings clear optional fields. */
+export const updateProfileSchema = z.object({
+  name: name.optional(),
+  phone: z.union([phoneSchema, z.literal('')]).optional(),
+  shopName: z.string().trim().max(80).optional(),
+  city: z.string().trim().max(60).optional(),
+});
+
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a date');
+
+export const offerInputSchema = z
+  .object({
+    title: z.string().trim().min(3, 'Title must be at least 3 characters').max(100),
+    description: z.string().trim().min(10, 'Describe the offer in at least 10 characters').max(600),
+    category: z.enum(CATEGORIES, { message: 'Choose a category' }),
+    discountType: z.enum(DISCOUNT_TYPES),
+    discountValue: z.coerce.number().positive('Enter the discount').max(1_000_000).optional(),
+    startsAt: day,
+    endsAt: day,
+    area: z.string().trim().min(2, 'Enter the area or city').max(100),
+    terms: z.string().trim().max(300).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.discountType !== 'deal' && v.discountValue === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['discountValue'], message: 'Enter the discount' });
+    }
+    if (v.discountType === 'percent' && v.discountValue !== undefined && v.discountValue >= 100) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['discountValue'], message: 'Percent must be below 100' });
+    }
+    if (v.endsAt < v.startsAt) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endsAt'], message: 'End date must be on or after the start date' });
+    }
+  });
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type OfferInput = z.infer<typeof offerInputSchema>;

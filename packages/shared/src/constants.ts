@@ -29,6 +29,13 @@ export const CATEGORIES = [
   'Organic',
 ] as const;
 
+export const OFFER_STATUSES = ['pending', 'active', 'rejected', 'expired'] as const;
+export type OfferStatus = (typeof OFFER_STATUSES)[number];
+
+/** percent: 1-99 off, amount: Rs off, deal: free text offer such as "Buy 1 Get 1" (no number). */
+export const DISCOUNT_TYPES = ['percent', 'amount', 'deal'] as const;
+export type DiscountType = (typeof DISCOUNT_TYPES)[number];
+
 export const slugify = (s: string): string =>
   s
     .toLowerCase()

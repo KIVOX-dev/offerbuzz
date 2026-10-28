@@ -1,4 +1,4 @@
-import type { Role, UserStatus } from './constants';
+import type { DiscountType, OfferStatus, Role, UserStatus } from './constants';
 
 export interface UserDTO {
   id: string;
@@ -11,6 +11,8 @@ export interface UserDTO {
   qrUrl?: string;
   /** true once the user has chosen a password (the hash itself is never sent) */
   hasPassword?: boolean;
+  shopName?: string;
+  city?: string;
 }
 
 export interface AuthTokens {
@@ -27,4 +29,27 @@ export interface AuthResponse extends AuthTokens {
 
 export interface ApiError {
   error: { code: string; message: string; details?: unknown };
+}
+
+export interface OfferDTO {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  discountType: DiscountType;
+  discountValue?: number;
+  /** YYYY-MM-DD */
+  startsAt: string;
+  endsAt: string;
+  area: string;
+  terms?: string;
+  status: OfferStatus;
+  views: number;
+  claims: number;
+  createdAt: string;
+}
+
+export interface MyOffersResponse {
+  offers: OfferDTO[];
+  totals: { offers: number; pending: number; active: number; views: number; claims: number };
 }

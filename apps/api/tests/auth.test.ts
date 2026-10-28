@@ -38,7 +38,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   if (mongoose.connection.readyState === 1) {
-    await Promise.all([User.deleteMany({}), Otp.deleteMany({}), mongoose.connection.collection('refreshtokens').deleteMany({})]);
+    await Promise.all([User.deleteMany({}), Otp.deleteMany({}), mongoose.connection.collection('offers').deleteMany({}), mongoose.connection.collection('refreshtokens').deleteMany({})]);
   }
 });
 
@@ -377,5 +377,84 @@ describe('password', () => {
     const admin = await login('boss@example.com', 'Adminpass123');
     expect(admin.status).toBe(403);
     expect(admin.body.error.code).toBe('ADMIN_LOGIN_ONLY');
+  });
+});
+
+describe('vendor offers and profile', () => {
+  const OFFER = {
+    title: 'Flat 30% off',
+    description: 'Thirty percent off on all services this month.',
+    category: 'Salon and Spa',
+    discountType: 'percent',
+    discountValue: 30,
+    startsAt: '2026-11-01',
+    endsAt: '2026-11-30',
+    area: 'RS Puram, Coimbatore',
+  };
+  const authed = (r: request.Test, token: string) => r.set('authorization', `Bearer ${token}`);
+  const post = (token: string, body: Record<string, unknown>) => authed(request(app).post('/api/v1/offers'), token).send(body);
+
+  it('a vendor posts an offer (pending) and sees it with zeroed insights', async () => {
+    const v = await signUp({ role: 'merchant' });
+    const created = await post(v.body.accessToken, OFFER);
+    expect(created.status).toBe(201);
+    expect(created.body.offer).toMatchObject({ title: 'Flat 30% off', status: 'pending', views: 0, claims: 0, endsAt: '2026-11-30' });
+
+    const mine = await authed(request(app).get('/api/v1/offers/mine'), v.body.accessToken);
+    expect(mine.status).toBe(200);
+    expect(mine.body.offers).toHaveLength(1);
+    expect(mine.body.totals).toEqual({ offers: 1, pending: 1, active: 0, views: 0, claims: 0 });
+  });
+
+  it('validates the offer form', async () => {
+    const v = await signUp({ role: 'merchant' });
+    const t = v.body.accessToken;
+    expect((await post(t, { ...OFFER, title: 'ab' })).status).toBe(400);
+    expect((await post(t, { ...OFFER, category: 'Nonsense' })).status).toBe(400);
+    expect((await post(t, { ...OFFER, discountValue: undefined })).status).toBe(400);
+    expect((await post(t, { ...OFFER, discountValue: 100 })).status).toBe(400);
+    expect((await post(t, { ...OFFER, endsAt: '2026-10-01' })).status).toBe(400);
+    // a free text deal needs no number
+    expect((await post(t, { ...OFFER, discountType: 'deal', discountValue: undefined, title: 'Buy 1 Get 1' })).status).toBe(201);
+  });
+
+  it('only vendors can post, and vendors only ever see and delete their own offers', async () => {
+    const a = await signUp({ role: 'merchant' }, 'a@example.com');
+    const b = await signUp({ role: 'merchant' }, 'b@example.com');
+    const customer = await signUp({ role: 'customer' }, 'c@example.com');
+    expect((await post(customer.body.accessToken, OFFER)).status).toBe(403);
+    expect((await request(app).post('/api/v1/offers').send(OFFER)).status).toBe(401);
+
+    const offer = (await post(a.body.accessToken, OFFER)).body.offer;
+    const bList = await authed(request(app).get('/api/v1/offers/mine'), b.body.accessToken);
+    expect(bList.body.offers).toHaveLength(0);
+    expect((await authed(request(app).delete(`/api/v1/offers/${offer.id}`), b.body.accessToken)).status).toBe(404);
+    expect((await authed(request(app).delete(`/api/v1/offers/${offer.id}`), a.body.accessToken)).status).toBe(204);
+  });
+
+  it('an approved offer past its end date reads as expired', async () => {
+    const v = await signUp({ role: 'merchant' });
+    const offer = (await post(v.body.accessToken, { ...OFFER, startsAt: '2020-01-01', endsAt: '2020-01-31' })).body.offer;
+    const Offer = (await import('../src/models/Offer')).Offer;
+    await Offer.updateOne({ _id: offer.id }, { status: 'active' });
+    const mine = await authed(request(app).get('/api/v1/offers/mine'), v.body.accessToken);
+    expect(mine.body.offers[0].status).toBe('expired');
+    expect(mine.body.totals.active).toBe(0);
+  });
+
+  it('PUT /me updates the profile, never the email or role, and guards phone numbers', async () => {
+    const a = await signUp({ role: 'merchant' }, 'a@example.com');
+    const b = await signUp({ role: 'merchant' }, 'b@example.com');
+    const put = (token: string, body: Record<string, unknown>) => authed(request(app).put('/api/v1/me'), token).send(body);
+
+    const ok = await put(a.body.accessToken, { name: 'New Name', shopName: 'Glow Salon', city: 'Coimbatore', phone: '98765 43210', email: 'hacker@x.com', role: 'admin' });
+    expect(ok.status).toBe(200);
+    expect(ok.body.user).toMatchObject({ name: 'New Name', shopName: 'Glow Salon', city: 'Coimbatore', phone: '+919876543210', email: 'a@example.com', role: 'merchant' });
+
+    const clash = await put(b.body.accessToken, { phone: '9876543210' });
+    expect(clash.status).toBe(409);
+    expect((await put(a.body.accessToken, { phone: '12345' })).status).toBe(400);
+    expect((await put(a.body.accessToken, { shopName: '' })).body.user.shopName).toBeUndefined();
+    expect((await request(app).put('/api/v1/me').send({ name: 'x y' })).status).toBe(401);
   });
 });
