@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Logo } from '@/components/Logo';
 import { OtpLogin } from '@/components/OtpLogin';
 
@@ -11,8 +12,11 @@ const CARDS: { role: Role; title: string; tagline: string; icon: string }[] = [
   { role: 'intermediary', title: 'Intermediary', tagline: 'Intermediary: refer shops and earn credits', icon: '🤝' },
 ];
 
-export default function LoginPage() {
-  const [role, setRole] = useState<Role | null>(null);
+function LoginInner() {
+  // a scanned referral QR lands here as /login?role=merchant&ref=CODE: open vendor sign up with the code filled in
+  const params = useSearchParams();
+  const ref = (params.get('ref') ?? '').trim().toUpperCase();
+  const [role, setRole] = useState<Role | null>(params.get('role') === 'merchant' && ref ? 'merchant' : null);
 
   return (
     <main className="container-page py-6 md:py-8">
@@ -24,7 +28,7 @@ export default function LoginPage() {
 
       <div className="mt-6">
         {role ? (
-          <OtpLogin role={role} onBack={() => setRole(null)} />
+          <OtpLogin role={role} onBack={() => setRole(null)} initialReferral={ref} />
         ) : (
           <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
             {CARDS.map((c) => (
@@ -44,5 +48,13 @@ export default function LoginPage() {
       </div>
       <p className="mt-6 text-center text-small text-muted">Just browsing? No account needed to view offers.</p>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
   );
 }

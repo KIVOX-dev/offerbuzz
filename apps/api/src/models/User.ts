@@ -12,6 +12,8 @@ const userSchema = new Schema(
     referralCode: { type: String, required: true, unique: true },
     shopName: { type: String, trim: true },
     city: { type: String, trim: true },
+    // the intermediary who referred this vendor; set once at signup
+    referredBy: { type: Schema.Types.ObjectId, ref: 'User', index: true },
     qrUrl: String, // filled in by the QR service in Phase 5
     status: { type: String, enum: USER_STATUSES, default: 'active', index: true },
     fcmTokens: { type: [String], default: [] },

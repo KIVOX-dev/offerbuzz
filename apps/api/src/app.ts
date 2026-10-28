@@ -9,6 +9,7 @@ import { generalLimiter } from './middleware/rateLimit';
 import { authRouter } from './modules/auth/auth.routes';
 import { offersRouter } from './modules/offers/offers.routes';
 import { profileRouter } from './modules/profile/profile.routes';
+import { walletRouter } from './modules/wallet/wallet.routes';
 import { wrap } from './utils/async';
 
 export function createApp() {
@@ -39,6 +40,7 @@ export function createApp() {
   app.use('/api/v1', authRouter);
   app.use('/api/v1', profileRouter);
   app.use('/api/v1', offersRouter);
+  app.use('/api/v1', walletRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

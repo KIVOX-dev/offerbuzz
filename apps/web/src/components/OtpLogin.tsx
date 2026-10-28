@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AuthResponse } from '@offerbuzz/shared';
-import { ApiRequestError, passwordLogin, sendOtp, setPassword, verifyOtp, type AuthMode } from '@/lib/api';
+import { ApiRequestError, lookupReferral, passwordLogin, sendOtp, setPassword, verifyOtp, type AuthMode } from '@/lib/api';
 import { homeFor, saveSession } from '@/lib/session';
 import { BackButton } from './BackButton';
 import { PasswordInput } from './PasswordInput';
@@ -18,10 +18,21 @@ function passwordProblem(pw: string): string | undefined {
   return undefined;
 }
 
-export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; onBack: () => void }) {
+export function OtpLogin({
+  role,
+  onBack,
+  initialReferral = '',
+}: {
+  role: 'merchant' | 'intermediary';
+  onBack: () => void;
+  initialReferral?: string;
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('signup');
   const [name, setName] = useState('');
+  const [referral, setReferral] = useState(initialReferral);
+  // undefined = not checked yet (or the box is not a full code)
+  const [referrer, setReferrer] = useState<{ valid: boolean; name?: string }>();
   const [email, setEmail] = useState('');
   const [password, setPasswordValue] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -39,12 +50,27 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
   const cleanName = name.trim();
   const roleLabel = role === 'merchant' ? 'Vendor' : 'Intermediary';
   const passwordSignin = mode === 'signin' && !useCode;
+  const showReferral = mode === 'signup' && role === 'merchant';
+  const cleanReferral = referral.trim().toUpperCase();
+  const referralOk = !showReferral || cleanReferral === '' || referrer?.valid === true;
   const detailsValid =
     EMAIL_RE.test(cleanEmail) &&
+    referralOk &&
     (mode === 'signup' ? cleanName.length >= 2 : !passwordSignin || password.length > 0);
   const newPasswordError = password ? passwordProblem(password) : undefined;
   const mismatch = confirm.length > 0 && confirm !== password;
   const passwordValid = !passwordProblem(password) && password === confirm;
+
+  // confirm the referral code as soon as a full 8 character code is in the box
+  useEffect(() => {
+    setReferrer(undefined);
+    if (cleanReferral.length !== 8) return;
+    let stale = false;
+    lookupReferral(cleanReferral).then((r) => !stale && setReferrer(r)).catch(() => !stale && setReferrer(undefined));
+    return () => {
+      stale = true;
+    };
+  }, [cleanReferral]);
 
   function reset(next: { mode?: AuthMode; useCode?: boolean } = {}) {
     if (next.mode) setMode(next.mode);
@@ -105,6 +131,7 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
         mode,
         role,
         name: mode === 'signup' ? cleanName : undefined,
+        referralCode: showReferral && cleanReferral ? cleanReferral : undefined,
       });
       // new accounts, and anyone resetting a forgotten password, must choose a password next
       setPending(session);
@@ -178,6 +205,23 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
             <input id="email" className="input" type="email" inputMode="email" autoComplete="email" value={email}
               onChange={(e) => setEmail(e.target.value)} placeholder="yourname@gmail.com" />
           </div>
+          {showReferral && (
+            <div>
+              <label className="mb-1 block text-small font-semibold" htmlFor="referral">
+                Referral code <span className="font-normal text-muted">(optional)</span>
+              </label>
+              <input id="referral" className="input uppercase tracking-widest" value={referral} maxLength={8}
+                onChange={(e) => setReferral(e.target.value.replace(/[^A-Za-z0-9]/g, ''))} placeholder="From your intermediary" />
+              {referrer?.valid && (
+                <p className="mt-1 text-small text-green-700">
+                  Code accepted{referrer.name ? `: you were referred by ${referrer.name}` : ''}.
+                </p>
+              )}
+              {referrer && !referrer.valid && (
+                <p className="mt-1 text-small text-danger">This code was not found. Check it or clear the box.</p>
+              )}
+            </div>
+          )}
           {passwordSignin && (
             <div>
               <label className="mb-1 block text-small font-semibold" htmlFor="password">

@@ -38,7 +38,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   if (mongoose.connection.readyState === 1) {
-    await Promise.all([User.deleteMany({}), Otp.deleteMany({}), mongoose.connection.collection('offers').deleteMany({}), mongoose.connection.collection('refreshtokens').deleteMany({})]);
+    await Promise.all([User.deleteMany({}), Otp.deleteMany({}), mongoose.connection.collection('offers').deleteMany({}), mongoose.connection.collection('walletentries').deleteMany({}), mongoose.connection.collection('refreshtokens').deleteMany({})]);
   }
 });
 
@@ -457,4 +457,100 @@ describe('vendor offers and profile', () => {
     expect((await put(a.body.accessToken, { shopName: '' })).body.user.shopName).toBeUndefined();
     expect((await request(app).put('/api/v1/me').send({ name: 'x y' })).status).toBe(401);
   });
+});
+
+describe('referrals and intermediary wallet', () => {
+  const authed = (r: request.Test, token: string) => r.set('authorization', `Bearer ${token}`);
+  const wallet = (token: string) => authed(request(app).get('/api/v1/wallet'), token);
+
+  async function referrer() {
+    const res = await signUp({ role: 'intermediary' }, 'agent@example.com');
+    return { token: res.body.accessToken as string, code: res.body.user.referralCode as string, id: res.body.user.id as string };
+  }
+  const vendorVia = (code: string | undefined, email = 'shop@example.com') =>
+    signUp(code ? { role: 'merchant', referralCode: code } : { role: 'merchant' }, email);
+
+  it('a vendor who signs up with a code is linked to that intermediary', async () => {
+    const agent = await referrer();
+    const v = await vendorVia(agent.code);
+    expect(v.status).toBe(200);
+    const doc = await User.findById(v.body.user.id);
+    expect(String(doc?.referredBy)).toBe(agent.id);
+  });
+
+  it('accepts the code in lower case, and ignores unknown codes, customer codes and non-vendor signups', async () => {
+    const agent = await referrer();
+    const lower = await vendorVia(agent.code.toLowerCase(), 'a@example.com');
+    expect(String((await User.findById(lower.body.user.id))?.referredBy)).toBe(agent.id);
+
+    const unknown = await vendorVia('ZZZZZZZZ', 'b@example.com');
+    expect(unknown.status).toBe(200);
+    expect((await User.findById(unknown.body.user.id))?.referredBy).toBeUndefined();
+
+    const cust = await signUp({ role: 'customer' }, 'cust@example.com');
+    const viaCustomerCode = await vendorVia(cust.body.user.referralCode, 'c@example.com');
+    expect((await User.findById(viaCustomerCode.body.user.id))?.referredBy).toBeUndefined();
+
+    const customerSignup = await signUp({ role: 'customer', referralCode: agent.code }, 'd@example.com');
+    expect((await User.findById(customerSignup.body.user.id))?.referredBy).toBeUndefined();
+  });
+
+  it('rejects a malformed code at the door', async () => {
+    const bad = await signUp({ role: 'merchant', referralCode: 'not-a-code' }, 'e@example.com');
+    expect(bad.status).toBe(400);
+  });
+
+  it('GET /referral/:code tells the signup form who referred the vendor (first name only)', async () => {
+    const agent = await referrer();
+    const ok = await request(app).get(`/api/v1/referral/${agent.code}`);
+    expect(ok.body).toEqual({ valid: true, name: 'Test' });
+    expect((await request(app).get('/api/v1/referral/ZZZZZZZZ')).body).toEqual({ valid: false });
+    expect((await request(app).get('/api/v1/referral/bad')).body).toEqual({ valid: false });
+  });
+
+  it('a paid subscription credits the referrer once per month, held for the hold period', async () => {
+    const agent = await referrer();
+    const v = await vendorVia(agent.code);
+    const credit = await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11');
+    expect(credit).toMatchObject({ credits: 30, reason: 'subscription', kind: 'credit' });
+    // the same payment delivered twice changes nothing
+    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11')).toBeNull();
+    // a later month is a new commission
+    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-12')).not.toBeNull();
+
+    const w = await wallet(agent.token);
+    expect(w.status).toBe(200);
+    expect(w.body).toMatchObject({ balance: 60, available: 0, onHold: 60, totalEarned: 60, payoutThreshold: 100, holdDays: 365 });
+    expect(w.body.entries).toHaveLength(2);
+    expect(w.body.shops).toHaveLength(1);
+  });
+
+  it('credits past the hold period become available; payouts reduce what is available', async () => {
+    const agent = await referrer();
+    const v = await vendorVia(agent.code);
+    await svc2().creditReferrerForSubscription(v.body.user.id, '2025-01');
+    const WalletEntry = (await import('../src/models/WalletEntry')).WalletEntry;
+    await WalletEntry.updateOne({ period: '2025-01' }, { availableAt: new Date(Date.now() - 1000) });
+    await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11');
+
+    let w = (await wallet(agent.token)).body;
+    expect(w).toMatchObject({ balance: 60, available: 30, onHold: 30 });
+
+    await WalletEntry.create({ intermediaryId: agent.id, kind: 'debit', reason: 'payout', credits: 10, availableAt: new Date() });
+    w = (await wallet(agent.token)).body;
+    expect(w).toMatchObject({ balance: 50, available: 20, onHold: 30, totalEarned: 60 });
+  });
+
+  it('a vendor with no referrer earns nobody anything, and only intermediaries can open a wallet', async () => {
+    const v = await vendorVia(undefined);
+    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11')).toBeNull();
+    expect((await wallet(v.body.accessToken)).status).toBe(403);
+    expect((await request(app).get('/api/v1/wallet')).status).toBe(401);
+  });
+});
+
+const svc2 = () => walletSvc;
+let walletSvc: typeof import('../src/modules/wallet/wallet.service');
+beforeAll(async () => {
+  walletSvc = await import('../src/modules/wallet/wallet.service');
 });

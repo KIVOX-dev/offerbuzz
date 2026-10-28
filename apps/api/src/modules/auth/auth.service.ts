@@ -142,6 +142,7 @@ export async function verifyOtp(input: {
   mode?: 'signin' | 'signup';
   role?: SelfServeRole;
   name?: string;
+  referralCode?: string;
 }) {
   const identifier = input.email;
   const record = await Otp.findOne({ identifier });
@@ -166,7 +167,14 @@ export async function verifyOtp(input: {
     if (user.role === 'admin') throw forbidden('Admins sign in from the admin login page', 'ADMIN_LOGIN_ONLY');
     return respond(user, false);
   }
-  const { user, isNewUser } = await findOrCreate({ email: input.email }, input.role ?? 'customer', input.name ? { name: input.name } : {});
+  const role = input.role ?? 'customer';
+  const extra: Partial<UserDoc> = input.name ? { name: input.name } : {};
+  if (role === 'merchant' && input.referralCode) {
+    // a code that is not a live intermediary is ignored rather than blocking the signup
+    const referrer = await User.findOne({ referralCode: input.referralCode, role: 'intermediary', status: { $ne: 'blocked' } }).select('_id');
+    if (referrer) extra.referredBy = referrer._id;
+  }
+  const { user, isNewUser } = await findOrCreate({ email: input.email }, role, extra);
   return respond(user, isNewUser);
 }
 

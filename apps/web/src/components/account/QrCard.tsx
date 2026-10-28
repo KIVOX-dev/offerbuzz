@@ -8,19 +8,21 @@ import { useAccount } from './AccountShell';
  * A QR code that is unique to the signed in account: it encodes a link carrying the account's referral code.
  * Generated in the browser, so nothing is sent to a third party.
  */
-export function QrCard({ title, blurb }: { title: string; blurb: string }) {
+export function QrCard({ title, blurb, target = 'home' }: { title: string; blurb: string; target?: 'home' | 'vendor-signup' }) {
   const { user } = useAccount();
   const [link, setLink] = useState('');
   const [svg, setSvg] = useState('');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const url = `${window.location.origin}/?ref=${encodeURIComponent(user.referralCode)}`;
+    // vendor-signup opens the vendor sign up form with this code already filled in
+    const path = target === 'vendor-signup' ? '/login?role=merchant' : '/?';
+    const url = `${window.location.origin}${path}${target === 'vendor-signup' ? '&' : ''}ref=${encodeURIComponent(user.referralCode)}`;
     setLink(url);
     QRCode.toString(url, { type: 'svg', margin: 1, width: 200, errorCorrectionLevel: 'M', color: { dark: '#2e1065', light: '#ffffff' } })
       .then(setSvg)
       .catch(() => setSvg(''));
-  }, [user.referralCode]);
+  }, [user.referralCode, target]);
 
   async function copy() {
     try {

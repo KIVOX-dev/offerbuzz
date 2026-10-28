@@ -9,6 +9,10 @@ module.exports = {
   poweredByHeader: false,
   // Brand images are pre-sized PNGs; skipping the optimizer avoids needing `sharp` in the standalone image.
   images: { unoptimized: true },
+  // /admin has no page of its own; send people to the admin sign in
+  async redirects() {
+    return [{ source: '/admin', destination: '/admin/login', permanent: false }];
+  },
   // Catalyst's gateway answers CORS preflights itself without CORS headers, so browsers cannot call the API
   // cross-origin. Set NEXT_PUBLIC_API_URL=/api/v1 and the browser stays same-origin; this forwards the call.
   async rewrites() {

@@ -53,3 +53,34 @@ export interface MyOffersResponse {
   offers: OfferDTO[];
   totals: { offers: number; pending: number; active: number; views: number; claims: number };
 }
+
+export interface WalletEntryDTO {
+  id: string;
+  kind: 'credit' | 'debit';
+  reason: 'subscription' | 'payout' | 'adjustment';
+  credits: number;
+  /** billing month, YYYY-MM */
+  period?: string;
+  shop?: string;
+  availableAt: string;
+  createdAt: string;
+}
+
+/** Credits are rupees: 1 credit = Rs 1. */
+export interface WalletResponse {
+  balance: number;
+  /** released from the hold period and not yet paid out */
+  available: number;
+  onHold: number;
+  totalEarned: number;
+  payoutThreshold: number;
+  holdDays: number;
+  commissionCredits: number;
+  shops: { id: string; name: string; joinedAt: string }[];
+  entries: WalletEntryDTO[];
+}
+
+export interface ReferralLookup {
+  valid: boolean;
+  name?: string;
+}

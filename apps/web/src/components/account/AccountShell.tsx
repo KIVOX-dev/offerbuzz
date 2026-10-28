@@ -24,7 +24,20 @@ export function useAccount(): AccountCtx {
  * Signed in area for one role: sidebar on desktop, a scrolling tab bar on phones.
  * Sends signed out people to /login and people with another role to their own home.
  */
-export function AccountShell({ role, title, nav, children }: { role: Role; title: string; nav: NavItem[]; children: ReactNode }) {
+export function AccountShell({
+  role,
+  title,
+  nav,
+  loginPath = '/login',
+  children,
+}: {
+  role: Role;
+  title: string;
+  nav: NavItem[];
+  /** where signed out people (and logout) go */
+  loginPath?: string;
+  children: ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUserState] = useState<UserDTO>();
@@ -32,10 +45,10 @@ export function AccountShell({ role, title, nav, children }: { role: Role; title
 
   useEffect(() => {
     const s = loadSession();
-    if (!s) return router.replace('/login');
+    if (!s) return router.replace(loginPath);
     if (s.user.role !== role) return router.replace(homeFor(s.user.role));
     setUserState(s.user);
-  }, [role, router]);
+  }, [role, router, loginPath]);
 
   const setUser = (u: UserDTO) => {
     const s = loadSession();
@@ -49,7 +62,7 @@ export function AccountShell({ role, title, nav, children }: { role: Role; title
     // best effort: the local session is cleared even if the server cannot be reached
     if (s) await api('/auth/logout', { method: 'POST', json: { refreshToken: s.refreshToken } }).catch(() => undefined);
     clearSession();
-    router.replace('/login');
+    router.replace(loginPath);
   };
 
   if (!user) return null;

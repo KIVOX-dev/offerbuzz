@@ -3,6 +3,8 @@ import type {
   AuthResponse,
   AuthTokens,
   MyOffersResponse,
+  ReferralLookup,
+  WalletResponse,
   OfferDTO,
   OfferInput,
   UpdateProfileInput,
@@ -54,7 +56,14 @@ type LoginRole = 'merchant' | 'intermediary' | 'customer';
 export const sendOtp = (email: string, mode: AuthMode, role?: LoginRole) =>
   api<{ sent: boolean; resendIn: number; devOtp?: string }>('/auth/send-otp', { method: 'POST', json: { email, mode, role } });
 
-export const verifyOtp = (body: { email: string; code: string; mode: AuthMode; role?: LoginRole; name?: string }) =>
+export const verifyOtp = (body: {
+  email: string;
+  code: string;
+  mode: AuthMode;
+  role?: LoginRole;
+  name?: string;
+  referralCode?: string;
+}) =>
   api<AuthResponse>('/auth/verify-otp', { method: 'POST', json: body });
 
 export const passwordLogin = (email: string, password: string) =>
@@ -108,3 +117,6 @@ export const createOffer = (body: OfferInput) => authApi<{ offer: OfferDTO }>('/
 export const deleteOffer = (id: string) => authApi<void>(`/offers/${id}`, { method: 'DELETE' });
 export const updateProfile = (body: UpdateProfileInput) =>
   authApi<{ user: UserDTO }>('/me', { method: 'PUT', json: body });
+
+export const lookupReferral = (code: string) => api<ReferralLookup>(`/referral/${encodeURIComponent(code)}`);
+export const getWallet = () => authApi<WalletResponse>('/wallet');

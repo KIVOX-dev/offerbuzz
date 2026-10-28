@@ -23,6 +23,9 @@ const role = z.enum(SELF_SERVE_ROLES);
 const mode = z.enum(['signin', 'signup']).default('signin');
 const name = z.string().trim().min(2, 'Enter your name').max(80);
 
+/** Same alphabet as the generator in the API: no 0, O, 1 or I. */
+export const referralCodeSchema = z.string().trim().toUpperCase().regex(/^[A-HJ-NP-Z2-9]{8}$/, 'Invalid referral code');
+
 /** Login codes are sent by email only. */
 export const sendOtpSchema = z.object({ email, mode, role: role.optional() });
 export const verifyOtpSchema = z
@@ -32,6 +35,8 @@ export const verifyOtpSchema = z
     mode,
     role: role.optional(),
     name: name.optional(),
+    /** intermediary referral code, used only when a vendor signs up */
+    referralCode: referralCodeSchema.optional(),
   })
   .refine((v) => v.mode !== 'signup' || Boolean(v.name), { message: 'Enter your name', path: ['name'] });
 
