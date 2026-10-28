@@ -6,6 +6,7 @@ import type { AuthResponse } from '@offerbuzz/shared';
 import { ApiRequestError, passwordLogin, sendOtp, setPassword, verifyOtp, type AuthMode } from '@/lib/api';
 import { homeFor, saveSession } from '@/lib/session';
 import { BackButton } from './BackButton';
+import { PasswordInput } from './PasswordInput';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -182,7 +183,7 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
               <label className="mb-1 block text-small font-semibold" htmlFor="password">
                 Password
               </label>
-              <input id="password" className="input" type="password" autoComplete="current-password" value={password}
+              <PasswordInput id="password" autoComplete="current-password" value={password}
                 onChange={(e) => setPasswordValue(e.target.value)} placeholder="Your password" maxLength={128} />
             </div>
           )}
@@ -239,7 +240,7 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
             <label className="mb-1 block text-small font-semibold" htmlFor="new-password">
               Password
             </label>
-            <input id="new-password" className="input" type="password" autoComplete="new-password" value={password}
+            <PasswordInput id="new-password" autoComplete="new-password" value={password}
               onChange={(e) => setPasswordValue(e.target.value)} placeholder="At least 8 characters" maxLength={128} />
             {newPasswordError ? (
               <p className="mt-1 text-small text-danger">{newPasswordError}</p>
@@ -251,7 +252,7 @@ export function OtpLogin({ role, onBack }: { role: 'merchant' | 'intermediary'; 
             <label className="mb-1 block text-small font-semibold" htmlFor="confirm-password">
               Re-enter password
             </label>
-            <input id="confirm-password" className="input" type="password" autoComplete="new-password" value={confirm}
+            <PasswordInput id="confirm-password" autoComplete="new-password" value={confirm}
               onChange={(e) => setConfirm(e.target.value)} placeholder="Type it again" maxLength={128} />
             {mismatch && <p className="mt-1 text-small text-danger">Passwords do not match</p>}
           </div>
