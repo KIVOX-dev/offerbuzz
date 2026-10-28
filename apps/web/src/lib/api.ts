@@ -1,6 +1,8 @@
 import type { ApiError, AuthResponse } from '@offerbuzz/shared';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+// In the browser always call same-origin: next.config.js rewrites /api/v1 to the API. Catalyst's gateway
+// answers CORS preflights without CORS headers, so a direct cross-origin call is always blocked.
+const BASE = typeof window !== 'undefined' ? '/api/v1' : (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1');
 
 export class ApiRequestError extends Error {
   constructor(
