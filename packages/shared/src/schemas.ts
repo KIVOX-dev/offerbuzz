@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CATEGORIES, DISCOUNT_TYPES, OTP, SELF_SERVE_ROLES } from './constants';
+import { CATEGORIES, DISCOUNT_TYPES, OTP, ROLES, SELF_SERVE_ROLES, USER_STATUSES } from './constants';
 
 /** Accepts 10 digits, 91XXXXXXXXXX or +91XXXXXXXXXX (Indian mobiles) and returns +91XXXXXXXXXX, or null. */
 export function normalizePhone(input: string): string | null {
@@ -100,3 +100,30 @@ export const offerInputSchema = z
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type OfferInput = z.infer<typeof offerInputSchema>;
+
+// ---- Admin ---------------------------------------------------------------------------------------
+
+export const adminUsersQuerySchema = z.object({
+  role: z.enum(ROLES).optional(),
+  status: z.enum(USER_STATUSES).optional(),
+  q: z.string().trim().max(80).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+});
+/** Only these two moves are allowed from the admin screen: approve/unblock, or block. */
+export const setUserStatusSchema = z.object({ status: z.enum(['active', 'blocked']) });
+export const recordPaymentSchema = z.object({ months: z.coerce.number().int().min(1).max(12).default(1) });
+export const rejectPayoutSchema = z.object({ note: z.string().trim().max(200).optional() });
+
+export const adminOffersQuerySchema = z.object({
+  category: z.enum(CATEGORIES).optional(),
+  /** running = approved and inside its dates today; pending = waiting for approval */
+  view: z.enum(['running', 'pending', 'all']).default('running'),
+});
+export const setOfferStatusSchema = z.object({ status: z.enum(['active', 'rejected']) });
+
+export type AdminOffersQuery = z.infer<typeof adminOffersQuerySchema>;
+export type SetOfferStatusInput = z.infer<typeof setOfferStatusSchema>;
+export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
+export type SetUserStatusInput = z.infer<typeof setUserStatusSchema>;
+export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
+export type RejectPayoutInput = z.infer<typeof rejectPayoutSchema>;

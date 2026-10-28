@@ -10,6 +10,8 @@ import { authRouter } from './modules/auth/auth.routes';
 import { offersRouter } from './modules/offers/offers.routes';
 import { profileRouter } from './modules/profile/profile.routes';
 import { walletRouter } from './modules/wallet/wallet.routes';
+import { adminRouter } from './modules/admin/admin.routes';
+import { analyticsRouter } from './modules/analytics/analytics.routes';
 import { wrap } from './utils/async';
 
 export function createApp() {
@@ -41,6 +43,8 @@ export function createApp() {
   app.use('/api/v1', profileRouter);
   app.use('/api/v1', offersRouter);
   app.use('/api/v1', walletRouter);
+  app.use('/api/v1', adminRouter);
+  app.use('/api/v1', analyticsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

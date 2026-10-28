@@ -32,4 +32,4 @@ export function clearSession(): void {
 }
 
 export const homeFor = (role: AuthResponse['user']['role']): string =>
-  ({ merchant: '/merchant/dashboard', intermediary: '/intermediary/dashboard', admin: '/admin/users', customer: '/' })[role];
+  ({ merchant: '/merchant/dashboard', intermediary: '/intermediary/dashboard', admin: '/admin/dashboard', customer: '/' })[role];

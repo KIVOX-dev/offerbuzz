@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
 
   // already signed in as admin: skip the form
   useEffect(() => {
-    if (loadSession()?.user.role === 'admin') router.replace('/admin/users');
+    if (loadSession()?.user.role === 'admin') router.replace('/admin/dashboard');
   }, [router]);
 
   const valid = EMAIL_RE.test(email.trim()) && password.length >= 8;
@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
     try {
       const session = await adminLogin(email.trim().toLowerCase(), password);
       saveSession(session);
-      router.push('/admin/users');
+      router.push('/admin/dashboard');
     } catch (err) {
       clearSession();
       setError(err instanceof ApiRequestError ? err.message : 'Something went wrong, please try again');

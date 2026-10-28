@@ -1,4 +1,9 @@
 import type {
+  AdminAnalytics,
+  AdminOffersResponse,
+  AdminOverview,
+  AdminUsersResponse,
+  AdminWalletsResponse,
   ApiError,
   AuthResponse,
   AuthTokens,
@@ -120,3 +125,29 @@ export const updateProfile = (body: UpdateProfileInput) =>
 
 export const lookupReferral = (code: string) => api<ReferralLookup>(`/referral/${encodeURIComponent(code)}`);
 export const getWallet = () => authApi<WalletResponse>('/wallet');
+
+// ---- Intermediary payouts ------------------------------------------------------------------------
+export const requestPayout = () => authApi<{ id: string; credits: number }>('/wallet/payout-request', { method: 'POST', json: {} });
+
+// ---- Admin ------------------------------------------------------------------------------------------
+const qs = (o: Record<string, string | number | undefined>) => {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(o)) if (v !== undefined && v !== '') p.set(k, String(v));
+  const s = p.toString();
+  return s ? `?${s}` : '';
+};
+export const getAdminOverview = () => authApi<AdminOverview>('/admin/overview');
+export const getAdminUsers = (q: { role?: string; status?: string; q?: string; page?: number }) =>
+  authApi<AdminUsersResponse>(`/admin/users${qs(q)}`);
+export const setUserStatus = (id: string, status: 'active' | 'blocked') =>
+  authApi<{ id: string; status: string }>(`/admin/users/${id}/status`, { method: 'PATCH', json: { status } });
+export const recordPayment = (id: string, months: number) =>
+  authApi<{ paidUntil: string; referrerCredited: boolean }>(`/admin/vendors/${id}/payment`, { method: 'POST', json: { months } });
+export const getAdminOffers = (q: { view?: string; category?: string }) => authApi<AdminOffersResponse>(`/admin/offers${qs(q)}`);
+export const setOfferStatus = (id: string, status: 'active' | 'rejected') =>
+  authApi<{ id: string; status: string }>(`/admin/offers/${id}/status`, { method: 'PATCH', json: { status } });
+export const getAdminWallets = () => authApi<AdminWalletsResponse>('/admin/wallets');
+export const payPayout = (id: string) => authApi<void>(`/admin/payouts/${id}/pay`, { method: 'POST', json: {} });
+export const rejectPayoutRequest = (id: string, note?: string) =>
+  authApi<void>(`/admin/payouts/${id}/reject`, { method: 'POST', json: { note } });
+export const getAdminAnalytics = () => authApi<AdminAnalytics>('/admin/analytics');

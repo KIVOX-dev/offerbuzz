@@ -1,11 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { WalletResponse } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
 import { QrCard } from '@/components/account/QrCard';
-import { ApiRequestError, getWallet } from '@/lib/api';
+import { ApiRequestError, getWallet, requestPayout } from '@/lib/api';
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 const rs = (n: number) => `Rs ${n.toLocaleString('en-IN')}`;
@@ -27,9 +27,11 @@ export default function IntermediaryDashboard() {
   const { user } = useAccount();
   const [wallet, setWallet] = useState<WalletResponse>();
   const [error, setError] = useState<string>();
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string>();
   const pending = user.status === 'pending';
 
-  useEffect(() => {
+  const load = useCallback(() => {
     getWallet()
       .then(setWallet)
       .catch((e) => {
@@ -37,6 +39,24 @@ export default function IntermediaryDashboard() {
         setError(e instanceof ApiRequestError ? e.message : 'Could not load your wallet');
       });
   }, [router]);
+
+  useEffect(load, [load]);
+
+  async function askForPayout() {
+    setBusy(true);
+    setError(undefined);
+    setNotice(undefined);
+    try {
+      const r = await requestPayout();
+      setNotice(`Payout request for ${rs(r.credits)} sent. We will pay you and mark it as paid here.`);
+      load();
+    } catch (e) {
+      if (e instanceof ApiRequestError && e.code === 'SESSION_EXPIRED') return router.replace('/login');
+      setError(e instanceof ApiRequestError ? e.message : 'Could not send the request');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -67,6 +87,23 @@ export default function IntermediaryDashboard() {
           <Stat label="Shops referred" value={String(wallet?.shops.length ?? 0)}
             hint={wallet ? `${wallet.commissionCredits} credits per paid month` : undefined} />
         </div>
+
+        {wallet && (
+          <div className="surface mt-3 flex flex-wrap items-center justify-between gap-3 p-4">
+            <p className="text-small">
+              {wallet.requested > 0
+                ? `A payout request for ${rs(wallet.requested)} is waiting to be paid.`
+                : wallet.requestable >= wallet.payoutThreshold
+                  ? `You can request ${rs(wallet.requestable)} now.`
+                  : `You can request a payout once ${rs(wallet.payoutThreshold)} is available. You have ${rs(wallet.requestable)}.`}
+            </p>
+            <button type="button" className="btn-primary" onClick={askForPayout}
+              disabled={busy || pending || wallet.requested > 0 || wallet.requestable < wallet.payoutThreshold}>
+              {busy ? 'Sending...' : 'Request payout'}
+            </button>
+          </div>
+        )}
+        {notice && <p role="status" className="mt-2 text-small font-semibold text-green-700">{notice}</p>}
       </section>
 
       <QrCard

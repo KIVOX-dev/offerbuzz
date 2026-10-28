@@ -205,3 +205,23 @@ export const EyeStatIcon = (p: IconProps) => (
     <path d="M3 3v18h18M7 15l4-4 3 3 5-6" />
   </Svg>
 );
+
+export const UsersIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.5.6 4 2.5 4 6" />
+  </Svg>
+);
+export const WalletIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 7a2 2 0 0 1 2-2h13v4M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2Z" />
+    <circle cx="16.5" cy="14.5" r="1" />
+  </Svg>
+);
+export const OffersIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 12V4h8l10 10-8 8L3 12Z" />
+    <circle cx="7.5" cy="8.5" r="1.2" />
+    <path d="M14 8l-4 4" />
+  </Svg>
+);

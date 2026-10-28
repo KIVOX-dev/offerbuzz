@@ -36,6 +36,9 @@ export type OfferStatus = (typeof OFFER_STATUSES)[number];
 export const DISCOUNT_TYPES = ['percent', 'amount', 'deal'] as const;
 export type DiscountType = (typeof DISCOUNT_TYPES)[number];
 
+export const PAYOUT_STATUSES = ['pending', 'paid', 'rejected'] as const;
+export type PayoutStatus = (typeof PAYOUT_STATUSES)[number];
+
 export const slugify = (s: string): string =>
   s
     .toLowerCase()

@@ -38,7 +38,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   if (mongoose.connection.readyState === 1) {
-    await Promise.all([User.deleteMany({}), Otp.deleteMany({}), mongoose.connection.collection('offers').deleteMany({}), mongoose.connection.collection('walletentries').deleteMany({}), mongoose.connection.collection('refreshtokens').deleteMany({})]);
+    await Promise.all([User.deleteMany({}), Otp.deleteMany({}), mongoose.connection.collection('offers').deleteMany({}), mongoose.connection.collection('walletentries').deleteMany({}), mongoose.connection.collection('subscriptions').deleteMany({}), mongoose.connection.collection('visits').deleteMany({}), mongoose.connection.collection('pagehits').deleteMany({}), mongoose.connection.collection('payoutrequests').deleteMany({}), mongoose.connection.collection('refreshtokens').deleteMany({})]);
   }
 });
 
@@ -553,4 +553,241 @@ const svc2 = () => walletSvc;
 let walletSvc: typeof import('../src/modules/wallet/wallet.service');
 beforeAll(async () => {
   walletSvc = await import('../src/modules/wallet/wallet.service');
+});
+
+describe('admin area', () => {
+  const ADMIN = { email: 'boss@example.com', password: 'Adminpass123' };
+  const authed = (r: request.Test, token: string) => r.set('authorization', `Bearer ${token}`);
+  const OFFER = {
+    title: 'Flat 30% off',
+    description: 'Thirty percent off on all services this month.',
+    category: 'Salon and Spa',
+    discountType: 'percent',
+    discountValue: 30,
+    startsAt: '2020-01-01',
+    endsAt: '2099-12-31',
+    area: 'RS Puram, Coimbatore',
+  };
+
+  async function adminToken() {
+    await User.create({
+      email: ADMIN.email, role: 'admin', status: 'active', referralCode: 'ADMINREF',
+      passwordHash: await svc.hashPassword(ADMIN.password),
+    });
+    const res = await request(app).post('/api/v1/auth/admin/login').send(ADMIN);
+    return res.body.accessToken as string;
+  }
+  const get = (t: string, url: string) => authed(request(app).get(`/api/v1${url}`), t);
+  const send2 = (t: string, method: 'post' | 'patch', url: string, body: Record<string, unknown> = {}) =>
+    authed(request(app)[method](`/api/v1${url}`), t).send(body);
+
+  /** An approved intermediary and a vendor they referred. */
+  async function agentAndVendor() {
+    const agent = await signUp({ role: 'intermediary' }, 'agent@example.com');
+    await User.updateOne({ _id: agent.body.user.id }, { status: 'active' });
+    const vendor = await signUp({ role: 'merchant', referralCode: agent.body.user.referralCode }, 'shop@example.com');
+    return { agent: agent.body, vendor: vendor.body };
+  }
+
+  it('only an admin can use /admin routes', async () => {
+    const vendor = await signUp({ role: 'merchant' });
+    expect((await request(app).get('/api/v1/admin/overview')).status).toBe(401);
+    expect((await get(vendor.body.accessToken, '/admin/overview')).status).toBe(403);
+    expect((await get(await adminToken(), '/admin/overview')).status).toBe(200);
+  });
+
+  it('counts vendors that have paid, after the admin records a payment', async () => {
+    const t = await adminToken();
+    const { agent, vendor } = await agentAndVendor();
+    await signUp({ role: 'merchant' }, 'solo@example.com');
+
+    let o = (await get(t, '/admin/overview')).body;
+    expect(o.vendors).toEqual({ total: 2, subscribed: 0, unsubscribed: 2 });
+
+    const paid = await send2(t, 'post', `/admin/vendors/${vendor.user.id}/payment`, { months: 2 });
+    expect(paid.status).toBe(200);
+    expect(paid.body.referrerCredited).toBe(true);
+    o = (await get(t, '/admin/overview')).body;
+    expect(o.vendors).toEqual({ total: 2, subscribed: 1, unsubscribed: 1 });
+
+    // two months paid = two commissions of 30 for the intermediary
+    const wallet = await authed(request(app).get('/api/v1/wallet'), agent.accessToken);
+    expect(wallet.body.balance).toBe(60);
+    // paying again extends the plan and credits the following months, never the same month twice
+    await send2(t, 'post', `/admin/vendors/${vendor.user.id}/payment`, { months: 1 });
+    expect((await authed(request(app).get('/api/v1/wallet'), agent.accessToken)).body.balance).toBe(90);
+
+    expect((await send2(t, 'post', `/admin/vendors/${agent.user.id}/payment`, {})).status).toBe(400);
+  });
+
+  it('lists users with filters, search and subscription state', async () => {
+    const t = await adminToken();
+    const { vendor } = await agentAndVendor();
+    await send2(t, 'post', `/admin/vendors/${vendor.user.id}/payment`, { months: 1 });
+
+    const vendors = (await get(t, '/admin/users?role=merchant')).body;
+    expect(vendors.total).toBe(1);
+    expect(vendors.users[0]).toMatchObject({ email: 'shop@example.com', subscribed: true });
+    expect(vendors.users[0].referredBy).toBe('Test Shopper');
+    expect((await get(t, '/admin/users?q=agent')).body.users).toHaveLength(1);
+    expect((await get(t, '/admin/users?role=bogus')).status).toBe(400);
+  });
+
+  it('approves an intermediary, blocks a user (and signs them out), but never admins or yourself', async () => {
+    const t = await adminToken();
+    const pending = await signUp({ role: 'intermediary' }, 'new@example.com');
+    expect(pending.body.user.status).toBe('pending');
+    expect((await send2(t, 'patch', `/admin/users/${pending.body.user.id}/status`, { status: 'active' })).status).toBe(200);
+    expect((await User.findById(pending.body.user.id))?.status).toBe('active');
+
+    await send2(t, 'patch', `/admin/users/${pending.body.user.id}/status`, { status: 'blocked' });
+    const refresh = await request(app).post('/api/v1/auth/refresh').send({ refreshToken: pending.body.refreshToken });
+    expect(refresh.status).toBe(401);
+
+    const adminDoc = await User.findOne({ email: ADMIN.email });
+    expect((await send2(t, 'patch', `/admin/users/${adminDoc!.id}/status`, { status: 'blocked' })).status).toBe(403);
+    expect((await send2(t, 'patch', `/admin/users/${pending.body.user.id}/status`, { status: 'weird' })).status).toBe(400);
+  });
+
+  it('payout flow: needs 100 available, one request at a time, admin pays and the wallet is debited', async () => {
+    const t = await adminToken();
+    const { agent, vendor } = await agentAndVendor();
+    const WalletEntry = (await import('../src/models/WalletEntry')).WalletEntry;
+    const request1 = () => authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({});
+
+    // nothing earned yet
+    expect((await request1()).body.error.code).toBe('PAYOUT_MINIMUM');
+
+    // 4 commissions of 30 = 120, released from the hold period
+    for (const period of ['2025-01', '2025-02', '2025-03', '2025-04']) {
+      await walletSvc.creditReferrerForSubscription(vendor.user.id, period);
+    }
+    await WalletEntry.updateMany({}, { availableAt: new Date(Date.now() - 1000) });
+    const ok = await request1();
+    expect(ok.status).toBe(201);
+    expect(ok.body.credits).toBe(120);
+    expect((await request1()).status).toBe(409);
+
+    const w = await authed(request(app).get('/api/v1/wallet'), agent.accessToken);
+    expect(w.body).toMatchObject({ available: 120, requested: 120, requestable: 0 });
+
+    const wallets = (await get(t, '/admin/wallets')).body;
+    expect(wallets.payoutThreshold).toBe(100);
+    expect(wallets.wallets[0]).toMatchObject({ balance: 120, available: 120, requested: 120, shops: 1 });
+    expect(wallets.payouts[0]).toMatchObject({ credits: 120, status: 'pending' });
+
+    const paid = await send2(t, 'post', `/admin/payouts/${ok.body.id}/pay`);
+    expect(paid.status).toBe(204);
+    expect((await send2(t, 'post', `/admin/payouts/${ok.body.id}/pay`)).status).toBe(409);
+    const after = (await authed(request(app).get('/api/v1/wallet'), agent.accessToken)).body;
+    expect(after).toMatchObject({ balance: 0, available: 0, requested: 0, totalEarned: 120 });
+  });
+
+  it('rejecting a payout leaves the credits in the wallet, and pending intermediaries cannot request', async () => {
+    const t = await adminToken();
+    const { agent, vendor } = await agentAndVendor();
+    const WalletEntry = (await import('../src/models/WalletEntry')).WalletEntry;
+    for (const period of ['2025-01', '2025-02', '2025-03', '2025-04']) await walletSvc.creditReferrerForSubscription(vendor.user.id, period);
+    await WalletEntry.updateMany({}, { availableAt: new Date(Date.now() - 1000) });
+    const req = await authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({});
+    const rej = await send2(t, 'post', `/admin/payouts/${req.body.id}/reject`, { note: 'Bank details missing' });
+    expect(rej.status).toBe(204);
+    const w = (await authed(request(app).get('/api/v1/wallet'), agent.accessToken)).body;
+    expect(w).toMatchObject({ balance: 120, available: 120, requested: 0, requestable: 120 });
+
+    await User.updateOne({ _id: agent.user.id }, { status: 'pending' });
+    const again = await authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({});
+    expect(again.status).toBe(403);
+  });
+
+  it('shows running offers by category, and only approved offers inside their dates run', async () => {
+    const t = await adminToken();
+    const vendor = await signUp({ role: 'merchant' }, 'v@example.com');
+    const post = (body: Record<string, unknown>) =>
+      authed(request(app).post('/api/v1/offers'), vendor.body.accessToken).send(body);
+    const salon = (await post(OFFER)).body.offer;
+    const fashion = (await post({ ...OFFER, category: 'Fashion', title: 'Fashion sale' })).body.offer;
+    const future = (await post({ ...OFFER, category: 'Fashion', title: 'Later', startsAt: '2098-01-01' })).body.offer;
+    const old = (await post({ ...OFFER, category: 'Jewellery', title: 'Old', endsAt: '2020-02-01' })).body.offer;
+
+    // nothing runs until it is approved
+    let res = (await get(t, '/admin/offers')).body;
+    expect(res.offers).toHaveLength(0);
+    expect(res.categories.find((c: { category: string }) => c.category === 'Fashion')).toMatchObject({ running: 0, pending: 2 });
+    expect((await get(t, '/admin/offers?view=pending')).body.offers).toHaveLength(4);
+
+    for (const o of [salon, fashion, future, old]) {
+      expect((await send2(t, 'patch', `/admin/offers/${o.id}/status`, { status: 'active' })).status).toBe(200);
+    }
+    res = (await get(t, '/admin/offers')).body;
+    expect(res.offers.map((o: { title: string }) => o.title).sort()).toEqual(['Fashion sale', 'Flat 30% off']);
+    expect(res.offers[0].vendor).toBeTruthy();
+    expect(res.categories[0]).toMatchObject({ running: 1 });
+    expect(res.categories.find((c: { category: string }) => c.category === 'Fashion')).toMatchObject({ running: 1, pending: 0 });
+
+    expect((await get(t, '/admin/offers?category=Fashion')).body.offers).toHaveLength(1);
+    expect((await get(t, '/admin/offers?category=Nope')).status).toBe(400);
+
+    await send2(t, 'patch', `/admin/offers/${salon.id}/status`, { status: 'rejected' });
+    expect((await get(t, '/admin/offers')).body.offers).toHaveLength(1);
+    expect((await get(t, '/admin/overview')).body.pendingOffers).toBe(0);
+    expect((await send2(t, 'patch', `/admin/offers/${salon.id}/status`, { status: 'expired' })).status).toBe(400);
+  });
+});
+
+describe('site analytics', () => {
+  const VID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+  const track = (body: Record<string, unknown>, ua = 'Mozilla/5.0 (Windows NT 10.0) Chrome/120') =>
+    request(app).post('/api/v1/track').set('user-agent', ua).send(body);
+
+  async function admin() {
+    await User.create({ email: 'boss@example.com', role: 'admin', status: 'active', referralCode: 'ADMINREF', passwordHash: await svc.hashPassword('Adminpass123') });
+    return (await request(app).post('/api/v1/auth/admin/login').send({ email: 'boss@example.com', password: 'Adminpass123' })).body.accessToken as string;
+  }
+  const analytics = (t: string) => request(app).get('/api/v1/admin/analytics').set('authorization', `Bearer ${t}`);
+
+  it('counts unique visitors once a day, and page views every time', async () => {
+    const t = await admin();
+    expect((await track({ visitorId: VID, path: '/' })).status).toBe(204);
+    await track({ visitorId: VID, path: '/login' });
+    await track({ visitorId: 'zzzzzzzz-1111-2222-3333-444444444444', path: '/' });
+
+    const a = (await analytics(t)).body;
+    expect(a.visitors.today).toBe(2);
+    expect(a.pageViews.today).toBe(3);
+    expect(a.visitors.last7).toBe(2);
+    expect(a.series).toHaveLength(14);
+    expect(a.series[13]).toMatchObject({ visitors: 2, views: 3 });
+    expect(a.topPages[0]).toEqual({ path: '/', views: 2 });
+  });
+
+  it('ignores bots, bad ids, private paths and Do Not Track, and always answers 204', async () => {
+    const t = await admin();
+    expect((await track({ visitorId: VID, path: '/' }, 'Googlebot/2.1')).status).toBe(204);
+    expect((await track({ visitorId: 'short', path: '/' })).status).toBe(204);
+    expect((await track({ visitorId: VID, path: '/admin/users' })).status).toBe(204);
+    expect((await track({ visitorId: VID, path: '/api/v1/me' })).status).toBe(204);
+    expect((await track({ visitorId: VID, path: 'no-slash' })).status).toBe(204);
+    expect((await request(app).post('/api/v1/track').set('dnt', '1').send({ visitorId: VID, path: '/' })).status).toBe(204);
+    expect((await request(app).post('/api/v1/track').send({})).status).toBe(204);
+    expect((await analytics(t)).body.pageViews.today).toBe(0);
+  });
+
+  it('strips query strings so a page is counted as one page', async () => {
+    const t = await admin();
+    await track({ visitorId: VID, path: '/login?role=merchant&ref=ABCD2345' });
+    await track({ visitorId: VID, path: '/login/' });
+    expect((await analytics(t)).body.topPages).toEqual([{ path: '/login', views: 2 }]);
+  });
+
+  it('counts new sign ups, and only admins can read the numbers', async () => {
+    const t = await admin();
+    await signUp({ role: 'customer' }, 'new1@example.com');
+    await signUp({ role: 'merchant' }, 'new2@example.com');
+    const a = (await analytics(t)).body;
+    expect(a.newUsers.today).toBe(3); // the two sign ups plus the admin account made just now
+    const vendor = await signUp({ role: 'merchant' }, 'new3@example.com');
+    expect((await analytics(vendor.body.accessToken)).status).toBe(403);
+    expect((await request(app).get('/api/v1/admin/analytics')).status).toBe(401);
+  });
 });
