@@ -144,6 +144,8 @@ export const searchOffers = (p: { q?: string; category?: string; lat?: number; l
   return api<NearbyOffersResponse>(`/offers/search?${params}`);
 };
 
+export const getOffersByIds = (ids: string[]) => api<NearbyOffersResponse>(`/offers/by-ids?ids=${ids.map(encodeURIComponent).join(',')}`);
+
 export const lookupReferral = (code: string) => api<ReferralLookup>(`/referral/${encodeURIComponent(code)}`);
 export const getWallet = () => authApi<WalletResponse>('/wallet');
 

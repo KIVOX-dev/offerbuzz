@@ -86,10 +86,19 @@ function SectionHead({ title, live, href = '/search' }: { title: string; live?: 
           </span>
         )}
       </h2>
-      <Link href={href} className="btn-ghost btn-sm gap-1">
+      <Link href={href} className="btn-primary btn-sm gap-1 !rounded-full px-4">
         View all <ChevronRightIcon size={16} />
       </Link>
     </div>
+  );
+}
+
+/** A full-width "View all" button under a list, easy to tap on a phone. */
+function ViewAllButton({ href = '/search', label = 'View all offers' }: { href?: string; label?: string }) {
+  return (
+    <Link href={href} className="btn-outline mt-4 w-full gap-2 !border-2 !font-bold">
+      {label} <ChevronRightIcon size={18} />
+    </Link>
   );
 }
 
@@ -299,6 +308,7 @@ export default function Home() {
                       </Reveal>
                     ))}
                   </div>
+                  <ViewAllButton />
                 </>
               ) : (
                 <div className="surface flex flex-col items-center gap-3 p-8 text-center">
@@ -330,13 +340,6 @@ export default function Home() {
                       <Reveal key={d.title} delay={i * 60}>
                         <article className="surface-hover relative h-full overflow-hidden rounded-lg">
                           <span className="badge-discount absolute left-2 top-2 z-10">{d.off}</span>
-                          <button
-                            type="button"
-                            aria-label="Save offer"
-                            className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-purple-700 shadow-card transition active:scale-90 hover:text-danger"
-                          >
-                            <HeartIcon size={16} />
-                          </button>
                           <div
                             style={{ backgroundImage: `linear-gradient(120deg, ${categories[d.cat].from}, ${categories[d.cat].to})` }}
                             className="aspect-[4/3] overflow-hidden"
@@ -355,6 +358,7 @@ export default function Home() {
                     ))}
                   </div>
                 )}
+                {shownDeals.length > 0 && <ViewAllButton />}
               </>
             )}
           </div>

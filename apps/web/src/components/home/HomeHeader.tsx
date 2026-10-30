@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSaved } from '@/lib/saved';
 import { ChevronDownIcon, DuoCategoryIcon, HeartIcon, PinIcon } from '../Icons';
 import { Logo } from '../Logo';
 import { SearchBox } from './SearchBox';
@@ -37,6 +38,11 @@ export function HomeHeader({
   locationHint: string;
   onLocation: () => void;
 }) {
+  const { count: savedCount } = useSaved();
+  const savedBadge = savedCount > 0 && (
+    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-ink">{savedCount}</span>
+  );
+
   const location = (
     <button type="button" onClick={onLocation} aria-label="Change location" className="flex min-w-0 items-center gap-2.5 text-left">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 md:h-auto md:w-auto md:bg-transparent">
@@ -74,8 +80,9 @@ export function HomeHeader({
         </div>
         <div className="mt-3 flex items-center gap-2 md:hidden">
           {search}
-          <Link href="/login" aria-label="Saved offers" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white transition active:scale-95">
+          <Link href="/saved" aria-label="Saved offers" className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white transition active:scale-95">
             <HeartIcon />
+            {savedBadge}
           </Link>
         </div>
 
@@ -84,8 +91,9 @@ export function HomeHeader({
           <Logo height={48} />
           {location}
           {desktopSearch}
-          <Link href="/login" aria-label="Saved offers" className="btn-ghost !px-2">
+          <Link href="/saved" aria-label="Saved offers" className="btn-ghost relative !px-2">
             <HeartIcon />
+            {savedBadge}
           </Link>
         </div>
       </div>

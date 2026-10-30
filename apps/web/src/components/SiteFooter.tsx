@@ -34,42 +34,42 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
 function Heading({ children }: { children: string }) {
   return (
     <div className="mb-5 flex items-center gap-3">
-      <h2 className="font-mono text-[12px] uppercase tracking-wider text-purple-300">{children}</h2>
-      <span aria-hidden className="h-px max-w-[120px] flex-1 bg-purple-300/40" />
+      <h2 className="font-mono text-[12px] font-bold uppercase tracking-wider text-purple-900">{children}</h2>
+      <span aria-hidden className="h-px max-w-[120px] flex-1 bg-purple-900/30" />
     </div>
   );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="mt-10 bg-[#150a3a] text-purple-100">
+    <footer className="mt-10 bg-accent text-ink">
       {/* dotted top edge */}
       <div
         aria-hidden
         className="h-2"
-        style={{ backgroundImage: 'repeating-linear-gradient(90deg, #a78bfa 0 4px, transparent 4px 8px)' }}
+        style={{ backgroundImage: 'repeating-linear-gradient(90deg, #4c1d95 0 4px, transparent 4px 8px)' }}
       />
       <div className="container-page py-12">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2fr)]">
           {/* brand: logo, line, then address and contact right below */}
           <div>
-            <Logo height={60} variant="light" />
-            <p className="mt-5 max-w-sm text-body leading-relaxed text-purple-200">
+            <Logo height={76} variant="transparent" />
+            <p className="mt-5 max-w-sm text-body font-medium leading-relaxed text-ink/80">
               Your path to the best local offers: shops, deals and savings near you, all in one place.
             </p>
-            <ul className="mt-6 space-y-3 text-body text-white">
+            <ul className="mt-6 space-y-3 text-body font-medium text-ink">
               <li>
                 <address className="flex items-start gap-3 not-italic">
-                  <PinIcon size={18} className="mt-0.5 shrink-0 text-purple-300" />
+                  <PinIcon size={18} className="mt-0.5 shrink-0 text-purple-900" />
                   <span>#3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045</span>
                 </address>
               </li>
               <li className="flex items-center gap-3">
-                <PhoneIcon size={18} className="shrink-0 text-purple-300" />
-                <a href="tel:+919345975747" className="transition hover:text-accent">+91 93459 75747</a>
+                <PhoneIcon size={18} className="shrink-0 text-purple-900" />
+                <a href="tel:+919345975747" className="transition hover:text-purple-800">+91 93459 75747</a>
               </li>
               <li className="flex items-center gap-3">
-                <ClockIcon size={18} className="shrink-0 text-purple-300" /> 09:00 AM – 09:00 PM
+                <ClockIcon size={18} className="shrink-0 text-purple-900" /> 09:00 AM – 09:00 PM
               </li>
             </ul>
           </div>
@@ -82,14 +82,14 @@ export function SiteFooter() {
                 <ul className="space-y-3.5">
                   {col.links.map((l) => (
                     <li key={l.label}>
-                      <Link href={l.href} className="text-body text-white transition hover:text-accent">
+                      <Link href={l.href} className="text-body font-medium text-ink transition hover:text-purple-800">
                         {l.label}
                       </Link>
                     </li>
                   ))}
                   {col.title === 'Legal' && (
                     <li>
-                      <CookieSettingsButton className="text-body text-white transition hover:text-accent" />
+                      <CookieSettingsButton className="text-body font-medium text-ink transition hover:text-purple-800" />
                     </li>
                   )}
                 </ul>
@@ -98,7 +98,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <p className="mt-12 border-t border-purple-300/20 pt-6 text-small text-purple-300">© 2026 OfferBuzz</p>
+        <p className="mt-12 border-t border-purple-900/20 pt-6 text-small font-medium text-ink/70">© 2026 OfferBuzz</p>
       </div>
     </footer>
   );

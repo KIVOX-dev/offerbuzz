@@ -231,6 +231,30 @@ offersRouter.get(
   }),
 );
 
+// The customer's saved offers: live ones only, in the order requested. Not counted as views.
+offersRouter.get(
+  '/offers/by-ids',
+  wrap(async (req, res) => {
+    const ids = String(req.query.ids ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s, i, all) => mongoose.isValidObjectId(s) && all.indexOf(s) === i)
+      .slice(0, 50);
+    const docs = ids.length ? await Offer.find({ _id: { $in: ids }, ...liveWindow() }) : [];
+    const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName location locationAddress placeId');
+    const byId = new Map(vendors.map((v) => [String(v._id), v]));
+    const byOffer = new Map(docs.map((o) => [String(o._id), o]));
+    const offers = ids.flatMap((id) => {
+      const o = byOffer.get(id);
+      const v = o && byId.get(String(o.merchantId));
+      const dto = o && v ? toPublicOffer(o, v) : undefined;
+      return dto ? [dto] : [];
+    });
+    const body: NearbyOffersResponse = { offers };
+    res.json(body);
+  }),
+);
+
 offersRouter.get(
   '/offers/:id',
   wrap(async (req, res) => {

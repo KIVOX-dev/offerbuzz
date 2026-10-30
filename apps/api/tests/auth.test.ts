@@ -496,6 +496,12 @@ describe('vendor offers and profile', () => {
     await Offer.updateOne({ _id: b.id }, { status: 'pending' });
     expect((await request(app).get('/api/v1/offers/nearby?lat=11.0&lng=76.96&radiusKm=50')).body.offers).toHaveLength(1);
 
+    // saved offers: live ones only, in the order asked, junk ids ignored
+    const saved = await request(app).get(`/api/v1/offers/by-ids?ids=${b.id},${a.id},not-an-id`);
+    expect(saved.status).toBe(200);
+    expect(saved.body.offers.map((o: { title: string }) => o.title)).toEqual(['Near deal']);
+    expect((await request(app).get('/api/v1/offers/by-ids')).body.offers).toEqual([]);
+
     const one = await request(app).get(`/api/v1/offers/${a.id}`);
     expect(one.status).toBe(200);
     expect(one.body.offer.shop.location).toMatchObject({ lat: 11.0, lng: 76.96 });

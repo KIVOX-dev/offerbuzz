@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { GridIcon, HeartIcon, HomeIcon, PinIcon, QrIcon } from '../Icons';
+import { useSaved } from '@/lib/saved';
 import { ScanButton } from '../Scanner';
 
 export type NavKey = 'home' | 'categories' | 'near';
@@ -14,6 +15,7 @@ const SLOTS = 5; // home, categories, scan, near, saved
  * the camera scanner.
  */
 export function BottomNav({ active, onSelect, onScan }: { active: NavKey; onSelect: (k: NavKey) => void; onScan: (text: string) => void }) {
+  const { count: savedCount } = useSaved();
   const slot = { home: 0, categories: 1, near: 3 }[active];
   const item = (key: NavKey, label: string, icon: ReactNode) => (
     <button
@@ -46,8 +48,13 @@ export function BottomNav({ active, onSelect, onScan }: { active: NavKey; onSele
           </ScanButton>
         </div>
         {item('near', 'Near you', <PinIcon size={22} />)}
-        <Link href="/login" className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-muted">
-          <HeartIcon size={22} />
+        <Link href="/saved" className="relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-muted">
+          <span className="relative">
+            <HeartIcon size={22} />
+            {savedCount > 0 && (
+              <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">{savedCount}</span>
+            )}
+          </span>
           Saved
         </Link>
       </div>

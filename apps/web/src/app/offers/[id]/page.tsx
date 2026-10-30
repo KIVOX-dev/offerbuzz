@@ -6,10 +6,11 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { PublicOfferDTO } from '@offerbuzz/shared';
 import { Logo } from '@/components/Logo';
-import { TagIcon } from '@/components/Icons';
+import { HeartIcon, TagIcon } from '@/components/Icons';
 import { ShopMap } from '@/components/maps/ShopMap';
 import { discountLabel } from '@/components/OfferPreview';
 import { ApiRequestError, getPublicOffer } from '@/lib/api';
+import { useSaved } from '@/lib/saved';
 
 const fmt = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -17,6 +18,7 @@ export default function OfferPage() {
   const { id } = useParams<{ id: string }>();
   const [offer, setOffer] = useState<PublicOfferDTO>();
   const [error, setError] = useState('');
+  const { has, toggle } = useSaved();
 
   useEffect(() => {
     getPublicOffer(id)
@@ -59,6 +61,10 @@ export default function OfferPage() {
                 <p className="whitespace-pre-line text-body">{offer.description}</p>
                 <p className="text-small font-semibold">Valid {fmt(offer.startsAt)} to {fmt(offer.endsAt)}</p>
                 {offer.terms && <p className="text-small text-muted">Terms: {offer.terms}</p>}
+                <button type="button" onClick={() => toggle(offer.id)} aria-pressed={has(offer.id)} className="btn-outline mt-2 w-full gap-2">
+                  <HeartIcon size={18} fill={has(offer.id) ? 'currentColor' : 'none'} className={has(offer.id) ? 'text-danger' : ''} />
+                  {has(offer.id) ? 'Saved' : 'Save offer'}
+                </button>
               </div>
             </article>
 
