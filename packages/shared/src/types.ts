@@ -87,6 +87,8 @@ export interface AiRewriteResponse {
   description: string;
   /** `basic` = only tidied up, because the AI model could not be reached */
   source: 'ai' | 'basic';
+  /** why it was only tidied: no key set on the server, or the models were busy or down */
+  note?: 'no_key' | 'unavailable';
 }
 
 export interface NearbyOffersResponse {

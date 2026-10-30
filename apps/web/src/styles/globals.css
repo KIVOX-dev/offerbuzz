@@ -109,3 +109,34 @@
     animation: none;
   }
 }
+
+/* ---- loading screen ---- */
+@keyframes ob-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+.ob-bar {
+  animation: ob-bar 1.3s ease-in-out infinite;
+}
+@keyframes ob-pop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+.ob-pop {
+  animation: ob-pop 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ob-bar,
+  .ob-pop {
+    animation: none;
+  }
+}

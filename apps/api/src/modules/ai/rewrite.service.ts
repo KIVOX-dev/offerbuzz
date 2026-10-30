@@ -1,4 +1,5 @@
 import type { AiRewriteInput, AiRewriteResponse } from '@offerbuzz/shared';
+import { env } from '../../config/env';
 import { chatJson } from '../../services/groq';
 
 const MAX = 600;
@@ -36,5 +37,5 @@ export async function rewriteDescription(input: AiRewriteInput): Promise<AiRewri
   } catch {
     /* no key, every model busy, or an unreadable answer: fall through */
   }
-  return { description: basicTidy(input.description), source: 'basic' };
+  return { description: basicTidy(input.description), source: 'basic', note: env().GROQ_API_KEY ? 'unavailable' : 'no_key' };
 }

@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
+import { Spinner } from '@/components/PageLoader';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
 import type { MyOffersResponse, OfferDTO } from '@offerbuzz/shared';
@@ -153,7 +154,7 @@ export default function MerchantDashboard() {
         {error && <p role="alert" className="mb-3 text-small text-danger">{error}</p>}
 
         {!data ? (
-          <p className="text-muted">Loading...</p>
+          <Spinner label="Loading your offers" />
         ) : data.offers.length === 0 ? (
           <div className="surface flex flex-col items-center p-8 text-center">
             <DuoTagIcon size={56} />

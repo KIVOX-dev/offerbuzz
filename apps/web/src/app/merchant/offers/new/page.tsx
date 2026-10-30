@@ -68,7 +68,7 @@ export default function NewOfferPage() {
 
   // AI rewrite of the description: shown as a suggestion the vendor accepts or ignores
   const [rewriting, setRewriting] = useState(false);
-  const [suggestion, setSuggestion] = useState<{ text: string; source: 'ai' | 'basic' }>();
+  const [suggestion, setSuggestion] = useState<{ text: string; source: 'ai' | 'basic'; note?: 'no_key' | 'unavailable' }>();
   const [rewriteError, setRewriteError] = useState('');
   async function rewrite() {
     setRewriteError('');
@@ -79,7 +79,7 @@ export default function NewOfferPage() {
         category: (user.category ?? (form.category || undefined)) as (typeof CATEGORIES)[number] | undefined,
         description: form.description,
       });
-      setSuggestion({ text: res.description, source: res.source });
+      setSuggestion({ text: res.description, source: res.source, note: res.note });
     } catch (err) {
       setRewriteError(err instanceof ApiRequestError ? err.message : 'Could not rewrite right now. Please try again.');
     } finally {
@@ -173,7 +173,7 @@ export default function NewOfferPage() {
             {rewriteError && <p role="alert" className="mt-1 text-small text-danger">{rewriteError}</p>}
             {suggestion && (
               <div className="ob-fade-up mt-2 rounded-xl border border-purple-200 bg-purple-50 p-3">
-                <p className="text-small font-bold text-purple-800">{suggestion.source === 'ai' ? 'Suggested by Offera AI' : 'Tidied up (AI is busy right now)'}</p>
+                <p className="text-small font-bold text-purple-800">{suggestion.source === 'ai' ? 'Suggested by Offera AI' : suggestion.note === 'no_key' ? 'Only tidied up: AI is not switched on yet' : 'Only tidied up: AI is busy right now, try again in a minute'}</p>
                 <p className="mt-1 whitespace-pre-line text-body">{suggestion.text}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <button type="button" className="btn-primary btn-sm" onClick={() => { set('description', suggestion.text); setSuggestion(undefined); }}>

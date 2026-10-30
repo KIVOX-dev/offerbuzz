@@ -173,7 +173,8 @@ describe('Offera AI', () => {
     // no AI key: tidied up, still useful
     const basic = await post(vendor);
     expect(basic.status).toBe(200);
-    expect(basic.body).toEqual({ description: 'Flat 30% off on all sarees till sunday visit shop.', source: 'basic' });
+    expect(basic.body).toEqual({ description: 'Flat 30% off on all sarees till sunday visit shop.', source: 'basic', note: 'no_key' });
+    expect((await request(app).get('/api/v1/ai/status')).body).toEqual({ configured: false, models: ['model-a', 'model-b'] });
 
     // with the model: its text is used, trimmed to 600 characters
     withKey();

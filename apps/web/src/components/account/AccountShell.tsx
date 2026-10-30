@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PageLoader } from '../PageLoader';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import type { Role, UserDTO } from '@offerbuzz/shared';
@@ -75,7 +76,7 @@ export function AccountShell({
     router.replace(loginPath);
   };
 
-  if (!user) return null;
+  if (!user) return <PageLoader label="Loading your dashboard" />;
 
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 

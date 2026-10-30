@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Spinner } from '@/components/PageLoader';
 import { useAccount } from '@/components/account/AccountShell';
 import { rs, useWallet } from '@/components/account/useWallet';
 import { HistoryList, Stat } from '@/components/account/WalletParts';
@@ -45,7 +46,7 @@ export default function IntermediaryDashboard() {
           <Link href="/intermediary/wallet" className="text-small font-semibold text-purple-700 underline">View wallet</Link>
         </div>
         {!wallet ? (
-          <p className="text-muted">Loading...</p>
+          <Spinner label="Loading your wallet" />
         ) : wallet.entries.length === 0 ? (
           <p className="surface p-4 text-muted">Nothing yet. Credits appear when a referred shop pays.</p>
         ) : (

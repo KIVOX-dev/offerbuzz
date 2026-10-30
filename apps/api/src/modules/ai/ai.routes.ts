@@ -4,6 +4,8 @@ import { authenticate, requireRole } from '../../middleware/auth';
 import { aiLimiter } from '../../middleware/rateLimit';
 import { validate } from '../../middleware/validate';
 import { wrap } from '../../utils/async';
+import { env } from '../../config/env';
+import { modelList } from '../../services/groq';
 import { askOffera } from './ai.service';
 import { rewriteDescription } from './rewrite.service';
 
@@ -30,3 +32,8 @@ aiRouter.post(
     res.json(await rewriteDescription(req.body as AiRewriteInput));
   }),
 );
+
+// Diagnostic: is the AI switched on, and which models are in the fallback chain? Never returns the key itself.
+aiRouter.get('/ai/status', (_req, res) => {
+  res.json({ configured: Boolean(env().GROQ_API_KEY), models: modelList() });
+});
