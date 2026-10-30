@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CATEGORIES, type AuthResponse } from '@offerbuzz/shared';
-import { ApiRequestError, lookupReferral, passwordLogin, sendOtp, setPassword, verifyOtp, type AuthMode } from '@/lib/api';
+import { ApiRequestError, googleLogin, lookupReferral, passwordLogin, sendOtp, setPassword, verifyOtp, type AuthMode } from '@/lib/api';
 import { homeFor, saveSession } from '@/lib/session';
 import { BackButton } from './BackButton';
+import { GoogleButton } from './GoogleButton';
 import { Select } from './Select';
 import { PasswordInput } from './PasswordInput';
 
@@ -24,11 +25,14 @@ export function OtpLogin({
   onBack,
   initialReferral = '',
   initialMode = 'signup',
+  bare = false,
 }: {
   role: 'merchant' | 'intermediary';
   onBack: () => void;
   initialReferral?: string;
   initialMode?: AuthMode;
+  /** no card around the form, for the split layout login page */
+  bare?: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -159,10 +163,16 @@ export function OtpLogin({
       finish(await passwordLogin(cleanEmail, password));
     });
 
+  const signInWithGoogle = (idToken: string) =>
+    run(async () => {
+      finish(await googleLogin(idToken, role));
+    });
+  const googleError = (message: string) => setError({ code: 'GOOGLE', message });
+
   const submitDetails = () => (passwordSignin ? signInWithPassword() : requestCode());
 
   return (
-    <div className="surface mx-auto w-full max-w-sm p-4">
+    <div className={bare ? 'w-full' : 'surface mx-auto w-full max-w-sm p-4'}>
       {step === 'password' ? null : step === 'code' ? (
         <BackButton onClick={() => { setStep('details'); setCode(''); setError(undefined); }}>Edit email</BackButton>
       ) : (
@@ -260,6 +270,18 @@ export function OtpLogin({
             </button>
           )}
         </form>
+      )}
+
+      {step === 'details' && (
+        <div className="mt-5">
+          <div className="mb-4 flex items-center gap-3 text-small text-muted">
+            <span className="h-px flex-1 bg-purple-100" /> or {mode === 'signup' ? 'sign up' : 'log in'} with <span className="h-px flex-1 bg-purple-100" />
+          </div>
+          <GoogleButton onCredential={signInWithGoogle} onError={googleError} />
+          {mode === 'signup' && role === 'merchant' && (
+            <p className="mt-2 text-center text-small text-muted">With Google, you choose your shop category in your profile after signing in.</p>
+          )}
+        </div>
       )}
 
       {step === 'code' && (

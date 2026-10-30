@@ -5,7 +5,9 @@ FROM node:20-alpine AS build
 WORKDIR /repo
 ARG NEXT_PUBLIC_API_URL=https://api.offerbuzz.co/api/v1
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID \
+# the shared Google Maps key; inlined into the browser bundle at build time
+ARG GOOGLE_MAPS_API_KEY=
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID \n    GOOGLE_MAPS_API_KEY=$GOOGLE_MAPS_API_KEY \
     NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/

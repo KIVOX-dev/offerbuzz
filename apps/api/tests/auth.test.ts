@@ -8,6 +8,8 @@ let app: import('express').Express;
 let svc: typeof import('../src/modules/auth/auth.service');
 let User: typeof import('../src/models/User').User;
 let Otp: typeof import('../src/models/Otp').Otp;
+let Offer: typeof import('../src/models/Offer').Offer;
+let geocodeCalls = 0;
 
 const EMAIL = 'shopper@example.com';
 const NAME = 'Test Shopper';
@@ -28,6 +30,11 @@ beforeAll(async () => {
   svc = await import('../src/modules/auth/auth.service');
   User = (await import('../src/models/User')).User;
   Otp = (await import('../src/models/Otp')).Otp;
+  Offer = (await import('../src/models/Offer')).Offer;
+  (await import('../src/services/geocode')).setReverseGeocoder(async () => {
+    geocodeCalls++;
+    return { address: 'Reverse geocoded address', placeId: 'place-1' };
+  });
   app = createApp();
 });
 
@@ -49,7 +56,12 @@ const verify = (body: Record<string, unknown>) => request(app).post('/api/v1/aut
 async function signUp(extra: Record<string, unknown> = {}, email = EMAIL) {
   const sent = await send({ email, mode: 'signup', ...extra });
   expect(sent.status).toBe(200);
-  return verify({ email, code: sent.body.devOtp, mode: 'signup', name: NAME, ...extra });
+  const res = await verify({ email, code: sent.body.devOtp, mode: 'signup', name: NAME, ...extra });
+  // vendors that pick a category here are also given a shop pin (Coimbatore), since posting offers needs one
+  if (extra.role === 'merchant' && extra.category) {
+    await User.updateOne({ email }, { location: { type: 'Point', coordinates: [76.9558, 11.0168] }, locationAddress: 'Test Street, Coimbatore' });
+  }
+  return res;
 }
 
 async function signIn(email = EMAIL) {
@@ -424,6 +436,70 @@ describe('vendor offers and profile', () => {
     expect((await post(t, OFFER)).status).toBe(400); // OFFER is Salon and Spa
     const change = await authed(request(app).put('/api/v1/me'), t).send({ category: 'Travels' });
     expect(change.status).toBe(409);
+  });
+
+  it('needs a shop location before a vendor can post, and checks the coordinates', async () => {
+    const v = await signUp({ role: 'merchant' }, 'loc@example.com');
+    const t = v.body.accessToken;
+    await authed(request(app).put('/api/v1/me'), t).send({ category: 'Salon and Spa' });
+    const blocked = await post(t, OFFER);
+    expect(blocked.status).toBe(409);
+    expect(blocked.body.error.code).toBe('LOCATION_REQUIRED');
+
+    const put = (location: Record<string, unknown>) => authed(request(app).put('/api/v1/me'), t).send({ location });
+    expect((await put({ lat: 91, lng: 10 })).status).toBe(400);
+    expect((await put({ lat: 10, lng: -181 })).status).toBe(400);
+
+    geocodeCalls = 0;
+    const saved = await put({ lat: 11.0168, lng: 76.9558 });
+    expect(saved.status).toBe(200);
+    expect(saved.body.user.location).toEqual({ lat: 11.0168, lng: 76.9558, address: 'Reverse geocoded address', placeId: 'place-1' });
+    expect(geocodeCalls).toBe(1);
+
+    // saving the same pin again, or a pin that came with a Places address, never calls Geocoding
+    await put({ lat: 11.0168, lng: 76.9558 });
+    await put({ lat: 11.02, lng: 76.96, address: 'Chosen from search', placeId: 'p2' });
+    expect(geocodeCalls).toBe(1);
+
+    expect((await post(t, OFFER)).status).toBe(201);
+  });
+
+  it('only vendors can have a location', async () => {
+    const c = await signUp({}, 'cust@example.com');
+    const res = await authed(request(app).put('/api/v1/me'), c.body.accessToken).send({ location: { lat: 10, lng: 10 } });
+    expect(res.status).toBe(400);
+  });
+
+  it('lists live offers near a point, closest first, and serves one offer publicly', async () => {
+    const near = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'near@example.com');
+    const far = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'far@example.com');
+    await User.updateOne({ email: 'near@example.com' }, { shopName: 'Near Shop', location: { type: 'Point', coordinates: [76.96, 11.0] } });
+    await User.updateOne({ email: 'far@example.com' }, { shopName: 'Far Shop', location: { type: 'Point', coordinates: [77.2, 11.2] } });
+    const today = new Date().toISOString().slice(0, 10);
+    const live = { ...OFFER, startsAt: today, endsAt: '2099-01-01' };
+    const a = (await post(near.body.accessToken, { ...live, title: 'Near deal' })).body.offer;
+    const b = (await post(far.body.accessToken, { ...live, title: 'Far deal' })).body.offer;
+    await Offer.updateMany({}, { status: 'active' });
+
+    const res = await request(app).get('/api/v1/offers/nearby?lat=11.0&lng=76.96&radiusKm=50');
+    expect(res.status).toBe(200);
+    expect(res.body.offers.map((o: { title: string }) => o.title)).toEqual(['Near deal', 'Far deal']);
+    expect(res.body.offers[0]).toMatchObject({ shop: { name: 'Near Shop' }, distanceKm: 0 });
+    expect(res.body.offers[1].distanceKm).toBeGreaterThan(20);
+
+    const small = await request(app).get('/api/v1/offers/nearby?lat=11.0&lng=76.96&radiusKm=5');
+    expect(small.body.offers.map((o: { title: string }) => o.title)).toEqual(['Near deal']);
+    expect((await request(app).get('/api/v1/offers/nearby?lat=95&lng=76')).status).toBe(400);
+    expect((await request(app).get('/api/v1/offers/nearby')).status).toBe(400);
+
+    // an expired or unapproved offer is not shown
+    await Offer.updateOne({ _id: b.id }, { status: 'pending' });
+    expect((await request(app).get('/api/v1/offers/nearby?lat=11.0&lng=76.96&radiusKm=50')).body.offers).toHaveLength(1);
+
+    const one = await request(app).get(`/api/v1/offers/${a.id}`);
+    expect(one.status).toBe(200);
+    expect(one.body.offer.shop.location).toMatchObject({ lat: 11.0, lng: 76.96 });
+    expect((await request(app).get(`/api/v1/offers/${b.id}`)).status).toBe(404);
   });
 
   it('validates the offer form', async () => {

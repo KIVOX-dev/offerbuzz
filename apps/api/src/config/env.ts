@@ -27,6 +27,8 @@ const schema = z
     OTP_SECRET: z.string().min(32),
     OTP_DEV_MODE: bool,
     GOOGLE_CLIENT_IDS: z.string().default(''),
+    // one Google Maps key shared by web, Android and this API (reverse geocoding when a vendor saves a pin)
+    GOOGLE_MAPS_API_KEY: z.string().optional(),
     BREVO_API_KEY: z.string().optional(),
     BREVO_SENDER_EMAIL: z.string().default('no-reply@offerbuzz.co'),
     BREVO_SENDER_NAME: z.string().default('OfferBuzz'),

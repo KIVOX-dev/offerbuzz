@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { CATEGORIES } from '@offerbuzz/shared';
+import { CATEGORIES, type LocationInput } from '@offerbuzz/shared';
 import { ApiRequestError, updateProfile } from '@/lib/api';
+import { LocationPicker } from '../maps/LocationPicker';
 import { Select } from '../Select';
 import { useAccount } from './AccountShell';
 
@@ -14,6 +15,8 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
   const [shopName, setShopName] = useState(user.shopName ?? '');
   const [city, setCity] = useState(user.city ?? '');
   const [category, setCategory] = useState(user.category ?? '');
+  const [location, setLocation] = useState<LocationInput | undefined>(user.location);
+  const [locationChanged, setLocationChanged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
 
@@ -27,9 +30,12 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
         phone: phone.trim(),
         city: city.trim(),
         ...(showShop ? { shopName: shopName.trim() } : {}),
+        ...(showShop && locationChanged && location ? { location } : {}),
         ...(showShop && !user.category && category ? { category: category as (typeof CATEGORIES)[number] } : {}),
       });
       setUser({ ...user, ...res.user });
+      setLocationChanged(false);
+      if (res.user.location) setLocation(res.user.location);
       setMsg({ ok: true, text: 'Profile saved' });
     } catch (err) {
       setMsg({ ok: false, text: err instanceof ApiRequestError ? err.message : 'Could not save, please try again' });
@@ -70,6 +76,19 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
               <p className="mt-1 text-small text-muted">Required before you can post offers. It cannot be changed later.</p>
             </>
           )}
+        </div>
+      )}
+      {showShop && (
+        <div>
+          <p className="mb-1 text-small font-semibold">Shop location</p>
+          <p className="mb-2 text-small text-muted">Customers see this pin on your offers and use it to get directions. Required before you can post offers.</p>
+          <LocationPicker
+            value={location}
+            onChange={(loc) => {
+              setLocation(loc);
+              setLocationChanged(true);
+            }}
+          />
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">

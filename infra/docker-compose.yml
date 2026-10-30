@@ -40,6 +40,7 @@ services:
     volumes: [../:/app]
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
       PORT_WEB: "3000"
     ports: ["3000:3000"]
     command: npm run dev -w @offerbuzz/web

@@ -16,12 +16,21 @@ const userSchema = new Schema(
     category: { type: String, enum: CATEGORIES },
     // the intermediary who referred this vendor; set once at signup
     referredBy: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    // vendors: shop pin as GeoJSON ([lng, lat]) plus the address saved when the pin was set. Left unset until chosen.
+    location: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number], default: undefined },
+    },
+    locationAddress: String,
+    placeId: String,
     qrUrl: String, // filled in by the QR service in Phase 5
     status: { type: String, enum: USER_STATUSES, default: 'active', index: true },
     fcmTokens: { type: [String], default: [] },
   },
   { timestamps: true },
 );
+
+userSchema.index({ location: '2dsphere' });
 
 export type UserDoc = InferSchemaType<typeof userSchema> & { _id: import('mongoose').Types.ObjectId };
 export const User = model('User', userSchema);

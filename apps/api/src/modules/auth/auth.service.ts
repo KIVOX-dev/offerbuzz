@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import type { Types } from 'mongoose';
-import { OTP, type AuthResponse, type SelfServeRole, type UserDTO } from '@offerbuzz/shared';
+import { OTP, type AuthResponse, type LocationDTO, type SelfServeRole, type UserDTO } from '@offerbuzz/shared';
 import { env } from '../../config/env';
 import { User, type UserDoc } from '../../models/User';
 import { Otp } from '../../models/Otp';
@@ -21,6 +21,12 @@ function generateReferralCode(): string {
   return Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('');
 }
 
+export function toLocationDTO(u: Pick<UserDoc, 'location' | 'locationAddress' | 'placeId'>): LocationDTO | undefined {
+  const c = u.location?.coordinates;
+  if (!c || c.length !== 2) return undefined;
+  return { lat: c[1], lng: c[0], address: u.locationAddress ?? undefined, placeId: u.placeId ?? undefined };
+}
+
 export function toUserDTO(u: UserDoc): UserDTO {
   return {
     id: String(u._id),
@@ -34,6 +40,7 @@ export function toUserDTO(u: UserDoc): UserDTO {
     shopName: u.shopName ?? undefined,
     city: u.city ?? undefined,
     category: u.category ?? undefined,
+    location: toLocationDTO(u),
   };
 }
 

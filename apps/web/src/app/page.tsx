@@ -1,9 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { PublicOfferDTO } from '@offerbuzz/shared';
+import { LocationPrompt } from '@/components/maps/LocationPrompt';
+import { discountLabel } from '@/components/OfferPreview';
+import { getNearbyOffers } from '@/lib/api';
+import { useVisitorLocation } from '@/lib/location';
 import { Carousel } from '@/components/Carousel';
 import { Logo } from '@/components/Logo';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -55,7 +60,7 @@ const deals = [
   { title: 'Latest gadgets, best prices', shop: 'Electronics', off: 'UP TO 20% OFF', cat: 2 },
   { title: 'Weekend getaway packages', shop: 'Travel & Lifestyle', off: '15% OFF', cat: 11 },
   { title: 'Living room makeover', shop: 'Home & Living', off: 'UP TO 40% OFF', cat: 3 },
-  { title: 'Buy 1 Get 1 on meals', shop: 'Food & Beverages', off: 'BOGO', cat: 8 },
+  { title: 'Buy 1 Get 1 on meals', shop: 'Food & Beverages', off: 'BUY 1 GET 1', cat: 8 },
 ];
 
 // Banner slides after the intro slide; indexes point into `categories`. Sample copy until the API feeds real offers.
@@ -91,6 +96,16 @@ export default function Home() {
   const router = useRouter();
   const [query, setQuery] = useState('');
 
+  // offers from shops near the visitor, once they have shared their location
+  const { coords, status, request } = useVisitorLocation();
+  const [nearby, setNearby] = useState<PublicOfferDTO[]>([]);
+  useEffect(() => {
+    if (!coords) return;
+    getNearbyOffers(coords.lat, coords.lng, 15)
+      .then((r) => setNearby(r.offers))
+      .catch(() => setNearby([]));
+  }, [coords]);
+
   // an OfferBuzz link opens straight away; anything else (a product barcode, plain text) fills the search box
   const onScan = useCallback(
     (text: string) => {
@@ -111,17 +126,18 @@ export default function Home() {
       style={{ backgroundColor: theme ? theme.from : undefined }}
       className="min-h-screen transition-colors duration-500"
     >
+      <LocationPrompt />
       <div className="h-1 bg-brand" aria-hidden />
 
       <header className="sticky top-0 z-20 border-b border-purple-100 bg-card">
         <div className="container-page flex items-center gap-3 py-2 md:h-header md:py-0">
           <Logo height={48} />
 
-          <button type="button" className="hidden items-center gap-1 rounded-md px-2 py-1 text-small text-ink hover:bg-purple-50 md:flex">
+          <button type="button" onClick={request} className="hidden items-center gap-1 rounded-md px-2 py-1 text-small text-ink hover:bg-purple-50 md:flex">
             <PinIcon className="text-purple-700" />
             <span className="text-left leading-tight">
               <span className="block text-muted">Your Location</span>
-              <span className="font-semibold">Select a Location</span>
+              <span className="font-semibold">{coords ? 'Near you' : status === 'asking' ? 'Locating...' : 'Select a Location'}</span>
             </span>
           </button>
 
@@ -204,11 +220,11 @@ export default function Home() {
                 style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '22px 22px' }}
               />
 
-              <div className="relative z-10 max-w-[480px]">
+              <div className="relative z-10 max-w-[480px] md:max-w-[52%]">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-small font-semibold text-accent backdrop-blur">
                   <TagIcon size={14} /> Shop more. Save more.
                 </span>
-                <h1 className="mt-5 text-[34px] font-extrabold leading-[1.05] tracking-tight md:text-[52px]">
+                <h1 className="mt-5 text-[34px] font-extrabold leading-[1.05] tracking-tight md:text-[38px] lg:text-[52px]">
                   Offers and deals <span className="bg-gradient-to-r from-accent to-amber-300 bg-clip-text text-transparent">near you</span>
                 </h1>
                 <p className="mt-4 max-w-md text-body text-purple-100 md:text-[17px]">
@@ -225,10 +241,10 @@ export default function Home() {
               </div>
 
               {/* floating offer cards */}
-              <div aria-hidden className="pointer-events-none absolute inset-y-0 right-6 hidden w-[44%] md:block lg:right-12">
+              <div aria-hidden className="pointer-events-none absolute inset-y-0 right-4 hidden w-[40%] md:block lg:right-12 lg:w-[44%]">
                 {[
                   { cat: 0, off: '30% OFF', cls: 'left-[2%] top-[14%] -rotate-6 w-[46%]' },
-                  { cat: 1, off: 'BOGO', cls: 'right-[4%] top-[8%] rotate-6 w-[44%]' },
+                  { cat: 1, off: 'BUY 1 GET 1', cls: 'right-[4%] top-[8%] rotate-6 w-[44%]' },
                   { cat: 2, off: '20% OFF', cls: 'left-[26%] bottom-[14%] rotate-2 w-[48%]' },
                 ].map((c) => (
                   <div
@@ -318,6 +334,32 @@ export default function Home() {
             ))}
           </ul>
         </section>
+
+        {/* offers from shops near the visitor */}
+        {nearby.length > 0 && (
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-section font-bold">Offers near you</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+              {nearby.map((o) => (
+                <Link key={o.id} href={`/offers/${o.id}`} className="surface-hover relative block overflow-hidden rounded-lg">
+                  <span className="badge-discount absolute left-2 top-2 z-10">
+                    {discountLabel(o.discountType, o.discountValue === undefined ? '' : String(o.discountValue))}
+                  </span>
+                  <div className="aspect-[4/3] bg-purple-50">
+                    {o.imageUrl && <img src={o.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />}
+                  </div>
+                  <div className="space-y-1 p-3">
+                    <p className="line-clamp-2 text-small font-semibold">{o.title}</p>
+                    <p className="text-small text-muted">{o.shop.name}</p>
+                    {o.distanceKm !== undefined && <p className="text-small font-semibold text-purple-700">{o.distanceKm < 1 ? 'Under 1 km' : `${o.distanceKm.toFixed(1)} km away`}</p>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* deals */}
         <section>

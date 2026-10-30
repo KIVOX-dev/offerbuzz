@@ -1,11 +1,21 @@
 import express, { Router } from 'express';
 import mongoose from 'mongoose';
-import { offerInputSchema, type MyOffersResponse, type OfferDTO, type OfferInput } from '@offerbuzz/shared';
+import {
+  nearbyQuerySchema,
+  offerInputSchema,
+  type MyOffersResponse,
+  type NearbyOffersResponse,
+  type NearbyQuery,
+  type OfferDTO,
+  type OfferInput,
+  type PublicOfferDTO,
+} from '@offerbuzz/shared';
 import { authenticate, requireRole } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { wrap } from '../../utils/async';
 import { HttpError, notFound } from '../../utils/errors';
-import { User } from '../../models/User';
+import { User, type UserDoc } from '../../models/User';
+import { toLocationDTO } from '../auth/auth.service';
 import { Offer, type OfferDoc } from '../../models/Offer';
 import { OfferImage } from '../../models/OfferImage';
 
@@ -44,12 +54,15 @@ offersRouter.post(
   wrap(async (req, res) => {
     const b = req.body as OfferInput;
     // a shop only posts into the category it chose at sign up
-    const vendor = await User.findById(req.auth!.id).select('category');
+    const vendor = await User.findById(req.auth!.id).select('category location');
     if (!vendor?.category) {
       throw new HttpError(409, 'CATEGORY_REQUIRED', 'Choose your shop category in your profile before posting offers');
     }
     if (b.category !== vendor.category) {
       throw new HttpError(400, 'CATEGORY_MISMATCH', `Your shop posts offers in ${vendor.category} only`);
+    }
+    if (!vendor.location?.coordinates?.length) {
+      throw new HttpError(409, 'LOCATION_REQUIRED', 'Share your shop location in your profile before posting offers');
     }
     const offer = await Offer.create({
       merchantId: req.auth!.id,
@@ -84,6 +97,80 @@ offersRouter.get(
       },
     };
     res.json(body);
+  }),
+);
+
+// ---- Public: what customers see -------------------------------------------------------------------
+
+const startOfToday = () => new Date(`${dateOnly(new Date())}T00:00:00.000Z`);
+
+/** Offers that are approved and inside their dates, with the shop that posted them. */
+function toPublicOffer(o: OfferDoc, vendor: Pick<UserDoc, 'name' | 'shopName' | 'location' | 'locationAddress' | 'placeId'>, distanceM?: number): PublicOfferDTO | undefined {
+  const location = toLocationDTO(vendor);
+  if (!location) return undefined;
+  return {
+    ...toOfferDTO(o),
+    shop: { name: vendor.shopName || vendor.name || 'Shop', location },
+    ...(distanceM === undefined ? {} : { distanceKm: Math.round(distanceM / 10) / 100 }),
+  };
+}
+
+// Customers near a point, closest shop first. Uses the 2dsphere index on the vendor's pin ($geoNear), so no Google
+// Distance Matrix and no per-request geocoding.
+offersRouter.get(
+  '/offers/nearby',
+  validate(nearbyQuerySchema, 'query'),
+  wrap(async (req, res) => {
+    const q = req.query as unknown as NearbyQuery;
+    const today = startOfToday();
+    const rows = await User.aggregate<{ vendor: UserDoc; offer: OfferDoc; distanceM: number }>([
+      {
+        $geoNear: {
+          near: { type: 'Point', coordinates: [q.lng, q.lat] },
+          distanceField: 'distanceM',
+          maxDistance: q.radiusKm * 1000,
+          spherical: true,
+          query: { role: 'merchant', status: 'active' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'offers',
+          let: { id: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$merchantId', '$$id'] }, status: 'active', startsAt: { $lte: today }, endsAt: { $gte: today } } },
+          ],
+          as: 'offers',
+        },
+      },
+      { $unwind: '$offers' },
+      { $sort: { distanceM: 1, 'offers.createdAt': -1 } },
+      { $limit: q.limit },
+      { $project: { distanceM: 1, offer: '$offers', vendor: { name: '$name', shopName: '$shopName', location: '$location', locationAddress: '$locationAddress', placeId: '$placeId' } } },
+    ]);
+    const offers = rows.flatMap((r) => toPublicOffer(r.offer, r.vendor, r.distanceM) ?? []);
+    const body: NearbyOffersResponse = { offers };
+    res.set('cache-control', 'public, max-age=60');
+    res.json(body);
+  }),
+);
+
+offersRouter.get(
+  '/offers/:id',
+  wrap(async (req, res) => {
+    const id = String(req.params.id);
+    if (!mongoose.isValidObjectId(id)) throw notFound('Offer not found');
+    const today = startOfToday();
+    const offer = await Offer.findOneAndUpdate(
+      { _id: id, status: 'active', startsAt: { $lte: today }, endsAt: { $gte: today } },
+      { $inc: { views: 1 } },
+      { new: true },
+    );
+    if (!offer) throw notFound('Offer not found');
+    const vendor = await User.findById(offer.merchantId).select('name shopName location locationAddress placeId');
+    const dto = vendor && toPublicOffer(offer, vendor);
+    if (!dto) throw notFound('Offer not found');
+    res.json({ offer: dto });
   }),
 );
 

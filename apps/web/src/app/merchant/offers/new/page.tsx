@@ -62,6 +62,8 @@ export default function NewOfferPage() {
     if (fileRef.current) fileRef.current.value = '';
   }
 
+  const needsSetup = !user.category || !user.location;
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(undefined);
@@ -111,6 +113,14 @@ export default function NewOfferPage() {
 
       <div className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <form onSubmit={submit} className="surface space-y-4 p-4 md:p-6" noValidate>
+          {needsSetup && (
+            <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">
+              Before you can post, add your {!user.category ? 'shop category' : ''}
+              {!user.category && !user.location ? ' and ' : ''}
+              {!user.location ? 'shop location' : ''} in your{' '}
+              <Link href="/merchant/profile" className="font-semibold underline">profile</Link>.
+            </p>
+          )}
           <div>
             <label className="mb-1 block text-small font-semibold" htmlFor="o-title">Offer title</label>
             <input id="o-title" className="input" value={form.title} onChange={(e) => set('title', e.target.value)}

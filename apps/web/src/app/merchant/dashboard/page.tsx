@@ -116,6 +116,13 @@ export default function MerchantDashboard() {
         </Link>
       </section>
 
+      {!user.location && (
+        <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">
+          Share your shop location so customers can find you on the map. It is needed before you can post offers.{' '}
+          <Link href="/merchant/profile" className="font-semibold underline">Set location</Link>
+        </p>
+      )}
+
       {!user.shopName && (
         <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">
           Add your shop name so customers know who is behind your offers.{' '}

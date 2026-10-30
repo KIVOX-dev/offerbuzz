@@ -66,6 +66,22 @@ export type PasswordLoginInput = z.infer<typeof passwordLoginSchema>;
 
 // ---- Profile and offers ------------------------------------------------------------------------
 
+/** A shop pin. Latitude and longitude are range checked; address and placeId come from Places search when used. */
+export const locationInputSchema = z.object({
+  lat: z.number().min(-90, 'Latitude must be between -90 and 90').max(90, 'Latitude must be between -90 and 90'),
+  lng: z.number().min(-180, 'Longitude must be between -180 and 180').max(180, 'Longitude must be between -180 and 180'),
+  address: z.string().trim().max(300).optional(),
+  placeId: z.string().trim().max(200).optional(),
+});
+
+/** GET /offers/nearby */
+export const nearbyQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  radiusKm: z.coerce.number().min(0.1).max(100).default(10),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+});
+
 /** Every field optional: send only what changed. Empty strings clear optional fields. */
 export const updateProfileSchema = z.object({
   name: name.optional(),
@@ -74,6 +90,8 @@ export const updateProfileSchema = z.object({
   city: z.string().trim().max(60).optional(),
   /** vendors only: can be set once (for accounts that signed up without one) and is then locked */
   category: z.enum(CATEGORIES).optional(),
+  /** vendors only: the shop pin; the address is looked up once on save when not supplied */
+  location: locationInputSchema.optional(),
 });
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a date');
@@ -103,6 +121,8 @@ export const offerInputSchema = z
   });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type LocationInput = z.infer<typeof locationInputSchema>;
+export type NearbyQuery = z.infer<typeof nearbyQuerySchema>;
 export type OfferInput = z.infer<typeof offerInputSchema>;
 
 // ---- Admin ---------------------------------------------------------------------------------------

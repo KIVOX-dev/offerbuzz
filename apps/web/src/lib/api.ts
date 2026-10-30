@@ -8,6 +8,8 @@ import type {
   AuthResponse,
   AuthTokens,
   MyOffersResponse,
+  NearbyOffersResponse,
+  PublicOfferDTO,
   ReferralLookup,
   WalletResponse,
   OfferDTO,
@@ -123,6 +125,11 @@ export const createOffer = (body: OfferInput) => authApi<{ offer: OfferDTO }>('/
 export const deleteOffer = (id: string) => authApi<void>(`/offers/${id}`, { method: 'DELETE' });
 export const updateProfile = (body: UpdateProfileInput) =>
   authApi<{ user: UserDTO }>('/me', { method: 'PUT', json: body });
+
+// ---- Public: what customers see ---------------------------------------------------------------------
+export const getPublicOffer = (id: string) => api<{ offer: PublicOfferDTO }>(`/offers/${encodeURIComponent(id)}`);
+export const getNearbyOffers = (lat: number, lng: number, radiusKm = 10) =>
+  api<NearbyOffersResponse>(`/offers/nearby?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`);
 
 export const lookupReferral = (code: string) => api<ReferralLookup>(`/referral/${encodeURIComponent(code)}`);
 export const getWallet = () => authApi<WalletResponse>('/wallet');

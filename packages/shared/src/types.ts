@@ -1,5 +1,13 @@
 import type { DiscountType, OfferStatus, PayoutStatus, Role, UserStatus } from './constants';
 
+/** A shop pin with the address saved when it was set (never looked up again on page views). */
+export interface LocationDTO {
+  lat: number;
+  lng: number;
+  address?: string;
+  placeId?: string;
+}
+
 export interface UserDTO {
   id: string;
   name?: string;
@@ -15,6 +23,8 @@ export interface UserDTO {
   city?: string;
   /** vendors: the category every offer they post belongs to */
   category?: string;
+  /** vendors: where the shop is */
+  location?: LocationDTO;
 }
 
 export interface AuthTokens {
@@ -51,6 +61,17 @@ export interface OfferDTO {
   createdAt: string;
   /** relative URL of the offer photo, present only when one was uploaded */
   imageUrl?: string;
+}
+
+/** An offer as customers see it: with the shop that posted it. */
+export interface PublicOfferDTO extends OfferDTO {
+  shop: { name: string; location: LocationDTO };
+  /** only on nearby results: straight line distance from the customer, in km */
+  distanceKm?: number;
+}
+
+export interface NearbyOffersResponse {
+  offers: PublicOfferDTO[];
 }
 
 export interface MyOffersResponse {

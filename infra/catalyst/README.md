@@ -39,7 +39,8 @@ Not yet verified end to end: that the CLI can read the local Docker image on a G
 
 ## Environment variables (Catalyst console -> AppSail -> offerbuzz-api)
 `NODE_ENV=production`, `MONGODB_URI`, `CORS_ORIGINS` (comma separated web origins), `JWT_ACCESS_SECRET`,
-`OTP_SECRET`, `OTP_DEV_MODE=false`, `GOOGLE_CLIENT_IDS`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`.
+`OTP_SECRET`, `OTP_DEV_MODE=false`, `GOOGLE_CLIENT_IDS`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`,
+`GOOGLE_MAPS_API_KEY` (used server side for the one reverse-geocode when a vendor saves a shop pin).
 Do not set `DNS_SERVERS` (a local Windows workaround). Port: the API listens on `X_ZOHO_CATALYST_LISTEN_PORT`
 if Catalyst injects it, otherwise `PORT`, otherwise 3001.
 

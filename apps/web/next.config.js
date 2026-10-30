@@ -7,6 +7,9 @@ module.exports = {
   outputFileTracingRoot: path.join(__dirname, '../../'),
   transpilePackages: ['@offerbuzz/shared'],
   poweredByHeader: false,
+  // One Google Maps key for web, Android and the API. The API reads GOOGLE_MAPS_API_KEY; the browser build gets the same
+  // value, inlined at build time (a Maps JavaScript key is public by nature, so lock it down with API restrictions).
+  env: { NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '' },
   // Brand images are pre-sized PNGs; skipping the optimizer avoids needing `sharp` in the standalone image.
   images: { unoptimized: true },
   // /admin has no page of its own; send people to the admin sign in
