@@ -12,3 +12,15 @@ is missing, that slide falls back to the small category picture.
 
 Size: 1600 x 640 px (5:2), WebP or JPG renamed to the names above, under 200 KB each.
 Keep the subject on the RIGHT 45% of the picture and leave the left half calm and empty: the headline and button sit there.
+
+## Current photos and credits
+All are free to use commercially, no attribution required (credits kept here for reference).
+
+| File | Source |
+|---|---|
+| `fashion.webp` | Bernd Dittrich, Unsplash (Unsplash License) |
+| `electronics.webp` | Pexels photo 2769274 (Pexels License) |
+| `grocery.webp` | Mike Jones, Pexels photo 8805182 (Pexels License) |
+| `travel.webp` | Pexels photo 533961 (Pexels License) |
+
+Swap any of them by replacing the file with the same name.

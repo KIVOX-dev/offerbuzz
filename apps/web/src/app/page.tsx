@@ -12,9 +12,10 @@ import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
 import { getNearbyOffers } from '@/lib/api';
 import { useVisitorLocation } from '@/lib/location';
-import { Carousel } from '@/components/Carousel';
+import { HeroRail } from '@/components/home/HeroRail';
+import { Burst, InfoStrip, OffPill, PromoCard } from '@/components/home/PromoCard';
 import { SiteFooter } from '@/components/SiteFooter';
-import { ChevronRightIcon, DuoHeartIcon, DuoOffersIcon, DuoPinIcon, DuoStoreIcon, DuoTagIcon, HeartIcon, TagIcon } from '@/components/Icons';
+import { ChevronRightIcon, DuoHeartIcon, DuoPinIcon, DuoStoreIcon, DuoTagIcon, HeartIcon, TagIcon } from '@/components/Icons';
 
 type Category = {
   name: string;
@@ -59,36 +60,6 @@ const banners = [
   { cat: 0, title: 'Fresh groceries, daily savings', sub: 'Stock up at your neighbourhood store', off: 'FLAT 15% OFF', image: '/banners/grocery.webp' },
   { cat: 11, title: 'Weekend getaway packages', sub: 'Short trips, great deals', off: '15% OFF', image: '/banners/travel.webp' },
 ];
-
-/**
- * Banner picture. A wide photo from public/banners fills the slide with a soft fade behind the text; if that file is
- * not there yet, the category art sits on the right and fades into the background instead of ending in a hard edge.
- */
-function BannerArt({ image, fallback }: { image: string; fallback: string }) {
-  // start with the category art and only switch once the banner photo has really loaded, so a missing file never
-  // shows a broken image (an onError handler can fire before the page is interactive and be missed)
-  const [custom, setCustom] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    const probe = new window.Image();
-    probe.onload = () => !cancelled && setCustom(true);
-    probe.src = image;
-    return () => {
-      cancelled = true;
-    };
-  }, [image]);
-
-  // one soft fade from the slide colour into the picture, so nothing ends in a hard edge and the photo stays vivid
-  return (
-    <img
-      src={custom ? image : fallback}
-      alt=""
-      className={`pointer-events-none absolute inset-y-0 right-0 h-full w-[68%] object-cover md:w-[62%] ${
-        custom ? '' : 'mix-blend-multiply'
-      } [mask-image:linear-gradient(to_right,transparent,rgba(0,0,0,0.55)_22%,black_48%)]`}
-    />
-  );
-}
 
 const perks = [
   { icon: DuoTagIcon, text: 'Best offers near you' },
@@ -216,11 +187,12 @@ export default function Home() {
       />
 
       <div className="container-page space-y-7 py-5 md:py-6">
-        {/* hero */}
+        {/* hero: a rail of banner cards, one new card every 10 seconds */}
         <Reveal>
-          <section className="grid gap-4 md:grid-cols-3">
-            <Carousel label="Featured offers" className="min-h-[380px] md:col-span-2">
-              <div className="relative flex h-full items-center overflow-hidden bg-hero px-6 pb-12 pt-8 text-white md:px-12">
+          <HeroRail label="Featured offers">
+            {/* intro card */}
+            <div className="h-[290px] overflow-hidden rounded-2xl shadow-card md:h-[310px]">
+              <div className="relative flex h-full items-center overflow-hidden bg-hero px-5 pb-6 pt-6 text-white md:px-8">
                 {/* soft glows and a faint dot grid */}
                 <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-purple-400/25 blur-3xl" />
                 <span aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
@@ -230,17 +202,17 @@ export default function Home() {
                   style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '22px 22px' }}
                 />
 
-                <div className="relative z-10 max-w-[480px] md:max-w-[52%]">
+                <div className="relative z-10 max-w-[480px]">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-small font-semibold text-accent backdrop-blur">
                     <TagIcon size={14} /> Shop more. Save more.
                   </span>
-                  <h1 className="mt-5 text-[34px] font-extrabold leading-[1.05] tracking-tight md:text-[38px] lg:text-[52px]">
+                  <h1 className="mt-5 text-[28px] font-extrabold leading-[1.05] tracking-tight md:text-[32px]">
                     Offers and deals <span className="bg-gradient-to-r from-accent to-amber-300 bg-clip-text text-transparent">near you</span>
                   </h1>
                   <p className="mt-4 max-w-md text-body text-purple-100 md:text-[17px]">
                     Don&apos;t miss the best offers from your favourite local stores.
                   </p>
-                  <ul className="mt-6 flex flex-wrap gap-2 text-small font-medium">
+                  <ul className="mt-4 hidden flex-wrap gap-2 text-small font-medium sm:flex">
                     {['Free for customers', 'Verified local shops', 'New offers daily'].map((t) => (
                       <li key={t} className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-ink">✓</span>
@@ -250,53 +222,44 @@ export default function Home() {
                   </ul>
                 </div>
 
-                {/* floating offer cards */}
-                <div aria-hidden className="pointer-events-none absolute inset-y-0 right-4 hidden w-[40%] md:block lg:right-12 lg:w-[44%]">
-                  {[
-                    { cat: 0, off: '30% OFF', cls: 'left-[2%] top-[14%] -rotate-6 w-[46%]' },
-                    { cat: 1, off: 'BUY 1 GET 1', cls: 'right-[4%] top-[8%] rotate-6 w-[44%]' },
-                    { cat: 2, off: '20% OFF', cls: 'left-[26%] bottom-[14%] rotate-2 w-[48%]' },
-                  ].map((c) => (
-                    <div key={c.cat} className={`absolute overflow-hidden rounded-xl border-4 border-white bg-white shadow-2xl ${c.cls}`}>
-                      <span className="absolute left-2 top-2 z-10 rounded-full bg-accent px-2 py-0.5 text-[11px] font-extrabold text-ink">{c.off}</span>
-                      <div style={{ backgroundImage: `linear-gradient(120deg, ${categories[c.cat].from}, ${categories[c.cat].to})` }} className="aspect-[4/3]">
-                        <img src={`/categories/${categories[c.cat].slug}.webp`} alt="" className="h-full w-full object-cover" />
-                      </div>
-                      <p className="truncate px-2.5 py-1.5 text-[12px] font-bold text-ink">{categories[c.cat].name}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
-              {banners.map((b) => {
-                const c = categories[b.cat];
-                return (
-                  <div
-                    key={b.title}
-                    style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }}
-                    className="relative flex h-full items-center overflow-hidden p-6 pb-10 md:p-10 md:pb-12"
-                  >
-                    <BannerArt image={b.image} fallback={`/categories/${c.slug}.webp`} />
-                    <div className="relative max-w-[58%] md:max-w-[46%]">
-                      <span className={`inline-flex rounded-full bg-white/80 px-3 py-1 text-small font-bold ${c.text}`}>{b.off}</span>
-                      <h2 className="mt-3 text-[26px] font-extrabold leading-tight tracking-tight text-ink md:text-[34px]">{b.title}</h2>
-                      <p className="mt-2 text-body text-ink/70">{b.sub}</p>
-                      <button type="button" onClick={() => setActive(b.cat)} className={`btn mt-5 px-5 text-white ${c.btn}`}>
-                        Shop {c.name.split(' ')[0]}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </Carousel>
-
-            <div className="relative flex flex-col justify-center gap-3 overflow-hidden rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-6 text-center shadow-card md:p-8">
-              <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-accent/30 blur-2xl" />
-              <DuoOffersIcon size={64} className="relative mx-auto" />
-              <p className="relative text-small font-bold uppercase tracking-wider text-purple-700">First order</p>
-              <h2 className="relative text-[30px] font-extrabold leading-none text-ink">Rs 50 off</h2>
-              <p className="relative text-muted">Claim it on your first order.</p>
             </div>
-          </section>
+
+            <PromoCard theme="blue" image="/banners/electronics.webp" imagePosition="52% center" label="Sale is live" href={`/search?category=${encodeURIComponent('Mobile and Electronics')}`}
+              burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} />}>
+              <span className="text-[34px] font-black uppercase leading-[0.95] tracking-tight [text-shadow:0_2px_14px_rgba(255,255,255,0.55)] md:text-[40px]">Sale is live</span>
+              <OffPill>50 - 80% Off</OffPill>
+              <InfoStrip>Up to Rs 100 instant off on your first order</InfoStrip>
+            </PromoCard>
+
+            <PromoCard theme="indigo" image="/banners/fashion.webp" label="Festivals of India" href={`/search?category=${encodeURIComponent('Fashion')}`}
+              burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} size={60} />}>
+              <span className="font-serif text-[34px] font-bold uppercase leading-[0.95] tracking-wide md:text-[38px]">Festivals</span>
+              <span className="-mt-2 font-serif text-[20px] uppercase tracking-[0.2em] text-white/90">of India</span>
+              <span aria-hidden className="h-px w-28 bg-gradient-to-r from-amber-300 to-transparent" />
+              <span className="text-[22px] font-bold text-amber-200">From Rs 99</span>
+            </PromoCard>
+
+            <PromoCard theme="teal" image="/banners/grocery.webp" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
+              burst={<Burst lines={['FRESH', 'EVERY', 'DAY']} size={62} />}>
+              <span className="text-[30px] font-black uppercase leading-[0.98] tracking-tight md:text-[34px]">Fresh groceries</span>
+              <span className="text-[15px] font-medium text-white/90">Stock up at your neighbourhood store</span>
+              <OffPill>Min. 15% Off</OffPill>
+            </PromoCard>
+
+            <PromoCard theme="orange" image="/banners/travel.webp" label="Weekend getaways" href={`/search?category=${encodeURIComponent('Travels')}`}
+              burst={<Burst lines={['WEEK', 'END', 'SALE']} size={62} />}>
+              <span className="text-[30px] font-black uppercase leading-[0.98] tracking-tight md:text-[34px]">Weekend getaways</span>
+              <span className="text-[15px] font-medium text-white/95">Short trips, great deals</span>
+              <OffPill>Up to 30% Off</OffPill>
+            </PromoCard>
+
+            <PromoCard theme="gold" dark image="/categories/home.webp" label="First order offer">
+              <span className="text-small font-extrabold uppercase tracking-wider text-purple-800">First order</span>
+              <span className="text-[44px] font-black leading-none md:text-[52px]">Rs 50 off</span>
+              <InfoStrip>Claim it on your first order</InfoStrip>
+            </PromoCard>
+          </HeroRail>
         </Reveal>
 
         {/* offers: near you / top deals */}
