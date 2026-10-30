@@ -39,15 +39,15 @@ export function HomeHeader({
 }) {
   const location = (
     <button type="button" onClick={onLocation} aria-label="Change location" className="flex min-w-0 items-center gap-2.5 text-left">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15">
-        <PinIcon size={22} className="text-accent" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 md:h-auto md:w-auto md:bg-transparent">
+        <PinIcon size={22} className="text-accent md:text-purple-700" />
       </span>
       <span className="min-w-0">
         <span className="flex items-center gap-1 text-[17px] font-extrabold leading-tight">
           <span key={locationLabel} className="ob-fade-up truncate">{locationLabel}</span>
           <ChevronDownIcon size={16} className="shrink-0" />
         </span>
-        <span className="block truncate text-small text-purple-200">{locationHint}</span>
+        <span className="block truncate text-small text-purple-200 md:text-muted">{locationHint}</span>
       </span>
     </button>
   );
@@ -67,12 +67,28 @@ export function HomeHeader({
     </form>
   );
 
+  const desktopSearch = (
+    <form action="/login" className="flex h-search min-w-0 flex-1">
+      <input
+        value={query}
+        onChange={(e) => onQuery(e.target.value)}
+        className="input h-full rounded-none border-r-0"
+        placeholder="Search offers, shops and categories"
+        aria-label="Search"
+      />
+      <ScanButton onResult={onScan} className="flex w-12 items-center justify-center border-y border-purple-200 bg-card text-purple-700 hover:bg-purple-50" />
+      <button type="submit" aria-label="Search" className="flex w-12 items-center justify-center rounded-r-md bg-accent text-ink hover:brightness-105">
+        <SearchIcon />
+      </button>
+    </form>
+  );
+
   return (
-    <header className="relative z-30 overflow-hidden rounded-b-[28px] bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none">
-      <span aria-hidden className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-purple-400/25 blur-3xl" />
+    <header className="relative z-30 overflow-hidden rounded-b-[28px] bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b md:border-purple-100 md:bg-card md:bg-none md:text-ink md:shadow-none">
+      <span aria-hidden className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-purple-400/25 blur-3xl md:hidden" />
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.10]"
+        className="pointer-events-none absolute inset-0 opacity-[0.10] md:hidden"
         style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '22px 22px' }}
       />
 
@@ -90,29 +106,29 @@ export function HomeHeader({
         </div>
 
         {/* desktop: logo | location | search | saved */}
-        <div className="hidden h-header items-center gap-6 md:flex">
-          <Logo height={46} variant="light" />
+        <div className="hidden h-header items-center gap-3 md:flex">
+          <Logo height={48} />
           {location}
-          {search}
-          <Link href="/login" aria-label="Saved offers" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 transition hover:bg-white/25">
+          {desktopSearch}
+          <Link href="/login" aria-label="Saved offers" className="btn-ghost !px-2">
             <HeartIcon />
           </Link>
         </div>
       </div>
 
       {/* category tabs */}
-      <nav aria-label="Categories" className="relative mt-2">
+      <nav aria-label="Categories" className="relative mt-2 md:mt-0 md:border-t md:border-purple-100 md:pt-2">
         <ul className="container-page flex gap-1 overflow-x-auto [scrollbar-width:none]">
           {[{ name: 'All', slug: 'all', from: '#e9e4fb', to: '#ffffff' }, ...categories].map((c, i) => {
             const on = active === i - 1;
             return (
               <li key={c.name} className="w-[84px] shrink-0">
                 <button type="button" aria-pressed={on} onClick={() => onPick(i - 1)} className="flex w-full flex-col items-center gap-1 text-small">
-                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl transition duration-300 ${on ? 'scale-110 bg-white/20' : ''}`}>
+                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl transition duration-300 ${on ? 'scale-110 bg-white/20 md:scale-100 md:bg-purple-100' : ''}`}>
                     <DuoCategoryIcon slug={c.slug} plain size={32} style={{ color: '#ffd60a' }} />
                   </span>
-                  <span className={`w-full truncate px-1 text-center ${on ? 'font-bold text-white' : 'font-medium text-purple-100'}`}>{c.name}</span>
-                  <span className={`h-[3px] rounded-full bg-accent transition-all duration-300 ${on ? 'w-full' : 'w-0'}`} />
+                  <span className={`w-full truncate px-1 text-center ${on ? 'font-bold text-white md:text-ink' : 'font-medium text-purple-100 md:text-ink'}`}>{c.name}</span>
+                  <span className={`h-[3px] rounded-full bg-accent transition-all duration-300 md:bg-purple-600 ${on ? 'w-full' : 'w-0'}`} />
                 </button>
               </li>
             );
