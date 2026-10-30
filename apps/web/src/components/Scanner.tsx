@@ -1,7 +1,7 @@
 'use client';
 
 import jsQR from 'jsqr';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { QrIcon } from './Icons';
 
 type Detector = { detect: (src: CanvasImageSource) => Promise<{ rawValue: string }[]> };
@@ -37,7 +37,7 @@ async function makeReader(): Promise<(video: HTMLVideoElement, canvas: HTMLCanva
  * An Amazon-style scan button: opens the camera, reads a QR code or product barcode and hands the text to `onResult`.
  * The camera feed is processed in the browser only and stops as soon as the sheet closes.
  */
-export function ScanButton({ onResult, className = '' }: { onResult: (text: string) => void; className?: string }) {
+export function ScanButton({ onResult, className = '', children }: { onResult: (text: string) => void; className?: string; children?: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
   const video = useRef<HTMLVideoElement>(null);
@@ -102,7 +102,7 @@ export function ScanButton({ onResult, className = '' }: { onResult: (text: stri
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} aria-label="Scan a QR code or barcode" className={className}>
-        <QrIcon />
+        {children ?? <QrIcon />}
       </button>
 
       {open && (

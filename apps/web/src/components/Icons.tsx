@@ -231,6 +231,22 @@ export const OffersIcon = (p: IconProps) => (
   </Svg>
 );
 
+export const HomeIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 11.5 12 4l9 7.5" />
+    <path d="M5 10v10h14V10" />
+    <path d="M10 20v-6h4v6" />
+  </Svg>
+);
+export const GridIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </Svg>
+);
+
 export const QrIcon = (p: IconProps) => (
   <Svg {...p}>
     <rect x="3" y="3" width="7" height="7" rx="1" />
