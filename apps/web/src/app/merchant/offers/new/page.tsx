@@ -8,6 +8,7 @@ import { useAccount } from '@/components/account/AccountShell';
 import { Select } from '@/components/Select';
 import { OfferPreview } from '@/components/OfferPreview';
 import { OfferaMark } from '@/components/agent/OfferaMark';
+import { AreaPicker } from '@/components/maps/AreaPicker';
 import { ApiRequestError, createOffer, rewriteDescription, updateProfile, uploadOfferImage } from '@/lib/api';
 import { shrinkImage } from '@/lib/image';
 
@@ -265,8 +266,7 @@ export default function NewOfferPage() {
 
           <div>
             <label className="mb-1 block text-small font-semibold" htmlFor="o-area">Area or city</label>
-            <input id="o-area" className="input" value={form.area} onChange={(e) => set('area', e.target.value)}
-              maxLength={100} placeholder="RS Puram, Coimbatore" />
+            <AreaPicker id="o-area" value={form.area} onChange={(v) => set('area', v)} shopAddress={user.location?.address} />
           </div>
 
           <div>
