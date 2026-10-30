@@ -29,6 +29,9 @@ const schema = z
     GOOGLE_CLIENT_IDS: z.string().default(''),
     // one Google Maps key shared by web, Android and this API (reverse geocoding when a vendor saves a pin)
     GOOGLE_MAPS_API_KEY: z.string().optional(),
+    // Offera AI (Groq free tier). Models are tried in this order; if one is rate limited or down the next is used.
+    GROQ_API_KEY: z.string().optional(),
+    GROQ_MODELS: z.string().default('llama-3.3-70b-versatile,llama-3.1-8b-instant,openai/gpt-oss-20b,gemma2-9b-it'),
     BREVO_API_KEY: z.string().optional(),
     BREVO_SENDER_EMAIL: z.string().default('no-reply@offerbuzz.co'),
     BREVO_SENDER_NAME: z.string().default('OfferBuzz'),

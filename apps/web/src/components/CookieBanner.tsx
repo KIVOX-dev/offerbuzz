@@ -52,7 +52,7 @@ export function CookieBanner() {
     <div
       role="region"
       aria-label="Cookie notice"
-      className="fixed bottom-20 left-4 right-4 z-40 md:bottom-4 rounded-lg border border-purple-100 bg-card p-5 shadow-card-hover sm:left-auto sm:max-w-[500px]"
+      className="fixed bottom-20 left-4 right-4 z-[55] md:bottom-4 rounded-lg border border-purple-100 bg-card p-5 shadow-card-hover sm:left-auto sm:max-w-[500px]"
     >
       {managing ? (
         <div className="space-y-3 text-body">

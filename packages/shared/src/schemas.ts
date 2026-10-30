@@ -94,6 +94,16 @@ export const searchQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(60).default(40),
 });
 
+/** POST /ai/chat: the conversation so far (newest last) and, if the visitor shared it, where they are. */
+export const aiChatSchema = z.object({
+  messages: z
+    .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().trim().min(1).max(500) }))
+    .min(1)
+    .max(10),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+});
+
 /** Every field optional: send only what changed. Empty strings clear optional fields. */
 export const updateProfileSchema = z.object({
   name: name.optional(),
@@ -133,6 +143,7 @@ export const offerInputSchema = z
   });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type AiChatInput = z.infer<typeof aiChatSchema>;
 export type SuggestQuery = z.infer<typeof suggestQuerySchema>;
 export type SearchQuery = z.infer<typeof searchQuerySchema>;
 export type LocationInput = z.infer<typeof locationInputSchema>;

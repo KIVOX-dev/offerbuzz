@@ -14,7 +14,7 @@ name to change it. All are from Pexels (Pexels License: free for commercial use,
 | `fitness.webp` | 3927387 |
 | `baby.webp` | 7946392 |
 | `food.webp` | 5836779 |
-| `automotive.webp` | 13911165 |
+| `automotive.webp` | 13065697 (top) + 6789020 (bottom), combined |
 | `pets.webp` | 8434670 |
 | `travel.webp` | 7662165 |
 

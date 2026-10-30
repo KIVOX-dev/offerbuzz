@@ -14,4 +14,6 @@ const make = (windowMs: number, limit: number, message: string) =>
 export const generalLimiter = () => make(60_000, 300, 'Too many requests, slow down');
 export const otpLimiter = () => make(15 * 60_000, 10, 'Too many code requests, try again later');
 export const loginLimiter = () => make(15 * 60_000, 20, 'Too many login attempts, try again later');
+// the AI assistant calls a free third party tier, so it gets a much lower limit than the rest of the API
+export const aiLimiter = () => make(60_000, 15, 'Offera AI is busy, please wait a moment');
 export const webhookLimiter = () => make(60_000, 120, 'Too many webhook calls');

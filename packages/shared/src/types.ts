@@ -76,6 +76,13 @@ export interface SuggestResponse {
   offers: { id: string; title: string; shop: string }[];
 }
 
+/** What Offera AI answers with: text plus the real offers it is recommending. `basic` = answered without the AI model. */
+export interface AiChatResponse {
+  reply: string;
+  offers: PublicOfferDTO[];
+  source: 'ai' | 'basic';
+}
+
 export interface NearbyOffersResponse {
   offers: PublicOfferDTO[];
 }

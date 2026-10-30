@@ -111,7 +111,7 @@ offersRouter.get(
 const startOfToday = () => new Date(`${dateOnly(new Date())}T00:00:00.000Z`);
 
 /** Offers that are approved and inside their dates, with the shop that posted them. */
-function toPublicOffer(o: OfferDoc, vendor: Pick<UserDoc, 'name' | 'shopName' | 'location' | 'locationAddress' | 'placeId'>, distanceM?: number): PublicOfferDTO | undefined {
+export function toPublicOffer(o: OfferDoc, vendor: Pick<UserDoc, 'name' | 'shopName' | 'location' | 'locationAddress' | 'placeId'>, distanceM?: number): PublicOfferDTO | undefined {
   const location = toLocationDTO(vendor);
   if (!location) return undefined;
   return {
@@ -120,46 +120,6 @@ function toPublicOffer(o: OfferDoc, vendor: Pick<UserDoc, 'name' | 'shopName' | 
     ...(distanceM === undefined ? {} : { distanceKm: Math.round(distanceM / 10) / 100 }),
   };
 }
-
-// Customers near a point, closest shop first. Uses the 2dsphere index on the vendor's pin ($geoNear), so no Google
-// Distance Matrix and no per-request geocoding.
-offersRouter.get(
-  '/offers/nearby',
-  validate(nearbyQuerySchema, 'query'),
-  wrap(async (req, res) => {
-    const q = req.query as unknown as NearbyQuery;
-    const today = startOfToday();
-    const rows = await User.aggregate<{ vendor: UserDoc; offer: OfferDoc; distanceM: number }>([
-      {
-        $geoNear: {
-          near: { type: 'Point', coordinates: [q.lng, q.lat] },
-          distanceField: 'distanceM',
-          maxDistance: q.radiusKm * 1000,
-          spherical: true,
-          query: { role: 'merchant', status: 'active' },
-        },
-      },
-      {
-        $lookup: {
-          from: 'offers',
-          let: { id: '$_id' },
-          pipeline: [
-            { $match: { $expr: { $eq: ['$merchantId', '$$id'] }, status: 'active', startsAt: { $lte: today }, endsAt: { $gte: today } } },
-          ],
-          as: 'offers',
-        },
-      },
-      { $unwind: '$offers' },
-      { $sort: { distanceM: 1, 'offers.createdAt': -1 } },
-      { $limit: q.limit },
-      { $project: { distanceM: 1, offer: '$offers', vendor: { name: '$name', shopName: '$shopName', location: '$location', locationAddress: '$locationAddress', placeId: '$placeId' } } },
-    ]);
-    const offers = rows.flatMap((r) => toPublicOffer(r.offer, r.vendor, r.distanceM) ?? []);
-    const body: NearbyOffersResponse = { offers };
-    res.set('cache-control', 'public, max-age=60');
-    res.json(body);
-  }),
-);
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -174,6 +134,59 @@ const liveWindow = () => {
   const today = startOfToday();
   return { status: 'active' as const, startsAt: { $lte: today }, endsAt: { $gte: today } };
 };
+
+/** Live offers from shops within `radiusKm` of a point, closest first. One $geoNear on the vendor's 2dsphere index. */
+export async function findNearbyOffers(lat: number, lng: number, radiusKm: number, limit: number): Promise<PublicOfferDTO[]> {
+  const today = startOfToday();
+  const rows = await User.aggregate<{ vendor: UserDoc; offer: OfferDoc; distanceM: number }>([
+    {
+      $geoNear: {
+        near: { type: 'Point', coordinates: [lng, lat] },
+        distanceField: 'distanceM',
+        maxDistance: radiusKm * 1000,
+        spherical: true,
+        query: { role: 'merchant', status: 'active' },
+      },
+    },
+    {
+      $lookup: {
+        from: 'offers',
+        let: { id: '$_id' },
+        pipeline: [{ $match: { $expr: { $eq: ['$merchantId', '$$id'] }, status: 'active', startsAt: { $lte: today }, endsAt: { $gte: today } } }],
+        as: 'offers',
+      },
+    },
+    { $unwind: '$offers' },
+    { $sort: { distanceM: 1, 'offers.createdAt': -1 } },
+    { $limit: limit },
+    { $project: { distanceM: 1, offer: '$offers', vendor: { name: '$name', shopName: '$shopName', location: '$location', locationAddress: '$locationAddress', placeId: '$placeId' } } },
+  ]);
+  return rows.flatMap((r) => toPublicOffer(r.offer, r.vendor, r.distanceM) ?? []);
+}
+
+/** The newest live offers anywhere, for visitors whose location is unknown. */
+export async function findLatestOffers(limit: number): Promise<PublicOfferDTO[]> {
+  const docs = await Offer.find(liveWindow()).sort({ createdAt: -1 }).limit(limit);
+  const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName location locationAddress placeId');
+  const byId = new Map(vendors.map((v) => [String(v._id), v]));
+  return docs.flatMap((o) => {
+    const v = byId.get(String(o.merchantId));
+    return v ? (toPublicOffer(o, v) ?? []) : [];
+  });
+}
+
+// Customers near a point, closest shop first. Uses the 2dsphere index on the vendor's pin ($geoNear), so no Google
+// Distance Matrix and no per-request geocoding.
+offersRouter.get(
+  '/offers/nearby',
+  validate(nearbyQuerySchema, 'query'),
+  wrap(async (req, res) => {
+    const q = req.query as unknown as NearbyQuery;
+    const body: NearbyOffersResponse = { offers: await findNearbyOffers(q.lat, q.lng, q.radiusKm, q.limit) };
+    res.set('cache-control', 'public, max-age=60');
+    res.json(body);
+  }),
+);
 
 // What to show under the search box while typing: matching categories, shops and live offers.
 offersRouter.get(
