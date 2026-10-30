@@ -17,3 +17,11 @@ export async function backfillOfferLocations(): Promise<number> {
   }
   return changed;
 }
+
+/**
+ * Production does not build indexes automatically (autoIndex is off there), but the nearby search ($geoNear) cannot run
+ * without its 2dsphere index. Creating an index that already exists does nothing, so this is safe on every start.
+ */
+export async function ensureGeoIndexes(): Promise<void> {
+  await Promise.all([Offer.collection.createIndex({ location: '2dsphere' }), User.collection.createIndex({ location: '2dsphere' })]);
+}

@@ -23,6 +23,7 @@ import { HttpError, notFound } from '../../utils/errors';
 import { User, type UserDoc } from '../../models/User';
 import { toLocationDTO } from '../auth/auth.service';
 import { reverseGeocode } from '../../services/geocode';
+import { ensureGeoIndexes } from '../../services/backfill';
 import { Offer, type OfferDoc } from '../../models/Offer';
 import { OfferImage } from '../../models/OfferImage';
 
@@ -150,6 +151,17 @@ const liveWindow = () => {
 
 /** Live offers within `radiusKm` of a point, closest first. One $geoNear on the offers' own 2dsphere index. */
 export async function findNearbyOffers(lat: number, lng: number, radiusKm: number, limit: number): Promise<PublicOfferDTO[]> {
+  try {
+    return await nearbyQuery(lat, lng, radiusKm, limit);
+  } catch (err) {
+    // 291: "unable to find index for $geoNear". Build it now and try once more instead of failing the visitor.
+    if ((err as { code?: number }).code !== 291) throw err;
+    await ensureGeoIndexes();
+    return nearbyQuery(lat, lng, radiusKm, limit);
+  }
+}
+
+async function nearbyQuery(lat: number, lng: number, radiusKm: number, limit: number): Promise<PublicOfferDTO[]> {
   const today = startOfToday();
   const rows = await Offer.aggregate<OfferDoc & { distanceM: number; vendor: UserDoc }>([
     {

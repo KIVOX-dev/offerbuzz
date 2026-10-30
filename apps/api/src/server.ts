@@ -1,7 +1,7 @@
 import { env } from './config/env';
 import { connectDb } from './config/db';
 import { createApp } from './app';
-import { backfillOfferLocations } from './services/backfill';
+import { backfillOfferLocations, ensureGeoIndexes } from './services/backfill';
 import { startOfferExpiryJob } from './services/offerExpiry';
 
 async function main() {
@@ -10,6 +10,7 @@ async function main() {
   const server = app.listen(PORT, () => console.log(`OfferBuzz API listening on :${PORT}`));
   // Warm the connection, but keep serving /health even if Atlas is briefly unreachable.
   connectDb()
+    .then(() => ensureGeoIndexes())
     .then(() => backfillOfferLocations())
     .then((n) => n > 0 && console.log(`Gave ${n} older offers their shop's location`))
     .catch((err) => console.error('Initial MongoDB connection failed:', err.message));

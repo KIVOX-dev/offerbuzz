@@ -604,6 +604,18 @@ describe('vendor offers and profile', () => {
     expect((await post(t, { ...OFFER, location: { lat: 95, lng: 0 } })).status).toBe(400);
   });
 
+  it('creates the geo indexes the nearby search needs, and recovers when one is missing (production has autoIndex off)', async () => {
+    const { ensureGeoIndexes } = await import('../src/services/backfill');
+    await Offer.collection.dropIndex('location_2dsphere').catch(() => undefined);
+    // the nearby search heals itself: the missing index is built and the query retried
+    const res = await request(app).get('/api/v1/offers/nearby?lat=11.0&lng=76.96&radiusKm=5');
+    expect(res.status).toBe(200);
+    await ensureGeoIndexes();
+    await ensureGeoIndexes(); // running twice is harmless
+    const names = (await Offer.collection.indexes()).map((i) => i.name);
+    expect(names).toContain('location_2dsphere');
+  });
+
   it('gives older offers their shop pin so the nearby search still finds them', async () => {
     const { backfillOfferLocations } = await import('../src/services/backfill');
     const v = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'old@example.com');
