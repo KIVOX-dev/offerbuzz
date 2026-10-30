@@ -10,6 +10,7 @@ import {
   ClockIcon,
   DuoCategoryIcon,
   DuoHeartIcon,
+  DuoOffersIcon,
   DuoPinIcon,
   DuoStoreIcon,
   DuoTagIcon,
@@ -157,23 +158,49 @@ export default function Home() {
       <div className="container-page space-y-6 py-4 md:py-6">
         {/* hero */}
         <section className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-md bg-hero p-6 text-white shadow-glow md:col-span-2 md:p-8">
-            <span className="badge-discount !bg-accent !text-ink">Shop more. Save more.</span>
-            <h1 className="mt-3 text-title font-bold">Offers and deals near you</h1>
-            <p className="mt-2 max-w-xl text-purple-100">Don&apos;t miss your best offers from your favourite stores.</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link href="/login" className="btn-accent gap-2">
-                <TagIcon /> Post your offer
-              </Link>
-              <Link href="/login" className="btn border border-white/40 text-white hover:bg-white/10 gap-2">
-                <StoreIcon /> Become an intermediary
-              </Link>
+          <div className="relative overflow-hidden rounded-lg bg-hero p-6 text-white shadow-glow md:col-span-2 md:p-10">
+            {/* soft decorative shapes */}
+            <span aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-sm" />
+            <span aria-hidden className="pointer-events-none absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-accent/20 blur-2xl" />
+            <DuoTagIcon
+              size={150}
+              style={{ color: '#ffd60a' }}
+              className="pointer-events-none absolute -right-2 bottom-4 hidden rotate-12 opacity-90 drop-shadow-2xl md:block [&_*]:stroke-white/80"
+            />
+
+            <div className="relative max-w-xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-small font-bold text-ink">
+                <TagIcon size={14} /> Shop more. Save more.
+              </span>
+              <h1 className="mt-4 text-[28px] font-extrabold leading-tight tracking-tight md:text-[38px]">
+                Offers and deals <span className="text-accent">near you</span>
+              </h1>
+              <p className="mt-3 text-body text-purple-100 md:text-[17px]">
+                Don&apos;t miss the best offers from your favourite local stores.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/login" className="btn-accent gap-2 px-5">
+                  <TagIcon /> Post your offer
+                </Link>
+                <Link href="/login" className="btn gap-2 border border-white/40 bg-white/10 px-5 text-white backdrop-blur hover:bg-white/20">
+                  <StoreIcon /> Become an intermediary
+                </Link>
+              </div>
+              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-small text-purple-100">
+                <li>✓ Free for customers</li>
+                <li>✓ Verified local shops</li>
+                <li>✓ New offers daily</li>
+              </ul>
             </div>
           </div>
-          <div className="surface flex flex-col justify-center gap-3 p-6">
-            <h2 className="text-section font-bold">$20 discount</h2>
-            <p className="text-muted">On your first order. Sign in to claim it.</p>
-            <Link href="/login" className="btn-primary gap-2">
+
+          <div className="relative flex flex-col justify-center gap-3 overflow-hidden rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-6 text-center shadow-card md:p-8">
+            <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-accent/30 blur-2xl" />
+            <DuoOffersIcon size={64} className="relative mx-auto" />
+            <p className="relative text-small font-bold uppercase tracking-wider text-purple-700">First order</p>
+            <h2 className="relative text-[30px] font-extrabold leading-none text-ink">$20 discount</h2>
+            <p className="relative text-muted">Sign in to claim it on your first order.</p>
+            <Link href="/login" className="btn-primary relative mt-1 w-full gap-2">
               <UserIcon /> Login to claim
             </Link>
           </div>
