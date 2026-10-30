@@ -198,7 +198,7 @@ export default function Home() {
             <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-accent/30 blur-2xl" />
             <DuoOffersIcon size={64} className="relative mx-auto" />
             <p className="relative text-small font-bold uppercase tracking-wider text-purple-700">First order</p>
-            <h2 className="relative text-[30px] font-extrabold leading-none text-ink">$20 discount</h2>
+            <h2 className="relative text-[30px] font-extrabold leading-none text-ink">Rs 50 off</h2>
             <p className="relative text-muted">Sign in to claim it on your first order.</p>
             <Link href="/login" className="btn-primary relative mt-1 w-full gap-2">
               <UserIcon /> Login to claim
