@@ -80,7 +80,7 @@ export async function probeModels(): Promise<ProbeResult[]> {
         const res = await fetch(URL, {
           method: 'POST',
           headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-          body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Reply with the JSON {"ok": true}' }], max_tokens: 12, response_format: { type: 'json_object' } }),
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Reply with the JSON {"ok": true}' }], max_tokens: 300, response_format: { type: 'json_object' } }),
           signal: AbortSignal.timeout(TIMEOUT_MS),
         });
         if (res.ok) return { model, ok: true, status: res.status };
