@@ -34,25 +34,21 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
 function Heading({ children }: { children: string }) {
   return (
     <div className="mb-5 flex items-center gap-3">
-      <h2 className="font-mono text-[12px] uppercase tracking-wider text-purple-300">{children}</h2>
-      <span aria-hidden className="h-px max-w-[120px] flex-1 bg-purple-300/40" />
+      <h2 className="font-mono text-[12px] uppercase tracking-wider text-[#8fb0b0]">{children}</h2>
+      <span aria-hidden className="h-px max-w-[120px] flex-1 bg-[#8fb0b0]/40" />
     </div>
   );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="mt-10 bg-[#150a3a] text-purple-100">
-      {/* dotted top edge */}
-      <div
-        aria-hidden
-        className="h-2"
-        style={{ backgroundImage: 'repeating-linear-gradient(90deg, #a78bfa 0 4px, transparent 4px 8px)' }}
-      />
+    <footer className="mt-10 bg-[#0b2a2d] text-[#a9bfbf]">
       <div className="container-page py-12">
-        <div className="mb-10 flex flex-wrap items-center gap-4">
-          <Logo height={56} variant="light" />
-          <p className="text-body text-purple-200">Offers and deals from your favourite local stores.</p>
+        <div className="mb-12 max-w-md">
+          <Logo height={64} variant="light" />
+          <p className="mt-6 text-[19px] leading-relaxed text-[#a9bfbf]">
+            Your path to the best local offers: shops, deals and savings near you, all in one place.
+          </p>
         </div>
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {COLUMNS.map((col) => (
@@ -79,14 +75,14 @@ export function SiteFooter() {
             <Heading>Contact</Heading>
             <ul className="space-y-3.5 text-body text-white">
               <li className="flex items-center gap-2">
-                <PhoneIcon size={16} className="shrink-0 text-purple-300" /> +91 93459 75747
+                <PhoneIcon size={16} className="shrink-0 text-[#8fb0b0]" /> +91 93459 75747
               </li>
               <li className="flex items-center gap-2">
-                <ClockIcon size={16} className="shrink-0 text-purple-300" /> 09:00 AM – 09:00 PM
+                <ClockIcon size={16} className="shrink-0 text-[#8fb0b0]" /> 09:00 AM – 09:00 PM
               </li>
               <li>
                 <address className="flex items-start gap-2 not-italic">
-                  <PinIcon size={16} className="mt-1 shrink-0 text-purple-300" />
+                  <PinIcon size={16} className="mt-1 shrink-0 text-[#8fb0b0]" />
                   <span>#3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045</span>
                 </address>
               </li>
@@ -94,7 +90,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <p className="mt-12 border-t border-purple-300/20 pt-6 text-small text-purple-300">© 2026 OfferBuzz</p>
+        <p className="mt-12 border-t border-[#8fb0b0]/20 pt-6 text-small text-[#8fb0b0]">© 2026 OfferBuzz</p>
       </div>
     </footer>
   );
