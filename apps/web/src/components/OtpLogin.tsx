@@ -178,10 +178,10 @@ export function OtpLogin({
       ) : (
         <BackButton onClick={onBack}>Change role</BackButton>
       )}
-      <h2 className="mt-1 text-section font-bold">{roleLabel} account</h2>
+      {!bare && <h2 className="mt-1 text-section font-bold">{roleLabel} account</h2>}
 
       {step !== 'password' && (
-        <div role="tablist" className="mt-3 grid grid-cols-2 rounded-md bg-purple-100 p-1">
+        <div role="tablist" className={`grid grid-cols-2 rounded-md bg-purple-100 p-1 ${bare ? 'mt-2' : 'mt-3'}`}>
           {(['signup', 'signin'] as const).map((m) => (
             <button
               key={m}
@@ -200,7 +200,7 @@ export function OtpLogin({
 
       {step === 'details' && (
         <form
-          className="mt-4 space-y-3"
+          className={bare ? 'mt-3 space-y-2.5' : 'mt-4 space-y-3'}
           onSubmit={(e) => {
             e.preventDefault();
             void submitDetails();
@@ -272,21 +272,18 @@ export function OtpLogin({
         </form>
       )}
 
-      {step === 'details' && (
-        <div className="mt-5">
-          <div className="mb-4 flex items-center gap-3 text-small text-muted">
-            <span className="h-px flex-1 bg-purple-100" /> or {mode === 'signup' ? 'sign up' : 'log in'} with <span className="h-px flex-1 bg-purple-100" />
+      {step === 'details' && mode === 'signin' && (
+        <div className="mt-4">
+          <div className="mb-3 flex items-center gap-3 text-small text-muted">
+            <span className="h-px flex-1 bg-purple-100" /> or log in with <span className="h-px flex-1 bg-purple-100" />
           </div>
           <GoogleButton onCredential={signInWithGoogle} onError={googleError} />
-          {mode === 'signup' && role === 'merchant' && (
-            <p className="mt-2 text-center text-small text-muted">With Google, you choose your shop category in your profile after signing in.</p>
-          )}
         </div>
       )}
 
       {step === 'code' && (
         <form
-          className="mt-4 space-y-3"
+          className={bare ? 'mt-3 space-y-2.5' : 'mt-4 space-y-3'}
           onSubmit={(e) => {
             e.preventDefault();
             void confirmCode();
@@ -306,7 +303,7 @@ export function OtpLogin({
 
       {step === 'password' && (
         <form
-          className="mt-4 space-y-3"
+          className={bare ? 'mt-3 space-y-2.5' : 'mt-4 space-y-3'}
           onSubmit={(e) => {
             e.preventDefault();
             void savePassword();

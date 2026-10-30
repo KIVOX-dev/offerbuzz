@@ -84,17 +84,16 @@ function LoginInner() {
   }, [linkedRole, initialMode]);
 
   return (
-    <main className="grid min-h-screen bg-card lg:grid-cols-2">
-      <div className="flex flex-col px-6 py-6 md:px-12 lg:px-16">
-        <Logo height={52} />
+    <main className="grid min-h-[100dvh] bg-card lg:grid-cols-2">
+      <div className="flex flex-col px-5 py-4 sm:px-8 md:px-12 md:py-6 lg:px-16">
+        <Logo height={44} />
 
-        <div className="mx-auto my-auto w-full max-w-md py-10">
-          <h1 className="text-[30px] font-extrabold leading-tight tracking-tight md:text-[36px]">
+        <div className="mx-auto w-full max-w-md py-4 lg:my-auto lg:py-8">
+          <h1 className="text-[24px] font-extrabold leading-tight tracking-tight sm:text-[28px] md:text-[32px]">
             {role ? `${role === 'merchant' ? 'Vendor' : 'Intermediary'} account` : 'Welcome to OfferBuzz'}
           </h1>
-          <p className="mb-6 mt-2 text-muted">
-            {role ? 'Sign in or create your account to continue.' : 'Choose how you want to continue'}
-          </p>
+          {!role && <p className="mb-5 mt-2 text-muted">Choose how you want to continue</p>}
+          {role && <div className="mb-1" />}
 
           {role ? (
             <OtpLogin
@@ -127,7 +126,7 @@ function LoginInner() {
             </div>
           )}
 
-          <p className="mt-8 text-small text-muted">
+          <p className="mt-5 text-small text-muted">
             Just browsing? No account needed to view offers.{' '}
             <Link href="/" className="font-semibold text-purple-700 underline">Back to home</Link>
           </p>
