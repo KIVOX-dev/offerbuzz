@@ -191,7 +191,7 @@ export default function Home() {
         <Reveal>
           <HeroRail label="Featured offers">
             {/* intro card */}
-            <div className="h-[290px] overflow-hidden rounded-2xl shadow-card md:h-[310px]">
+            <div className="h-[232px] overflow-hidden rounded-2xl shadow-card sm:h-[290px] md:h-[310px]">
               <div className="relative flex h-full items-center overflow-hidden bg-hero px-5 pb-6 pt-6 text-white md:px-8">
                 {/* soft glows and a faint dot grid */}
                 <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-purple-400/25 blur-3xl" />
@@ -227,36 +227,36 @@ export default function Home() {
 
             <PromoCard theme="blue" image="/banners/electronics.webp" imagePosition="52% center" label="Sale is live" href={`/search?category=${encodeURIComponent('Mobile and Electronics')}`}
               burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} />}>
-              <span className="text-[34px] font-black uppercase leading-[0.95] tracking-tight [text-shadow:0_2px_14px_rgba(255,255,255,0.55)] md:text-[40px]">Sale is live</span>
+              <span className="text-[27px] font-black uppercase leading-[0.95] tracking-tight [text-shadow:0_2px_14px_rgba(255,255,255,0.55)] sm:text-[34px] md:text-[40px]">Sale is live</span>
               <OffPill>50 - 80% Off</OffPill>
               <InfoStrip>Up to Rs 100 instant off on your first order</InfoStrip>
             </PromoCard>
 
             <PromoCard theme="indigo" image="/banners/fashion.webp" label="Festivals of India" href={`/search?category=${encodeURIComponent('Fashion')}`}
               burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} size={60} />}>
-              <span className="font-serif text-[34px] font-bold uppercase leading-[0.95] tracking-wide md:text-[38px]">Festivals</span>
-              <span className="-mt-2 font-serif text-[20px] uppercase tracking-[0.2em] text-white/90">of India</span>
-              <span aria-hidden className="h-px w-28 bg-gradient-to-r from-amber-300 to-transparent" />
-              <span className="text-[22px] font-bold text-amber-200">From Rs 99</span>
+              <span className="font-serif text-[26px] font-bold uppercase leading-[0.95] tracking-wide sm:text-[34px] md:text-[38px]">Festivals</span>
+              <span className="-mt-1 font-serif text-[14px] uppercase tracking-[0.2em] text-white/90 sm:-mt-2 sm:text-[20px]">of India</span>
+              <span aria-hidden className="hidden h-px w-28 bg-gradient-to-r from-amber-300 to-transparent sm:block" />
+              <span className="text-[18px] font-bold text-amber-200 sm:text-[22px]">From Rs 99</span>
             </PromoCard>
 
-            <PromoCard theme="teal" image="/banners/grocery.webp" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
+            <PromoCard theme="teal" image="/banners/grocery.webp" imagePosition="88% center" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
               burst={<Burst lines={['FRESH', 'EVERY', 'DAY']} size={62} />}>
-              <span className="text-[30px] font-black uppercase leading-[0.98] tracking-tight md:text-[34px]">Fresh groceries</span>
-              <span className="text-[15px] font-medium text-white/90">Stock up at your neighbourhood store</span>
+              <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight sm:text-[30px] md:text-[34px]">Fresh groceries</span>
+              <span className="hidden text-[15px] font-medium text-white/90 sm:block">Stock up at your neighbourhood store</span>
               <OffPill>Min. 15% Off</OffPill>
             </PromoCard>
 
             <PromoCard theme="orange" image="/banners/travel.webp" label="Weekend getaways" href={`/search?category=${encodeURIComponent('Travels')}`}
               burst={<Burst lines={['WEEK', 'END', 'SALE']} size={62} />}>
-              <span className="text-[30px] font-black uppercase leading-[0.98] tracking-tight md:text-[34px]">Weekend getaways</span>
-              <span className="text-[15px] font-medium text-white/95">Short trips, great deals</span>
+              <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight sm:text-[30px] md:text-[34px]">Weekend getaways</span>
+              <span className="hidden text-[15px] font-medium text-white/95 sm:block">Short trips, great deals</span>
               <OffPill>Up to 30% Off</OffPill>
             </PromoCard>
 
             <PromoCard theme="gold" dark image="/categories/home.webp" label="First order offer">
               <span className="text-small font-extrabold uppercase tracking-wider text-purple-800">First order</span>
-              <span className="text-[44px] font-black leading-none md:text-[52px]">Rs 50 off</span>
+              <span className="text-[34px] font-black leading-none sm:text-[44px] md:text-[52px]">Rs 50 off</span>
               <InfoStrip>Claim it on your first order</InfoStrip>
             </PromoCard>
           </HeroRail>

@@ -11,7 +11,7 @@ const BURST = Array.from({ length: 32 }, (_, i) => {
 
 export function Burst({ lines, size = 72 }: { lines: [string, string, string?]; size?: number }) {
   return (
-    <span className="relative inline-flex -rotate-6 items-center justify-center drop-shadow-lg" style={{ width: size, height: size }} aria-hidden>
+    <span className="relative inline-flex origin-top-left -rotate-6 items-center justify-center drop-shadow-lg max-sm:-mb-4 max-sm:scale-[0.62]" style={{ width: size, height: size }} aria-hidden>
       <svg viewBox="0 0 100 100" width={size} height={size} className="absolute inset-0">
         <polygon points={BURST} fill="#ffd60a" stroke="#f59e0b" strokeWidth="2" />
       </svg>
@@ -61,7 +61,7 @@ export function PromoCard({
   cutout?: boolean;
 }) {
   const body = (
-    <div className={`relative h-[290px] overflow-hidden rounded-2xl bg-gradient-to-br shadow-card md:h-[310px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
+    <div className={`relative h-[232px] overflow-hidden rounded-2xl bg-gradient-to-br shadow-card sm:h-[290px] md:h-[310px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-25"
@@ -78,7 +78,7 @@ export function PromoCard({
           src={image}
           alt=""
           loading="lazy"
-          className="pointer-events-none absolute -bottom-2 right-1 h-[104%] w-auto max-w-[52%] object-contain object-bottom drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
+          className="pointer-events-none absolute -bottom-2 right-1 h-[104%] w-auto max-w-[44%] object-contain object-bottom sm:max-w-[52%] drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
         />
       ) : (
         <img
@@ -86,11 +86,11 @@ export function PromoCard({
           alt=""
           loading="lazy"
           style={{ objectPosition: imagePosition }}
-          className="absolute inset-y-0 right-0 h-full w-[46%] object-cover shadow-[-12px_0_24px_rgba(0,0,0,0.18)]"
+          className="absolute inset-y-0 right-0 h-full w-[38%] object-cover shadow-[-12px_0_24px_rgba(0,0,0,0.18)] sm:w-[46%]"
         />
       )}
 
-      <div className="relative z-10 flex h-full max-w-[56%] flex-col items-start justify-center gap-3 p-5 md:p-6">
+      <div className="relative z-10 flex h-full max-w-[64%] flex-col items-start justify-center gap-1.5 p-4 sm:max-w-[56%] sm:gap-3 sm:p-5 md:p-6">
         {burst}
         {children}
       </div>
@@ -107,10 +107,10 @@ export function PromoCard({
 
 /** The dark navy "50 - 80% Off" style pill. */
 export function OffPill({ children }: { children: ReactNode }) {
-  return <span className="rounded-xl border border-white/25 bg-[#1e1b6b] px-4 py-2 text-[17px] font-extrabold text-white shadow-lg">{children}</span>;
+  return <span className="whitespace-nowrap rounded-xl border border-white/25 bg-[#1e1b6b] px-3 py-1.5 text-[14px] font-extrabold text-white shadow-lg sm:px-4 sm:py-2 sm:text-[17px]">{children}</span>;
 }
 
 /** The small white strip along the bottom of a card ("Up to Rs 100 off on your first order"). */
 export function InfoStrip({ children }: { children: ReactNode }) {
-  return <span className="rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold leading-tight text-ink shadow-card">{children}</span>;
+  return <span className="hidden rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold leading-tight text-ink shadow-card sm:inline-block">{children}</span>;
 }

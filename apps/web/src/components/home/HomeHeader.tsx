@@ -123,7 +123,7 @@ export function HomeHeader({
               className="mr-3 w-[132px] shrink-0 overflow-hidden rounded-2xl bg-gradient-to-b from-amber-300 to-accent p-2.5 text-left text-ink shadow-card"
             >
               <span className="block text-[11px] font-extrabold uppercase text-purple-900">{p.off}</span>
-              <span className="mt-0.5 block h-9 text-[14px] font-extrabold leading-tight">{p.title}</span>
+              <span className="mt-0.5 line-clamp-2 h-9 text-[13px] font-extrabold leading-tight">{p.title}</span>
               <span
                 style={{ backgroundImage: `linear-gradient(120deg, ${categories[p.cat].from}, ${categories[p.cat].to})` }}
                 className="mt-2 block aspect-[4/3] overflow-hidden rounded-xl"
