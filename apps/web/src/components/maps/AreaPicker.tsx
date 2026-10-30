@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { LocationInput } from '@offerbuzz/shared';
 import { nameFromBigDataCloud } from '@/lib/location';
 import { loadMaps, mapsConfigured } from '@/lib/maps';
 import { PinIcon } from '../Icons';
 
-type Suggestion = { id: string; text: string };
+type Suggestion = { id: string; text: string; place: google.maps.places.Place };
 
 const MIN_CHARS = 3;
 const DEBOUNCE_MS = 450;
@@ -50,6 +51,7 @@ export function AreaPicker({
   value,
   onChange,
   shopAddress,
+  onPlace,
   placeholder = 'RS Puram, Coimbatore',
 }: {
   id?: string;
@@ -57,6 +59,8 @@ export function AreaPicker({
   onChange: (v: string) => void;
   /** the vendor's saved shop address, offered as a quick pick */
   shopAddress?: string;
+  /** the exact point behind the chosen area (undefined = no exact point, use the shop pin) */
+  onPlace?: (p: LocationInput | undefined) => void;
   placeholder?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
@@ -107,7 +111,7 @@ export function AreaPicker({
           includedPrimaryTypes: ['(regions)'],
         });
         if (stale) return;
-        setItems(suggestions.flatMap((s) => (s.placePrediction ? [{ id: s.placePrediction.placeId, text: shorten(s.placePrediction.text.text) }] : [])));
+        setItems(suggestions.flatMap((s) => (s.placePrediction ? [{ id: s.placePrediction.placeId, text: shorten(s.placePrediction.text.text), place: s.placePrediction.toPlace() }] : [])));
       } catch {
         if (!stale) setItems([]);
       }
@@ -117,6 +121,18 @@ export function AreaPicker({
       clearTimeout(t);
     };
   }, [value, ready]);
+
+  /** a suggestion was picked: also fetch its exact point and address for directions */
+  async function choosePlace(sug: Suggestion) {
+    choose(sug.text);
+    try {
+      await sug.place.fetchFields({ fields: ['location', 'formattedAddress', 'id'] });
+      const loc = sug.place.location;
+      if (loc) onPlace?.({ lat: loc.lat(), lng: loc.lng(), address: sug.place.formattedAddress ?? undefined, placeId: sug.place.id });
+    } catch {
+      /* the area text is still filled in; directions fall back to the shop pin */
+    }
+  }
 
   function choose(text: string) {
     picked.current = text;
@@ -134,6 +150,8 @@ export function AreaPicker({
       async (pos) => {
         try {
           const area = await areaFromCoords(pos.coords.latitude, pos.coords.longitude);
+          // the exact GPS point goes with the offer, so customers get directions to this very spot
+          onPlace?.({ lat: pos.coords.latitude, lng: pos.coords.longitude });
           if (area) choose(area);
           else setError('Could not find the area name. Type it instead.');
         } catch {
@@ -159,6 +177,7 @@ export function AreaPicker({
         onChange={(e) => {
           picked.current = '';
           onChange(e.target.value);
+          onPlace?.(undefined); // typed by hand: the previous exact point no longer matches
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
@@ -181,7 +200,10 @@ export function AreaPicker({
           {shopAddress && (
             <button
               type="button"
-              onClick={() => choose(shorten(shopAddress))}
+              onClick={() => {
+                choose(shorten(shopAddress));
+                onPlace?.(undefined); // the shop pin is used
+              }}
               className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-purple-200 bg-white px-3 py-1.5 text-small font-semibold text-purple-800 transition hover:bg-purple-50 active:scale-95"
             >
               <PinIcon size={16} className="shrink-0" /> <span className="truncate">Use my shop location</span>
@@ -197,7 +219,7 @@ export function AreaPicker({
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => choose(s.text)}
+                onClick={() => void choosePlace(s)}
                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-body transition-colors hover:bg-purple-50"
               >
                 <PinIcon size={16} className="shrink-0 text-purple-700" />

@@ -136,6 +136,8 @@ export const offerInputSchema = z
     endsAt: day,
     area: z.string().trim().min(2, 'Enter the area or city').max(100),
     terms: z.string().trim().max(300).optional(),
+    /** exact spot for directions; when left out the shop's saved pin is used */
+    location: locationInputSchema.optional(),
   })
   .superRefine((v, ctx) => {
     if (v.discountType !== 'deal' && v.discountValue === undefined) {

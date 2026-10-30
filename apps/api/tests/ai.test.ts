@@ -22,7 +22,7 @@ async function seed() {
   const day = (n: number) => new Date(today.getTime() + n * 86_400_000);
   const mk = async (email: string, shopName: string, lng: number, lat: number, category: string, title: string, value: number) => {
     const v = await User.create({ role: 'merchant', email, name: shopName, shopName, category, referralCode: email.slice(0, 8).toUpperCase().padEnd(8, 'A'), location: { type: 'Point', coordinates: [lng, lat] } });
-    return Offer.create({ merchantId: v._id, title, description: 'Great deal for everyone.', category, discountType: 'percent', discountValue: value, startsAt: day(-1), endsAt: day(10), area: 'RS Puram', status: 'active' });
+    return Offer.create({ merchantId: v._id, title, description: 'Great deal for everyone.', category, discountType: 'percent', discountValue: value, startsAt: day(-1), endsAt: day(10), area: 'RS Puram', status: 'active', location: { type: 'Point', coordinates: [lng, lat] } });
   };
   const near = await mk('near@example.com', 'Near Fresh', HERE.lng, HERE.lat, 'Grocery', 'Veg combo', 20);
   const mid = await mk('mid@example.com', 'Mid Styles', HERE.lng + 0.05, HERE.lat, 'Fashion', 'Saree sale', 40);

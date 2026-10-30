@@ -569,6 +569,52 @@ describe('vendor offers and profile', () => {
     expect(near.body.offers[0].distanceKm).toBe(0);
   });
 
+  it('stores an exact location with the offer, which can differ from the shop pin and is what directions and nearby use', async () => {
+    // a vendor with NO shop pin can still post when the offer itself carries a location
+    const v = await signUp({ role: 'merchant' }, 'branch@example.com');
+    const t = v.body.accessToken;
+    await authed(request(app).put('/api/v1/me'), t).send({ category: 'Salon and Spa' });
+    expect((await post(t, OFFER)).status).toBe(409);
+
+    geocodeCalls = 0;
+    const today = new Date().toISOString().slice(0, 10);
+    const branch = await post(t, { ...OFFER, startsAt: today, endsAt: '2099-01-01', title: 'Branch deal', location: { lat: 11.05, lng: 77.0 } });
+    expect(branch.status).toBe(201);
+    expect(geocodeCalls).toBe(1); // a bare pin gets its address looked up once, now
+
+    // a second offer with its own address never calls Geocoding, and the shop pin is unchanged
+    const own = await post(t, { ...OFFER, startsAt: today, endsAt: '2099-01-01', title: 'Other deal', location: { lat: 11.2, lng: 77.1, address: 'Chosen address', placeId: 'pp' } });
+    expect(own.status).toBe(201);
+    expect(geocodeCalls).toBe(1);
+    await Offer.updateMany({}, { status: 'active' });
+
+    const near = await request(app).get('/api/v1/offers/nearby?lat=11.05&lng=77.0&radiusKm=5');
+    expect(near.body.offers.map((o: { title: string }) => o.title)).toEqual(['Branch deal']);
+    expect(near.body.offers[0].shop.location).toEqual({ lat: 11.05, lng: 77.0, address: 'Reverse geocoded address', placeId: 'place-1' });
+
+    const one = await request(app).get(`/api/v1/offers/${own.body.offer.id}`);
+    expect(one.body.offer.shop.location).toEqual({ lat: 11.2, lng: 77.1, address: 'Chosen address', placeId: 'pp' });
+
+    // an offer without its own location takes the shop pin
+    await User.updateOne({ email: 'branch@example.com' }, { location: { type: 'Point', coordinates: [76.5, 10.5] }, locationAddress: 'Shop address' });
+    const plain = await post(t, { ...OFFER, startsAt: today, endsAt: '2099-01-01', title: 'Plain deal' });
+    await Offer.updateMany({}, { status: 'active' });
+    const p = await request(app).get(`/api/v1/offers/${plain.body.offer.id}`);
+    expect(p.body.offer.shop.location).toMatchObject({ lat: 10.5, lng: 76.5, address: 'Shop address' });
+    expect((await post(t, { ...OFFER, location: { lat: 95, lng: 0 } })).status).toBe(400);
+  });
+
+  it('gives older offers their shop pin so the nearby search still finds them', async () => {
+    const { backfillOfferLocations } = await import('../src/services/backfill');
+    const v = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'old@example.com');
+    const created = await post(v.body.accessToken, { ...OFFER, startsAt: new Date().toISOString().slice(0, 10), endsAt: '2099-01-01', title: 'Old offer' });
+    await Offer.updateOne({ _id: created.body.offer.id }, { status: 'active', $unset: { location: 1, address: 1, placeId: 1 } }); // as posted before this feature
+    expect((await request(app).get('/api/v1/offers/nearby?lat=11.0168&lng=76.9558&radiusKm=5')).body.offers).toHaveLength(0);
+    expect(await backfillOfferLocations()).toBe(1);
+    expect((await request(app).get('/api/v1/offers/nearby?lat=11.0168&lng=76.9558&radiusKm=5')).body.offers).toHaveLength(1);
+    expect(await backfillOfferLocations()).toBe(0); // running again changes nothing
+  });
+
   it('validates the offer form', async () => {
     const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
     const t = v.body.accessToken;

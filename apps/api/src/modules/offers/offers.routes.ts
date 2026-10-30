@@ -22,6 +22,7 @@ import { wrap } from '../../utils/async';
 import { HttpError, notFound } from '../../utils/errors';
 import { User, type UserDoc } from '../../models/User';
 import { toLocationDTO } from '../auth/auth.service';
+import { reverseGeocode } from '../../services/geocode';
 import { Offer, type OfferDoc } from '../../models/Offer';
 import { OfferImage } from '../../models/OfferImage';
 
@@ -60,15 +61,22 @@ offersRouter.post(
   wrap(async (req, res) => {
     const b = req.body as OfferInput;
     // a shop only posts into the category it chose at sign up
-    const vendor = await User.findById(req.auth!.id).select('category location');
+    const vendor = await User.findById(req.auth!.id).select('category location locationAddress placeId');
     if (!vendor?.category) {
       throw new HttpError(409, 'CATEGORY_REQUIRED', 'Choose your shop category in your profile before posting offers');
     }
     if (b.category !== vendor.category) {
       throw new HttpError(400, 'CATEGORY_MISMATCH', `Your shop posts offers in ${vendor.category} only`);
     }
-    if (!vendor.location?.coordinates?.length) {
-      throw new HttpError(409, 'LOCATION_REQUIRED', 'Share your shop location in your profile before posting offers');
+    // the exact spot for directions: the one given with the offer, else the shop's saved pin
+    let spot = b.location ? { lat: b.location.lat, lng: b.location.lng, address: b.location.address || undefined, placeId: b.location.placeId || undefined } : toLocationDTO(vendor);
+    if (!spot) {
+      throw new HttpError(409, 'LOCATION_REQUIRED', 'Share the exact location of this offer, or save your shop location in your profile, before posting');
+    }
+    if (b.location && !spot.address) {
+      // a pin without an address (GPS or a dragged pin): look the address up once now and store it
+      const found = await reverseGeocode(spot.lat, spot.lng);
+      spot = { ...spot, address: found.address, placeId: found.placeId };
     }
     const offer = await Offer.create({
       merchantId: req.auth!.id,
@@ -81,6 +89,9 @@ offersRouter.post(
       endsAt: new Date(`${b.endsAt}T00:00:00.000Z`),
       area: b.area,
       terms: b.terms || undefined,
+      location: { type: 'Point', coordinates: [spot.lng, spot.lat] },
+      address: spot.address,
+      placeId: spot.placeId,
     });
     res.status(201).json({ offer: toOfferDTO(offer) });
   }),
@@ -112,7 +123,9 @@ const startOfToday = () => new Date(`${dateOnly(new Date())}T00:00:00.000Z`);
 
 /** Offers that are approved and inside their dates, with the shop that posted them. */
 export function toPublicOffer(o: OfferDoc, vendor: Pick<UserDoc, 'name' | 'shopName' | 'location' | 'locationAddress' | 'placeId'>, distanceM?: number): PublicOfferDTO | undefined {
-  const location = toLocationDTO(vendor);
+  const c = o.location?.coordinates;
+  const own = c && c.length === 2 ? { lat: c[1], lng: c[0], address: o.address ?? undefined, placeId: o.placeId ?? undefined } : undefined;
+  const location = own ?? toLocationDTO(vendor);
   if (!location) return undefined;
   return {
     ...toOfferDTO(o),
@@ -135,33 +148,26 @@ const liveWindow = () => {
   return { status: 'active' as const, startsAt: { $lte: today }, endsAt: { $gte: today } };
 };
 
-/** Live offers from shops within `radiusKm` of a point, closest first. One $geoNear on the vendor's 2dsphere index. */
+/** Live offers within `radiusKm` of a point, closest first. One $geoNear on the offers' own 2dsphere index. */
 export async function findNearbyOffers(lat: number, lng: number, radiusKm: number, limit: number): Promise<PublicOfferDTO[]> {
   const today = startOfToday();
-  const rows = await User.aggregate<{ vendor: UserDoc; offer: OfferDoc; distanceM: number }>([
+  const rows = await Offer.aggregate<OfferDoc & { distanceM: number; vendor: UserDoc }>([
     {
       $geoNear: {
         near: { type: 'Point', coordinates: [lng, lat] },
         distanceField: 'distanceM',
         maxDistance: radiusKm * 1000,
         spherical: true,
-        query: { role: 'merchant', status: 'active' },
+        key: 'location',
+        query: { status: 'active', startsAt: { $lte: today }, endsAt: { $gte: today } },
       },
     },
-    {
-      $lookup: {
-        from: 'offers',
-        let: { id: '$_id' },
-        pipeline: [{ $match: { $expr: { $eq: ['$merchantId', '$$id'] }, status: 'active', startsAt: { $lte: today }, endsAt: { $gte: today } } }],
-        as: 'offers',
-      },
-    },
-    { $unwind: '$offers' },
-    { $sort: { distanceM: 1, 'offers.createdAt': -1 } },
+    { $lookup: { from: 'users', localField: 'merchantId', foreignField: '_id', as: 'vendor' } },
+    { $unwind: '$vendor' },
+    { $match: { 'vendor.role': 'merchant', 'vendor.status': 'active' } },
     { $limit: limit },
-    { $project: { distanceM: 1, offer: '$offers', vendor: { name: '$name', shopName: '$shopName', location: '$location', locationAddress: '$locationAddress', placeId: '$placeId' } } },
   ]);
-  return rows.flatMap((r) => toPublicOffer(r.offer, r.vendor, r.distanceM) ?? []);
+  return rows.flatMap((r) => toPublicOffer(r, r.vendor, r.distanceM) ?? []);
 }
 
 /** The newest live offers anywhere, for visitors whose location is unknown. */
@@ -231,7 +237,7 @@ offersRouter.get(
     const offers = docs
       .flatMap((o) => {
         const v = byId.get(String(o.merchantId));
-        const c = v?.location?.coordinates;
+        const c = o.location?.coordinates?.length === 2 ? o.location.coordinates : v?.location?.coordinates;
         if (!v || !c) return [];
         const dto = toPublicOffer(o, v, here ? distanceM(here.lat, here.lng, c[1], c[0]) : undefined);
         return dto ? [dto] : [];

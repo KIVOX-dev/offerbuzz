@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import type { PublicOfferDTO } from '@offerbuzz/shared';
-import { HeartIcon } from './Icons';
+import { HeartIcon, PinIcon } from './Icons';
 import { discountLabel } from './OfferPreview';
+import { directionsUrl } from '@/lib/maps';
 import { useSaved } from '@/lib/saved';
 
 /** "Ends today", "Ends tomorrow", "Ends in 3 days" for an end date (YYYY-MM-DD). */
@@ -40,6 +41,22 @@ export function OfferCard({ o }: { o: PublicOfferDTO }) {
       <div className="flex flex-1 flex-col gap-1 p-3">
         <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold">{o.title}</p>
         <p className="truncate text-small text-muted">{o.shop.name}</p>
+        {/* the exact spot this offer is redeemed at, with one tap to directions */}
+        <p className="flex items-start gap-1 text-[12px] leading-snug text-ink/80">
+          <PinIcon size={14} className="mt-0.5 shrink-0 text-purple-700" />
+          <span className="line-clamp-2">{(o.shop.location.address ?? o.area).replace(/,\s*India$/i, '')}</span>
+        </p>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault(); // the card itself is a link to the offer; this opens Google Maps instead
+            e.stopPropagation();
+            window.open(directionsUrl(o.shop.location.lat, o.shop.location.lng, o.shop.location.placeId), '_blank', 'noopener,noreferrer');
+          }}
+          className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-2 py-1.5 text-[12px] font-bold text-purple-800 transition hover:bg-purple-100 active:scale-95"
+        >
+          <PinIcon size={14} /> Get directions
+        </button>
         <p className="mt-auto flex items-center justify-between pt-1 text-small font-semibold">
           <span className="text-purple-700">{o.distanceKm === undefined ? '' : o.distanceKm < 1 ? 'Under 1 km' : `${o.distanceKm.toFixed(1)} km away`}</span>
           <span className="text-amber-700">{endsLabel(o.endsAt)}</span>
