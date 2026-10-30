@@ -45,6 +45,7 @@ export function PromoCard({
   label,
   dark,
   imagePosition = 'center',
+  cutout,
 }: {
   theme: PromoTheme;
   image: string;
@@ -56,6 +57,8 @@ export function PromoCard({
   dark?: boolean;
   /** CSS object-position for the photo panel, to keep the subject in view */
   imagePosition?: string;
+  /** a transparent cut-out (a person or product): stands on the card instead of filling a photo panel */
+  cutout?: boolean;
 }) {
   const body = (
     <div className={`relative h-[290px] overflow-hidden rounded-2xl bg-gradient-to-br shadow-card md:h-[310px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
@@ -70,13 +73,22 @@ export function PromoCard({
       />
       <span aria-hidden className="pointer-events-none absolute -left-10 -top-10 h-44 w-44 rounded-full bg-white/25 blur-2xl" />
 
-      <img
-        src={image}
-        alt=""
-        loading="lazy"
-        style={{ objectPosition: imagePosition }}
-        className="absolute inset-y-0 right-0 h-full w-[46%] object-cover shadow-[-12px_0_24px_rgba(0,0,0,0.18)]"
-      />
+      {cutout ? (
+        <img
+          src={image}
+          alt=""
+          loading="lazy"
+          className="pointer-events-none absolute -bottom-2 right-1 h-[104%] w-auto max-w-[52%] object-contain object-bottom drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
+        />
+      ) : (
+        <img
+          src={image}
+          alt=""
+          loading="lazy"
+          style={{ objectPosition: imagePosition }}
+          className="absolute inset-y-0 right-0 h-full w-[46%] object-cover shadow-[-12px_0_24px_rgba(0,0,0,0.18)]"
+        />
+      )}
 
       <div className="relative z-10 flex h-full max-w-[56%] flex-col items-start justify-center gap-3 p-5 md:p-6">
         {burst}
