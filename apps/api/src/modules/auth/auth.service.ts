@@ -222,7 +222,11 @@ export async function googleLogin(idToken: string, role: SelfServeRole = 'custom
   } catch (err) {
     if (err instanceof Error && 'status' in err) throw err;
     // the reason is only logged (never the token): "Wrong recipient" = the Client ID on the website and on the API differ
-    if (env().NODE_ENV !== 'test') console.error('Google sign in rejected:', err instanceof Error ? err.message : err);
+    const reason = err instanceof Error ? err.message : String(err);
+    if (env().NODE_ENV !== 'test') console.error('Google sign in rejected:', reason);
+    if (/wrong recipient|audience/i.test(reason)) {
+      throw unauthorized('Google sign in is set up with a different Client ID on the server than on the website. Please tell the site owner.', 'GOOGLE_CLIENT_MISMATCH');
+    }
     throw unauthorized('Invalid Google token', 'GOOGLE_TOKEN_INVALID');
   }
   const byGoogle = await User.findOne({ googleId: profile.sub });

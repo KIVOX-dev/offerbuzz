@@ -392,6 +392,18 @@ describe('password', () => {
   });
 });
 
+describe('google sign in errors', () => {
+  it('says so plainly when the Client ID on the server differs from the website', async () => {
+    svc.setGoogleVerifier(async () => {
+      throw new Error('Wrong recipient, payload audience != requiredAudience');
+    });
+    const res = await request(app).post('/api/v1/auth/google').send({ idToken: 'x'.repeat(30), role: 'intermediary' });
+    svc.setGoogleVerifier();
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('GOOGLE_CLIENT_MISMATCH');
+  });
+});
+
 describe('vendor offers and profile', () => {
   const OFFER = {
     title: 'Flat 30% off',
