@@ -9,7 +9,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
     <main className="min-h-screen">
       <header className="border-b border-purple-100 bg-card">
         <div className="container-page flex items-center justify-between py-3">
-          <Logo height={32} />
+          <Logo height={42} />
           <Link href="/" className="btn-ghost btn-sm">Back to home</Link>
         </div>
       </header>
@@ -25,7 +25,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
             {s.body.map((p) => <p key={p} className="text-body">{p}</p>)}
           </section>
         ))}
-        <p className="text-small text-muted">Questions? Call 93 45 97 57 47 between 09:00 AM and 09:00 PM, or write to us at #3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045.</p>
+        <p className="text-small text-muted">Questions? Call +91 93459 75747 between 09:00 AM and 09:00 PM, or write to us at #3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045.</p>
       </article>
     </main>
   );

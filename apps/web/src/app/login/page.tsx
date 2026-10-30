@@ -27,7 +27,7 @@ function LoginInner() {
   return (
     <main className="container-page py-6 md:py-8">
       <div className="mb-4 flex justify-center">
-        <Logo height={48} />
+        <Logo height={60} />
       </div>
       <h1 className="text-center text-title font-bold">Welcome to OfferBuzz</h1>
       <p className="mt-1 text-center text-muted">Choose how you want to continue</p>

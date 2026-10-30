@@ -74,7 +74,7 @@ export function SiteFooter() {
             <Heading>Contact</Heading>
             <ul className="space-y-3.5 text-body text-white">
               <li className="flex items-center gap-2">
-                <PhoneIcon size={16} className="shrink-0 text-purple-300" /> 93 45 97 57 47
+                <PhoneIcon size={16} className="shrink-0 text-purple-300" /> +91 93459 75747
               </li>
               <li className="flex items-center gap-2">
                 <ClockIcon size={16} className="shrink-0 text-purple-300" /> 09:00 AM – 09:00 PM

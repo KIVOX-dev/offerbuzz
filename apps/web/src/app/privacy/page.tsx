@@ -17,7 +17,7 @@ export default function Privacy() {
         { heading: 'Retention and security', body: ['We keep data while your account is active and as needed for legal and accounting reasons. Passwords are stored hashed and sessions use short-lived tokens, but no system is perfectly secure.'] },
         { heading: 'Your choices', body: ["You can view and edit your profile, ask us to correct or delete your data, and withdraw cookie consent at any time by clearing this site's data in your browser."] },
         { heading: 'Children', body: ['OfferBuzz is not meant for children under 13 and we do not knowingly collect their data.'] },
-        { heading: 'Contact', body: ['For privacy requests, call 93 45 97 57 47 during working hours. We may update this policy and will change the date above when we do.'] },
+        { heading: 'Contact', body: ['For privacy requests, call +91 93459 75747 during working hours. We may update this policy and will change the date above when we do.'] },
       ]}
     />
   );

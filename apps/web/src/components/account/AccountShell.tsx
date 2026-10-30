@@ -86,7 +86,7 @@ export function AccountShell({
         <header className="sticky top-0 z-20 border-b border-purple-100 bg-card">
           <div className="flex h-header-sm items-center justify-between px-3 md:h-header md:px-6">
             <Link href="/" aria-label="OfferBuzz home">
-              <Logo height={36} />
+              <Logo height={44} />
             </Link>
             <div className="flex items-center gap-2">
               <span className="hidden text-small text-muted sm:inline">{user.name || user.email}</span>

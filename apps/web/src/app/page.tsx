@@ -115,7 +115,7 @@ export default function Home() {
 
       <header className="sticky top-0 z-20 border-b border-purple-100 bg-card">
         <div className="container-page flex items-center gap-3 py-2 md:h-header md:py-0">
-          <Logo height={36} />
+          <Logo height={48} />
 
           <button type="button" className="hidden items-center gap-1 rounded-md px-2 py-1 text-small text-ink hover:bg-purple-50 md:flex">
             <PinIcon className="text-purple-700" />
@@ -193,33 +193,56 @@ export default function Home() {
       <div className="container-page space-y-6 py-4 md:py-6">
         {/* hero */}
         <section className="grid gap-4 md:grid-cols-3">
-          <Carousel label="Featured offers" className="min-h-[340px] md:col-span-2">
-            <div className="relative h-full overflow-hidden bg-hero p-6 pb-10 text-white md:p-10 md:pb-12">
-            {/* soft decorative shapes */}
-            <span aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-sm" />
-            <span aria-hidden className="pointer-events-none absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-accent/20 blur-2xl" />
-            <DuoTagIcon
-              size={150}
-              style={{ color: '#ffd60a' }}
-              className="pointer-events-none absolute -right-2 bottom-4 hidden rotate-12 opacity-90 drop-shadow-2xl md:block [&_*]:stroke-white/80"
-            />
+          <Carousel label="Featured offers" className="min-h-[380px] md:col-span-2">
+            <div className="relative flex h-full items-center overflow-hidden bg-hero px-6 pb-12 pt-8 text-white md:px-12">
+              {/* soft glows and a faint dot grid */}
+              <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-purple-400/25 blur-3xl" />
+              <span aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.12]"
+                style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '22px 22px' }}
+              />
 
-            <div className="relative max-w-xl">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-small font-bold text-ink">
-                <TagIcon size={14} /> Shop more. Save more.
-              </span>
-              <h1 className="mt-4 text-[28px] font-extrabold leading-tight tracking-tight md:text-[38px]">
-                Offers and deals <span className="text-accent">near you</span>
-              </h1>
-              <p className="mt-3 text-body text-purple-100 md:text-[17px]">
-                Don&apos;t miss the best offers from your favourite local stores.
-              </p>
-              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-small text-purple-100">
-                <li>✓ Free for customers</li>
-                <li>✓ Verified local shops</li>
-                <li>✓ New offers daily</li>
-              </ul>
-            </div>
+              <div className="relative z-10 max-w-[480px]">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-small font-semibold text-accent backdrop-blur">
+                  <TagIcon size={14} /> Shop more. Save more.
+                </span>
+                <h1 className="mt-5 text-[34px] font-extrabold leading-[1.05] tracking-tight md:text-[52px]">
+                  Offers and deals <span className="bg-gradient-to-r from-accent to-amber-300 bg-clip-text text-transparent">near you</span>
+                </h1>
+                <p className="mt-4 max-w-md text-body text-purple-100 md:text-[17px]">
+                  Don&apos;t miss the best offers from your favourite local stores.
+                </p>
+                <ul className="mt-6 flex flex-wrap gap-2 text-small font-medium">
+                  {['Free for customers', 'Verified local shops', 'New offers daily'].map((t) => (
+                    <li key={t} className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-ink">✓</span>
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* floating offer cards */}
+              <div aria-hidden className="pointer-events-none absolute inset-y-0 right-6 hidden w-[44%] md:block lg:right-12">
+                {[
+                  { cat: 0, off: '30% OFF', cls: 'left-[2%] top-[14%] -rotate-6 w-[46%]' },
+                  { cat: 1, off: 'BOGO', cls: 'right-[4%] top-[8%] rotate-6 w-[44%]' },
+                  { cat: 2, off: '20% OFF', cls: 'left-[26%] bottom-[14%] rotate-2 w-[48%]' },
+                ].map((c) => (
+                  <div
+                    key={c.cat}
+                    className={`absolute overflow-hidden rounded-xl border-4 border-white bg-white shadow-2xl ${c.cls}`}
+                  >
+                    <span className="absolute left-2 top-2 z-10 rounded-full bg-accent px-2 py-0.5 text-[11px] font-extrabold text-ink">{c.off}</span>
+                    <div style={{ backgroundImage: `linear-gradient(120deg, ${categories[c.cat].from}, ${categories[c.cat].to})` }} className="aspect-[4/3]">
+                      <img src={`/categories/${categories[c.cat].slug}.webp`} alt="" className="h-full w-full object-cover" />
+                    </div>
+                    <p className="truncate px-2.5 py-1.5 text-[12px] font-bold text-ink">{categories[c.cat].name}</p>
+                  </div>
+                ))}
+              </div>
             </div>
             {banners.map((b) => {
               const c = categories[b.cat];

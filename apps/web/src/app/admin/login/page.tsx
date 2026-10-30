@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
 
   return (
     <main className="container-page flex min-h-screen flex-col items-center justify-center py-8">
-      <Logo height={48} />
+      <Logo height={60} />
       <h1 className="mt-4 text-title font-bold">Admin sign in</h1>
       <p className="mt-1 text-muted">Authorised team members only</p>
 
