@@ -8,6 +8,7 @@ import {
   ArrowRightIcon,
   ChevronRightIcon,
   ClockIcon,
+  DuoCategoryIcon,
   DuoHeartIcon,
   DuoPinIcon,
   DuoStoreIcon,
@@ -127,19 +128,29 @@ export default function Home() {
 
       {/* category strip */}
       <nav aria-label="Categories" className="border-b border-purple-100 bg-card">
-        <ul className="container-page flex gap-2 overflow-x-auto py-2 [scrollbar-width:none]">
-          {[{ name: 'All' }, ...categories].map((c, i) => (
-            <li key={c.name} className="shrink-0">
-              <button
-                type="button"
-                aria-pressed={active === i - 1}
-                onClick={() => setActive(i - 1)}
-                className={`chip ${active === i - 1 ? 'chip-active' : ''}`}
-              >
-                {c.name}
-              </button>
-            </li>
-          ))}
+        <ul className="container-page flex gap-1 overflow-x-auto pt-2 [scrollbar-width:none]">
+          {[{ name: 'All', slug: 'all', from: '#e9e4fb', to: '#ffffff' }, ...categories].map((c, i) => {
+            const on = active === i - 1;
+            return (
+              <li key={c.name} className="w-[84px] shrink-0">
+                <button
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setActive(i - 1)}
+                  className="flex w-full flex-col items-center gap-1 pb-0 text-small"
+                >
+                  <span
+                    style={on ? { backgroundImage: `linear-gradient(180deg, ${c.from}, ${c.to})` } : undefined}
+                    className="flex h-14 w-14 items-center justify-center rounded-xl transition"
+                  >
+                    <DuoCategoryIcon slug={c.slug} plain size={38} style={{ color: '#ffd60a' }} />
+                  </span>
+                  <span className={`w-full truncate px-1 text-center ${on ? 'font-bold text-ink' : 'font-medium text-ink'}`}>{c.name}</span>
+                  <span className={`h-[3px] w-full rounded-full transition ${on ? 'bg-purple-600' : 'bg-transparent'}`} />
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

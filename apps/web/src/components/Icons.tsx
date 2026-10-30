@@ -237,10 +237,10 @@ export const QrIcon = (p: IconProps) => (
 
 /* ---- duotone illustration icons: navy outline, light-blue fill, green "+" accent ---- */
 const NAVY = '#0f1b3d';
-const BLUE = '#8ecbf0';
+const BLUE = 'currentColor'; // fill colour: the svg's CSS colour, light blue unless overridden
 const GREEN = '#12b76a';
 
-function Duo({ size = 40, children, ...rest }: IconProps) {
+function Duo({ size = 40, plain, children, style, ...rest }: IconProps & { plain?: boolean }) {
   return (
     <svg
       width={size}
@@ -252,10 +252,11 @@ function Duo({ size = 40, children, ...rest }: IconProps) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
+      style={{ color: '#8ecbf0', ...style }}
       {...rest}
     >
       {children}
-      <path d="M38 4v8M34 8h8" stroke={GREEN} />
+      {!plain && <path d="M38 4v8M34 8h8" stroke={GREEN} />}
     </svg>
   );
 }
@@ -311,3 +312,87 @@ export const DuoUsersIcon = (p: IconProps) => (
     <path d="M32 27c5 0 9 3 9 9" />
   </Duo>
 );
+
+const duoCategoryPaths: Record<string, React.ReactNode> = {
+  all: (
+    <>
+      <rect x="6" y="6" width="14" height="14" rx="3" fill={BLUE} />
+      <rect x="24" y="6" width="10" height="14" rx="3" />
+      <rect x="6" y="24" width="14" height="14" rx="3" />
+      <rect x="24" y="24" width="14" height="14" rx="3" fill={BLUE} />
+    </>
+  ),
+  grocery: (
+    <>
+      <path d="M4 8h5l4 22h22l3-16H11" fill={BLUE} />
+      <circle cx="16" cy="38" r="2.5" fill="#fff" />
+      <circle cx="32" cy="38" r="2.5" fill="#fff" />
+    </>
+  ),
+  fashion: <path d="M15 6 4 12l4 9 5-2v21h18V19l5 2 4-9-11-6c-1 4-4 6-7 6s-6-2-7-6Z" fill={BLUE} />,
+  electronics: (
+    <>
+      <rect x="9" y="6" width="22" height="34" rx="4" fill={BLUE} />
+      <path d="M17 34h6" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M6 22 20 8l14 14v18H6V22Z" fill={BLUE} />
+      <path d="M16 40V28h8v12" fill="#fff" />
+    </>
+  ),
+  beauty: (
+    <>
+      <rect x="14" y="20" width="12" height="20" rx="2" fill={BLUE} />
+      <path d="M16 20v-6h8v6M18 14 22 4" />
+    </>
+  ),
+  health: (
+    <>
+      <rect x="6" y="6" width="30" height="30" rx="6" fill={BLUE} />
+      <path d="M21 13v16M13 21h16" />
+    </>
+  ),
+  fitness: (
+    <>
+      <path d="M10 14v14M30 14v14M5 18v6M35 18v6M10 21h20" />
+      <rect x="10" y="14" width="4" height="14" fill={BLUE} />
+      <rect x="26" y="14" width="4" height="14" fill={BLUE} />
+    </>
+  ),
+  baby: (
+    <>
+      <circle cx="20" cy="22" r="15" fill={BLUE} />
+      <path d="M14 26s2.5 4 6 4 6-4 6-4M15 19h.01M25 19h.01M20 7c3 0 4 3 2 5" />
+    </>
+  ),
+  food: (
+    <>
+      <path d="M6 22a14 14 0 0 1 28 0Z" fill={BLUE} />
+      <path d="M5 28h30M8 28c0 6 4 9 12 9s12-3 12-9" />
+    </>
+  ),
+  automotive: (
+    <>
+      <path d="M4 28v-8l4-9h22l5 9v8Z" fill={BLUE} />
+      <circle cx="12" cy="30" r="4" fill="#fff" />
+      <circle cx="28" cy="30" r="4" fill="#fff" />
+    </>
+  ),
+  pets: (
+    <>
+      <path d="M20 22c-6 0-10 5-10 9 0 4 4 5 10 5s10-1 10-5c0-4-4-9-10-9Z" fill={BLUE} />
+      <circle cx="9" cy="17" r="3" />
+      <circle cx="16" cy="9" r="3" />
+      <circle cx="26" cy="9" r="3" />
+      <circle cx="33" cy="17" r="3" />
+    </>
+  ),
+  travel: <path d="M40 8 4 20l12 5 5 12 5-11 14-18Z M16 25 40 8" fill={BLUE} />,
+};
+
+/** Duotone icon for a category slug (or "all"). */
+export function DuoCategoryIcon({ slug, ...p }: IconProps & { slug: string; plain?: boolean }) {
+  return <Duo {...p}>{duoCategoryPaths[slug] ?? duoCategoryPaths.all}</Duo>;
+}
