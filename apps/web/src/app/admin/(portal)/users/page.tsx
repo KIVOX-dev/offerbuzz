@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { AdminUserDTO, AdminUsersResponse } from '@offerbuzz/shared';
 import { ApiRequestError, getAdminUsers, recordPayment, setUserStatus } from '@/lib/api';
+import { Select } from '@/components/Select';
 
 const ROLE_TABS = [
   { value: '', label: 'All' },
@@ -95,12 +96,13 @@ export default function AdminUsers() {
           <div className="flex flex-wrap items-center gap-2">
             {u.role === 'merchant' && (
               <>
-                <select aria-label="Months paid" className="input h-9 w-auto px-2 text-small" value={months[u.id] ?? 1}
-                  onChange={(e) => setMonths((m) => ({ ...m, [u.id]: Number(e.target.value) }))}>
-                  {[1, 3, 6, 12].map((m) => (
-                    <option key={m} value={m}>{m} month{m > 1 ? 's' : ''}</option>
-                  ))}
-                </select>
+                <Select
+                  ariaLabel="Months paid"
+                  className="h-9 w-auto px-2 text-small"
+                  value={months[u.id] ?? 1}
+                  onChange={(v) => setMonths((m) => ({ ...m, [u.id]: v }))}
+                  options={[1, 3, 6, 12].map((m) => ({ value: m, label: `${m} month${m > 1 ? 's' : ''}` }))}
+                />
                 <button type="button" className="btn-secondary btn-sm" disabled={busy === u.id}
                   onClick={() => act(u.id, () => recordPayment(u.id, months[u.id] ?? 1), `Payment recorded for ${u.name || u.email}`)}>
                   Record payment
@@ -139,12 +141,18 @@ export default function AdminUsers() {
             {t.label}
           </button>
         ))}
-        <select aria-label="Status" className="input h-touch w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
-          <option value="">Any status</option>
-          <option value="active">Active</option>
-          <option value="pending">Needs approval</option>
-          <option value="blocked">Blocked</option>
-        </select>
+        <Select
+          ariaLabel="Status"
+          className="h-touch w-auto min-w-[160px]"
+          value={status}
+          onChange={(v) => { setStatus(v); setPage(1); }}
+          options={[
+            { value: '', label: 'Any status' },
+            { value: 'active', label: 'Active' },
+            { value: 'pending', label: 'Needs approval' },
+            { value: 'blocked', label: 'Blocked' },
+          ]}
+        />
         <form className="flex min-w-[220px] flex-1" onSubmit={(e) => { e.preventDefault(); setQuery(search.trim()); setPage(1); }}>
           <input aria-label="Search users" className="input rounded-r-none" placeholder="Search name, email, phone or shop"
             value={search} onChange={(e) => setSearch(e.target.value)} />

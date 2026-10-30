@@ -13,6 +13,8 @@ export interface UserDTO {
   hasPassword?: boolean;
   shopName?: string;
   city?: string;
+  /** vendors: the category every offer they post belongs to */
+  category?: string;
 }
 
 export interface AuthTokens {

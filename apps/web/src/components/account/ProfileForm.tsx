@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { CATEGORIES } from '@offerbuzz/shared';
 import { ApiRequestError, updateProfile } from '@/lib/api';
+import { Select } from '../Select';
 import { useAccount } from './AccountShell';
 
 /** Edit your own details. Email is shown but cannot be changed here. */
@@ -11,6 +13,7 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
   const [phone, setPhone] = useState(user.phone ? user.phone.replace(/^\+91/, '') : '');
   const [shopName, setShopName] = useState(user.shopName ?? '');
   const [city, setCity] = useState(user.city ?? '');
+  const [category, setCategory] = useState(user.category ?? '');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
 
@@ -24,6 +27,7 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
         phone: phone.trim(),
         city: city.trim(),
         ...(showShop ? { shopName: shopName.trim() } : {}),
+        ...(showShop && !user.category && category ? { category: category as (typeof CATEGORIES)[number] } : {}),
       });
       setUser({ ...user, ...res.user });
       setMsg({ ok: true, text: 'Profile saved' });
@@ -50,6 +54,22 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
           <label className="mb-1 block text-small font-semibold" htmlFor="p-shop">Shop name</label>
           <input id="p-shop" className="input" value={shopName} onChange={(e) => setShopName(e.target.value)} maxLength={80}
             placeholder="Shown on your offers" />
+        </div>
+      )}
+      {showShop && (
+        <div>
+          <label className="mb-1 block text-small font-semibold" htmlFor="p-category">Shop category</label>
+          {user.category ? (
+            <>
+              <input id="p-category" className="input bg-purple-50" value={user.category} readOnly />
+              <p className="mt-1 text-small text-muted">Your offers are listed in this category. Contact support to change it.</p>
+            </>
+          ) : (
+            <>
+              <Select id="p-category" value={category} onChange={setCategory} placeholder="Choose your category" options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
+              <p className="mt-1 text-small text-muted">Required before you can post offers. It cannot be changed later.</p>
+            </>
+          )}
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">

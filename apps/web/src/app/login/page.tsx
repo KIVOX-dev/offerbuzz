@@ -17,7 +17,12 @@ function LoginInner() {
   // a scanned referral QR lands here as /login?role=merchant&ref=CODE: open vendor sign up with the code filled in
   const params = useSearchParams();
   const ref = (params.get('ref') ?? '').trim().toUpperCase();
-  const [role, setRole] = useState<Role | null>(params.get('role') === 'merchant' && ref ? 'merchant' : null);
+  // footer links arrive as /login?role=merchant|intermediary&mode=signin|signup
+  const roleParam = params.get('role');
+  const initialMode = params.get('mode') === 'signin' ? 'signin' : 'signup';
+  const [role, setRole] = useState<Role | null>(
+    roleParam === 'intermediary' || (roleParam === 'merchant' && (ref || params.has('mode'))) ? roleParam : null,
+  );
 
   return (
     <main className="container-page py-6 md:py-8">
@@ -29,7 +34,7 @@ function LoginInner() {
 
       <div className="mt-6">
         {role ? (
-          <OtpLogin role={role} onBack={() => setRole(null)} initialReferral={ref} />
+          <OtpLogin role={role} onBack={() => setRole(null)} initialReferral={ref} initialMode={initialMode} />
         ) : (
           <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
             {CARDS.map((c) => (

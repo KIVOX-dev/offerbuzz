@@ -395,7 +395,7 @@ describe('vendor offers and profile', () => {
   const post = (token: string, body: Record<string, unknown>) => authed(request(app).post('/api/v1/offers'), token).send(body);
 
   it('a vendor posts an offer (pending) and sees it with zeroed insights', async () => {
-    const v = await signUp({ role: 'merchant' });
+    const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
     const created = await post(v.body.accessToken, OFFER);
     expect(created.status).toBe(201);
     expect(created.body.offer).toMatchObject({ title: 'Flat 30% off', status: 'pending', views: 0, claims: 0, endsAt: '2026-11-30' });
@@ -406,8 +406,28 @@ describe('vendor offers and profile', () => {
     expect(mine.body.totals).toEqual({ offers: 1, pending: 1, active: 0, views: 0, claims: 0 });
   });
 
-  it('validates the offer form', async () => {
+  it('only lets a vendor post in the category chosen at sign up', async () => {
+    const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
+    expect(v.body.user.category).toBe('Salon and Spa');
+    const wrong = await post(v.body.accessToken, { ...OFFER, category: 'Fashion' });
+    expect(wrong.status).toBe(400);
+    expect(wrong.body.error?.code ?? wrong.body.code).toBe('CATEGORY_MISMATCH');
+  });
+
+  it('asks a vendor with no category to choose one, then locks it', async () => {
     const v = await signUp({ role: 'merchant' });
+    const t = v.body.accessToken;
+    expect((await post(t, OFFER)).status).toBe(409);
+    const set = await authed(request(app).put('/api/v1/me'), t).send({ category: 'Fashion' });
+    expect(set.status).toBe(200);
+    expect(set.body.user.category).toBe('Fashion');
+    expect((await post(t, OFFER)).status).toBe(400); // OFFER is Salon and Spa
+    const change = await authed(request(app).put('/api/v1/me'), t).send({ category: 'Travels' });
+    expect(change.status).toBe(409);
+  });
+
+  it('validates the offer form', async () => {
+    const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
     const t = v.body.accessToken;
     expect((await post(t, { ...OFFER, title: 'ab' })).status).toBe(400);
     expect((await post(t, { ...OFFER, category: 'Nonsense' })).status).toBe(400);
@@ -419,8 +439,8 @@ describe('vendor offers and profile', () => {
   });
 
   it('only vendors can post, and vendors only ever see and delete their own offers', async () => {
-    const a = await signUp({ role: 'merchant' }, 'a@example.com');
-    const b = await signUp({ role: 'merchant' }, 'b@example.com');
+    const a = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'a@example.com');
+    const b = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'b@example.com');
     const customer = await signUp({ role: 'customer' }, 'c@example.com');
     expect((await post(customer.body.accessToken, OFFER)).status).toBe(403);
     expect((await request(app).post('/api/v1/offers').send(OFFER)).status).toBe(401);
@@ -433,7 +453,7 @@ describe('vendor offers and profile', () => {
   });
 
   it('an approved offer past its end date reads as expired', async () => {
-    const v = await signUp({ role: 'merchant' });
+    const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
     const offer = (await post(v.body.accessToken, { ...OFFER, startsAt: '2020-01-01', endsAt: '2020-01-31' })).body.offer;
     const Offer = (await import('../src/models/Offer')).Offer;
     await Offer.updateOne({ _id: offer.id }, { status: 'active' });
@@ -443,8 +463,8 @@ describe('vendor offers and profile', () => {
   });
 
   it('PUT /me updates the profile, never the email or role, and guards phone numbers', async () => {
-    const a = await signUp({ role: 'merchant' }, 'a@example.com');
-    const b = await signUp({ role: 'merchant' }, 'b@example.com');
+    const a = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'a@example.com');
+    const b = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'b@example.com');
     const put = (token: string, body: Record<string, unknown>) => authed(request(app).put('/api/v1/me'), token).send(body);
 
     const ok = await put(a.body.accessToken, { name: 'New Name', shopName: 'Glow Salon', city: 'Coimbatore', phone: '98765 43210', email: 'hacker@x.com', role: 'admin' });
@@ -590,7 +610,7 @@ describe('admin area', () => {
   }
 
   it('only an admin can use /admin routes', async () => {
-    const vendor = await signUp({ role: 'merchant' });
+    const vendor = await signUp({ role: 'merchant', category: 'Salon and Spa' });
     expect((await request(app).get('/api/v1/admin/overview')).status).toBe(401);
     expect((await get(vendor.body.accessToken, '/admin/overview')).status).toBe(403);
     expect((await get(await adminToken(), '/admin/overview')).status).toBe(200);
@@ -599,7 +619,7 @@ describe('admin area', () => {
   it('counts vendors that have paid, after the admin records a payment', async () => {
     const t = await adminToken();
     const { agent, vendor } = await agentAndVendor();
-    await signUp({ role: 'merchant' }, 'solo@example.com');
+    await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'solo@example.com');
 
     let o = (await get(t, '/admin/overview')).body;
     expect(o.vendors).toEqual({ total: 2, subscribed: 0, unsubscribed: 2 });
@@ -702,9 +722,13 @@ describe('admin area', () => {
 
   it('shows running offers by category, and only approved offers inside their dates run', async () => {
     const t = await adminToken();
-    const vendor = await signUp({ role: 'merchant' }, 'v@example.com');
+    // a shop posts in one category only, so each category here has its own vendor
+    const vendors: Record<string, string> = {};
+    for (const [i, category] of ['Salon and Spa', 'Fashion', 'Jewellery'].entries()) {
+      vendors[category] = (await signUp({ role: 'merchant', category }, `v${i}@example.com`)).body.accessToken;
+    }
     const post = (body: Record<string, unknown>) =>
-      authed(request(app).post('/api/v1/offers'), vendor.body.accessToken).send(body);
+      authed(request(app).post('/api/v1/offers'), vendors[body.category as string]).send(body);
     const salon = (await post(OFFER)).body.offer;
     const fashion = (await post({ ...OFFER, category: 'Fashion', title: 'Fashion sale' })).body.offer;
     const future = (await post({ ...OFFER, category: 'Fashion', title: 'Later', startsAt: '2098-01-01' })).body.offer;
@@ -783,10 +807,10 @@ describe('site analytics', () => {
   it('counts new sign ups, and only admins can read the numbers', async () => {
     const t = await admin();
     await signUp({ role: 'customer' }, 'new1@example.com');
-    await signUp({ role: 'merchant' }, 'new2@example.com');
+    await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'new2@example.com');
     const a = (await analytics(t)).body;
     expect(a.newUsers.today).toBe(3); // the two sign ups plus the admin account made just now
-    const vendor = await signUp({ role: 'merchant' }, 'new3@example.com');
+    const vendor = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'new3@example.com');
     expect((await analytics(vendor.body.accessToken)).status).toBe(403);
     expect((await request(app).get('/api/v1/admin/analytics')).status).toBe(401);
   });
@@ -810,7 +834,7 @@ describe('offer photo', () => {
   const authed = (r: request.Test, token: string) => r.set('authorization', `Bearer ${token}`);
 
   async function vendorWithOffer(email = 'v@example.com') {
-    const v = await signUp({ role: 'merchant' }, email);
+    const v = await signUp({ role: 'merchant', category: 'Salon and Spa' }, email);
     const offer = (await authed(request(app).post('/api/v1/offers'), v.body.accessToken).send(OFFER)).body.offer;
     return { token: v.body.accessToken as string, offer };
   }
@@ -854,7 +878,7 @@ describe('offer photo', () => {
 
   it('only the owning vendor can attach a photo, and there is no photo until one is uploaded', async () => {
     const a = await vendorWithOffer('a@example.com');
-    const b = await signUp({ role: 'merchant' }, 'b@example.com');
+    const b = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'b@example.com');
     const customer = await signUp({ role: 'customer' }, 'c@example.com');
     expect((await put(b.body.accessToken, a.offer.id, 'image/png', PNG)).status).toBe(404);
     expect((await put(customer.body.accessToken, a.offer.id, 'image/png', PNG)).status).toBe(403);

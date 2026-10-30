@@ -33,6 +33,7 @@ export function toUserDTO(u: UserDoc): UserDTO {
     qrUrl: u.qrUrl ?? undefined,
     shopName: u.shopName ?? undefined,
     city: u.city ?? undefined,
+    category: u.category ?? undefined,
   };
 }
 
@@ -143,6 +144,7 @@ export async function verifyOtp(input: {
   role?: SelfServeRole;
   name?: string;
   referralCode?: string;
+  category?: UserDoc['category'];
 }) {
   const identifier = input.email;
   const record = await Otp.findOne({ identifier });
@@ -169,6 +171,7 @@ export async function verifyOtp(input: {
   }
   const role = input.role ?? 'customer';
   const extra: Partial<UserDoc> = input.name ? { name: input.name } : {};
+  if (role === 'merchant' && input.category) extra.category = input.category;
   if (role === 'merchant' && input.referralCode) {
     // a code that is not a live intermediary is ignored rather than blocking the signup
     const referrer = await User.findOne({ referralCode: input.referralCode, role: 'intermediary', status: { $ne: 'blocked' } }).select('_id');

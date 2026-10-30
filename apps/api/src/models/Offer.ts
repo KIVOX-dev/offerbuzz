@@ -15,6 +15,8 @@ const offerSchema = new Schema(
     terms: { type: String, trim: true },
     // new offers wait for admin approval before they show to customers
     status: { type: String, enum: OFFER_STATUSES, default: 'pending', index: true },
+    // set once the vendor has been emailed that the offer is about to end, so it is never sent twice
+    expiryNoticeSentAt: Date,
     hasImage: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
     claims: { type: Number, default: 0 },

@@ -20,6 +20,11 @@ profileRouter.put(
     if (!user) throw notFound('User not found');
     if (b.name !== undefined) user.name = b.name;
     if (b.shopName !== undefined) user.shopName = b.shopName || undefined;
+    if (b.category !== undefined && b.category !== user.category) {
+      if (user.role !== 'merchant') throw new HttpError(400, 'NOT_A_VENDOR', 'Only vendors have a shop category');
+      if (user.category) throw new HttpError(409, 'CATEGORY_LOCKED', 'Your shop category is already set. Contact support to change it.');
+      user.category = b.category;
+    }
     if (b.city !== undefined) user.city = b.city || undefined;
     if (b.phone !== undefined) {
       if (b.phone === '') user.phone = undefined;

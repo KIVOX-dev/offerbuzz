@@ -1,13 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Carousel } from '@/components/Carousel';
 import { Logo } from '@/components/Logo';
+import { SiteFooter } from '@/components/SiteFooter';
+import { ScanButton } from '@/components/Scanner';
 import {
   ArrowRightIcon,
   ChevronRightIcon,
-  ClockIcon,
   DuoCategoryIcon,
   DuoHeartIcon,
   DuoOffersIcon,
@@ -15,12 +18,9 @@ import {
   DuoStoreIcon,
   DuoTagIcon,
   HeartIcon,
-  PhoneIcon,
   PinIcon,
   SearchIcon,
-  StoreIcon,
   TagIcon,
-  UserIcon,
 } from '@/components/Icons';
 
 type Category = {
@@ -58,6 +58,14 @@ const deals = [
   { title: 'Buy 1 Get 1 on meals', shop: 'Food & Beverages', off: 'BOGO', cat: 8 },
 ];
 
+// Banner slides after the intro slide; indexes point into `categories`. Sample copy until the API feeds real offers.
+const banners = [
+  { cat: 1, title: 'Festive fashion sale', sub: 'New styles from local boutiques', off: 'UP TO 50% OFF' },
+  { cat: 2, title: 'Latest gadgets, best prices', sub: 'Phones, laptops and accessories nearby', off: 'UP TO 20% OFF' },
+  { cat: 0, title: 'Fresh groceries, daily savings', sub: 'Stock up at your neighbourhood store', off: 'FLAT 15% OFF' },
+  { cat: 11, title: 'Weekend getaway packages', sub: 'Short trips, great deals', off: '15% OFF' },
+];
+
 const perks = [
   { icon: DuoTagIcon, text: 'Best offers near you' },
   { icon: DuoStoreIcon, text: 'Shop local, save more' },
@@ -80,6 +88,22 @@ export default function Home() {
   // -1 = "All"; picking a category re-tints the whole page with that category's colour
   const [active, setActive] = useState(-1);
   const theme = active >= 0 ? categories[active] : null;
+  const router = useRouter();
+  const [query, setQuery] = useState('');
+
+  // an OfferBuzz link opens straight away; anything else (a product barcode, plain text) fills the search box
+  const onScan = useCallback(
+    (text: string) => {
+      try {
+        const url = new URL(text);
+        if (url.origin === window.location.origin) return router.push(url.pathname + url.search);
+      } catch {
+        /* not a URL */
+      }
+      setQuery(text);
+    },
+    [router],
+  );
   const shownDeals = theme ? deals.filter((d) => categories[d.cat] === theme) : deals;
 
   return (
@@ -102,7 +126,14 @@ export default function Home() {
           </button>
 
           <form action="/login" className="hidden h-search flex-1 md:flex">
-            <input className="input h-full rounded-r-none" placeholder="Search offers, shops and categories" aria-label="Search" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="input h-full rounded-none border-r-0"
+              placeholder="Search offers, shops and categories"
+              aria-label="Search"
+            />
+            <ScanButton onResult={onScan} className="flex w-12 items-center justify-center border-y border-purple-200 bg-card text-purple-700 hover:bg-purple-50" />
             <button type="submit" aria-label="Search" className="flex w-12 items-center justify-center rounded-r-md bg-accent text-ink hover:brightness-105">
               <SearchIcon />
             </button>
@@ -112,15 +143,19 @@ export default function Home() {
             <Link href="/login" aria-label="Saved offers" className="btn-ghost !px-2">
               <HeartIcon />
             </Link>
-            <Link href="/login" className="btn-ghost gap-2 !px-3">
-              <UserIcon /> <span className="hidden sm:inline">Login</span>
-            </Link>
           </div>
         </div>
 
         {/* mobile search */}
         <form action="/login" className="container-page flex pb-2 md:hidden">
-          <input className="input rounded-r-none" placeholder="Search offers and shops" aria-label="Search" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="input rounded-none border-r-0"
+            placeholder="Search offers and shops"
+            aria-label="Search"
+          />
+          <ScanButton onResult={onScan} className="flex w-12 items-center justify-center border-y border-purple-200 bg-card text-purple-700" />
           <button type="submit" aria-label="Search" className="flex w-12 items-center justify-center rounded-r-md bg-accent text-ink">
             <SearchIcon />
           </button>
@@ -158,7 +193,8 @@ export default function Home() {
       <div className="container-page space-y-6 py-4 md:py-6">
         {/* hero */}
         <section className="grid gap-4 md:grid-cols-3">
-          <div className="relative overflow-hidden rounded-lg bg-hero p-6 text-white shadow-glow md:col-span-2 md:p-10">
+          <Carousel label="Featured offers" className="min-h-[340px] md:col-span-2">
+            <div className="relative h-full overflow-hidden bg-hero p-6 pb-10 text-white md:p-10 md:pb-12">
             {/* soft decorative shapes */}
             <span aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-sm" />
             <span aria-hidden className="pointer-events-none absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-accent/20 blur-2xl" />
@@ -178,31 +214,45 @@ export default function Home() {
               <p className="mt-3 text-body text-purple-100 md:text-[17px]">
                 Don&apos;t miss the best offers from your favourite local stores.
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/login" className="btn-accent gap-2 px-5">
-                  <TagIcon /> Post your offer
-                </Link>
-                <Link href="/login" className="btn gap-2 border border-white/40 bg-white/10 px-5 text-white backdrop-blur hover:bg-white/20">
-                  <StoreIcon /> Become an intermediary
-                </Link>
-              </div>
               <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-small text-purple-100">
                 <li>✓ Free for customers</li>
                 <li>✓ Verified local shops</li>
                 <li>✓ New offers daily</li>
               </ul>
             </div>
-          </div>
+            </div>
+            {banners.map((b) => {
+              const c = categories[b.cat];
+              return (
+                <div
+                  key={b.title}
+                  style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }}
+                  className="relative flex h-full items-center overflow-hidden p-6 pb-10 md:p-10 md:pb-12"
+                >
+                  <img
+                    src={`/categories/${c.slug}.webp`}
+                    alt=""
+                    className="pointer-events-none absolute inset-y-0 right-0 h-full w-1/2 object-cover mix-blend-multiply"
+                  />
+                  <div className="relative max-w-[55%]">
+                    <span className={`inline-flex rounded-full bg-white/80 px-3 py-1 text-small font-bold ${c.text}`}>{b.off}</span>
+                    <h2 className="mt-3 text-[26px] font-extrabold leading-tight tracking-tight text-ink md:text-[34px]">{b.title}</h2>
+                    <p className="mt-2 text-body text-ink/70">{b.sub}</p>
+                    <button type="button" onClick={() => setActive(b.cat)} className={`btn mt-5 px-5 text-white ${c.btn}`}>
+                      Shop {c.name.split(' ')[0]}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </Carousel>
 
           <div className="relative flex flex-col justify-center gap-3 overflow-hidden rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-6 text-center shadow-card md:p-8">
             <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-accent/30 blur-2xl" />
             <DuoOffersIcon size={64} className="relative mx-auto" />
             <p className="relative text-small font-bold uppercase tracking-wider text-purple-700">First order</p>
             <h2 className="relative text-[30px] font-extrabold leading-none text-ink">Rs 50 off</h2>
-            <p className="relative text-muted">Sign in to claim it on your first order.</p>
-            <Link href="/login" className="btn-primary relative mt-1 w-full gap-2">
-              <UserIcon /> Login to claim
-            </Link>
+            <p className="relative text-muted">Claim it on your first order.</p>
           </div>
         </section>
 
@@ -279,17 +329,7 @@ export default function Home() {
         </section>
       </div>
 
-      <footer className="mt-6 border-t border-purple-100 bg-card py-6">
-        <div className="container-page flex flex-wrap items-center justify-between gap-3 text-small text-muted">
-          <span className="flex items-center gap-2">
-            <PhoneIcon size={16} /> 93 45 97 57 47
-          </span>
-          <span className="flex items-center gap-2">
-            <ClockIcon size={16} /> 09:00 AM – 09:00 PM
-          </span>
-          <span>© OfferBuzz</span>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

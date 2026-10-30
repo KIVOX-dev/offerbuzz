@@ -4,6 +4,16 @@ import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
 const KEY = 'offerbuzz.vid';
+const CONSENT_KEY = 'offerbuzz.cookies';
+
+/** Counting starts only once the visitor has accepted analytics. */
+function consented(): boolean {
+  try {
+    return localStorage.getItem(CONSENT_KEY) === 'all';
+  } catch {
+    return false;
+  }
+}
 
 /** A random id kept in this browser so unique visitors can be counted. It holds no personal data. */
 function visitorId(): string | undefined {
@@ -27,7 +37,7 @@ export function Tracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (pathname.startsWith('/admin') || navigator.doNotTrack === '1') return;
+    if (pathname.startsWith('/admin') || navigator.doNotTrack === '1' || !consented()) return;
     const id = visitorId();
     if (!id) return;
     fetch('/api/v1/track', {

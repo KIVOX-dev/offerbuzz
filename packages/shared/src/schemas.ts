@@ -37,6 +37,8 @@ export const verifyOtpSchema = z
     name: name.optional(),
     /** intermediary referral code, used only when a vendor signs up */
     referralCode: referralCodeSchema.optional(),
+    /** vendors only: the one category all of this shop's offers belong to */
+    category: z.enum(CATEGORIES).optional(),
   })
   .refine((v) => v.mode !== 'signup' || Boolean(v.name), { message: 'Enter your name', path: ['name'] });
 
@@ -70,6 +72,8 @@ export const updateProfileSchema = z.object({
   phone: z.union([phoneSchema, z.literal('')]).optional(),
   shopName: z.string().trim().max(80).optional(),
   city: z.string().trim().max(60).optional(),
+  /** vendors only: can be set once (for accounts that signed up without one) and is then locked */
+  category: z.enum(CATEGORIES).optional(),
 });
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a date');

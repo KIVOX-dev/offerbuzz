@@ -68,6 +68,7 @@ export const verifyOtp = (body: {
   role?: LoginRole;
   name?: string;
   referralCode?: string;
+  category?: string;
 }) =>
   api<AuthResponse>('/auth/verify-otp', { method: 'POST', json: body });
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { CATEGORIES, offerInputSchema, type DiscountType } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
+import { Select } from '@/components/Select';
 import { OfferPreview } from '@/components/OfferPreview';
 import { ApiRequestError, createOffer, uploadOfferImage } from '@/lib/api';
 import { shrinkImage } from '@/lib/image';
@@ -17,7 +18,7 @@ export default function NewOfferPage() {
   const [form, setForm] = useState({
     title: '',
     description: '',
-    category: '',
+    category: user.category ?? '',
     discountType: 'percent' as DiscountType,
     discountValue: '',
     startsAt: today(),
@@ -145,23 +146,31 @@ export default function NewOfferPage() {
 
           <div>
             <label className="mb-1 block text-small font-semibold" htmlFor="o-cat">Category</label>
-            <select id="o-cat" className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>
-              <option value="">Choose a category</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <input id="o-cat" className="input bg-purple-50" value={user.category ?? ''} readOnly placeholder="Not chosen yet" />
+            <p className="mt-1 text-small text-muted">
+              {user.category ? (
+                'Your shop posts offers in this category only.'
+              ) : (
+                <>
+                  Choose your shop category in your <Link href="/merchant/profile" className="font-semibold text-purple-700 underline">profile</Link> before posting.
+                </>
+              )}
+            </p>
           </div>
 
           <fieldset>
             <legend className="mb-1 block text-small font-semibold">Discount</legend>
             <div className="grid gap-3 sm:grid-cols-2">
-              <select aria-label="Discount type" className="input" value={form.discountType}
-                onChange={(e) => set('discountType', e.target.value as DiscountType)}>
-                <option value="percent">Percent off (%)</option>
-                <option value="amount">Amount off (Rs)</option>
-                <option value="deal">Special deal (Buy 1 Get 1, free gift...)</option>
-              </select>
+              <Select
+                ariaLabel="Discount type"
+                value={form.discountType}
+                onChange={(v) => set('discountType', v)}
+                options={[
+                  { value: 'percent' as DiscountType, label: 'Percent off (%)' },
+                  { value: 'amount' as DiscountType, label: 'Amount off (Rs)' },
+                  { value: 'deal' as DiscountType, label: 'Special deal (Buy 1 Get 1, free gift...)' },
+                ]}
+              />
               {form.discountType !== 'deal' && (
                 <input aria-label="Discount value" className="input" inputMode="decimal" value={form.discountValue}
                   onChange={(e) => set('discountValue', e.target.value.replace(/[^\d.]/g, ''))}

@@ -1,6 +1,7 @@
 import { env } from './config/env';
 import { connectDb } from './config/db';
 import { createApp } from './app';
+import { startOfferExpiryJob } from './services/offerExpiry';
 
 async function main() {
   const PORT = env().X_ZOHO_CATALYST_LISTEN_PORT ?? env().PORT;
@@ -9,7 +10,11 @@ async function main() {
   // Warm the connection, but keep serving /health even if Atlas is briefly unreachable.
   connectDb().catch((err) => console.error('Initial MongoDB connection failed:', err.message));
 
-  const shutdown = () => server.close(() => process.exit(0));
+  const stopExpiryJob = startOfferExpiryJob();
+  const shutdown = () => {
+    stopExpiryJob();
+    server.close(() => process.exit(0));
+  };
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);
 }

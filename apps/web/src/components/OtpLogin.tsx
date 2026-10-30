@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { AuthResponse } from '@offerbuzz/shared';
+import { CATEGORIES, type AuthResponse } from '@offerbuzz/shared';
 import { ApiRequestError, lookupReferral, passwordLogin, sendOtp, setPassword, verifyOtp, type AuthMode } from '@/lib/api';
 import { homeFor, saveSession } from '@/lib/session';
 import { BackButton } from './BackButton';
+import { Select } from './Select';
 import { PasswordInput } from './PasswordInput';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,14 +23,17 @@ export function OtpLogin({
   role,
   onBack,
   initialReferral = '',
+  initialMode = 'signup',
 }: {
   role: 'merchant' | 'intermediary';
   onBack: () => void;
   initialReferral?: string;
+  initialMode?: AuthMode;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>('signup');
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [name, setName] = useState('');
+  const [category, setCategory] = useState('');
   const [referral, setReferral] = useState(initialReferral);
   // undefined = not checked yet (or the box is not a full code)
   const [referrer, setReferrer] = useState<{ valid: boolean; name?: string }>();
@@ -51,11 +55,13 @@ export function OtpLogin({
   const roleLabel = role === 'merchant' ? 'Vendor' : 'Intermediary';
   const passwordSignin = mode === 'signin' && !useCode;
   const showReferral = mode === 'signup' && role === 'merchant';
+  const needsCategory = showReferral; // vendors pick their shop category when they sign up
   const cleanReferral = referral.trim().toUpperCase();
   const referralOk = !showReferral || cleanReferral === '' || referrer?.valid === true;
   const detailsValid =
     EMAIL_RE.test(cleanEmail) &&
     referralOk &&
+    (!needsCategory || category !== '') &&
     (mode === 'signup' ? cleanName.length >= 2 : !passwordSignin || password.length > 0);
   const newPasswordError = password ? passwordProblem(password) : undefined;
   const mismatch = confirm.length > 0 && confirm !== password;
@@ -132,6 +138,7 @@ export function OtpLogin({
         role,
         name: mode === 'signup' ? cleanName : undefined,
         referralCode: showReferral && cleanReferral ? cleanReferral : undefined,
+        category: needsCategory ? category : undefined,
       });
       // new accounts, and anyone resetting a forgotten password, must choose a password next
       setPending(session);
@@ -205,6 +212,13 @@ export function OtpLogin({
             <input id="email" className="input" type="email" inputMode="email" autoComplete="email" value={email}
               onChange={(e) => setEmail(e.target.value)} placeholder="yourname@gmail.com" />
           </div>
+          {needsCategory && (
+            <div>
+              <label className="mb-1 block text-small font-semibold" htmlFor="shop-category">Shop category</label>
+              <Select id="shop-category" value={category} onChange={setCategory} placeholder="Choose your category" options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
+              <p className="mt-1 text-small text-muted">All your offers will be listed in this category.</p>
+            </div>
+          )}
           {showReferral && (
             <div>
               <label className="mb-1 block text-small font-semibold" htmlFor="referral">

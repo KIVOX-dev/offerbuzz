@@ -1,5 +1,5 @@
 import { Schema, model, type InferSchemaType } from 'mongoose';
-import { ROLES, USER_STATUSES } from '@offerbuzz/shared';
+import { CATEGORIES, ROLES, USER_STATUSES } from '@offerbuzz/shared';
 
 const userSchema = new Schema(
   {
@@ -12,6 +12,8 @@ const userSchema = new Schema(
     referralCode: { type: String, required: true, unique: true },
     shopName: { type: String, trim: true },
     city: { type: String, trim: true },
+    // vendors: every offer they post is in this category
+    category: { type: String, enum: CATEGORIES },
     // the intermediary who referred this vendor; set once at signup
     referredBy: { type: Schema.Types.ObjectId, ref: 'User', index: true },
     qrUrl: String, // filled in by the QR service in Phase 5

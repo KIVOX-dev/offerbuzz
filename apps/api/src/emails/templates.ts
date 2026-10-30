@@ -76,6 +76,16 @@ export const TEMPLATES: EmailTemplate[] = [
     ],
     cta: { label: 'Edit my offer', url: '{{ params.url }}' },
   }),
+  t('offer-expiring', 3, 'Your offer ends {{ params.when }}: {{ params.offerTitle }}', ['name', 'offerTitle', 'endDate', 'when', 'url'], {
+    preheader: '{{ params.offerTitle }} ends {{ params.when }}.',
+    heading: 'Your offer is ending soon',
+    paragraphs: [
+      'Hi {{ params.name }},',
+      '<b>{{ params.offerTitle }}</b> ends <b>{{ params.when }}</b> ({{ params.endDate }}). After that it will no longer be shown to customers.',
+      'Want to keep the deal going? Post a new offer with fresh dates from your dashboard.',
+    ],
+    cta: { label: 'Go to my dashboard', url: '{{ params.url }}' },
+  }),
   t('plan-receipt', 4, 'Payment received: OfferBuzz plan', ['name', 'amount', 'periodStart', 'periodEnd', 'paymentId'], {
     preheader: 'We received Rs {{ params.amount }} for your OfferBuzz plan.',
     heading: 'Payment received',

@@ -5,6 +5,7 @@ import { authenticate, requireRole } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { wrap } from '../../utils/async';
 import { HttpError, notFound } from '../../utils/errors';
+import { User } from '../../models/User';
 import { Offer, type OfferDoc } from '../../models/Offer';
 import { OfferImage } from '../../models/OfferImage';
 
@@ -42,6 +43,14 @@ offersRouter.post(
   validate(offerInputSchema),
   wrap(async (req, res) => {
     const b = req.body as OfferInput;
+    // a shop only posts into the category it chose at sign up
+    const vendor = await User.findById(req.auth!.id).select('category');
+    if (!vendor?.category) {
+      throw new HttpError(409, 'CATEGORY_REQUIRED', 'Choose your shop category in your profile before posting offers');
+    }
+    if (b.category !== vendor.category) {
+      throw new HttpError(400, 'CATEGORY_MISMATCH', `Your shop posts offers in ${vendor.category} only`);
+    }
     const offer = await Offer.create({
       merchantId: req.auth!.id,
       title: b.title,
