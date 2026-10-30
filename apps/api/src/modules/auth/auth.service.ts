@@ -198,7 +198,11 @@ export interface GoogleProfile {
 type GoogleVerifier = (idToken: string) => Promise<GoogleProfile>;
 
 const defaultVerifier: GoogleVerifier = async (idToken) => {
-  const audience = `${env().GOOGLE_CLIENT_IDS},${env().GOOGLE_CLIENT_ID ?? ''}`.split(',').map((s) => s.trim()).filter(Boolean);
+  // trim spaces and any quotes pasted around the value, a common slip when setting environment variables
+  const audience = `${env().GOOGLE_CLIENT_IDS},${env().GOOGLE_CLIENT_ID ?? ''}`
+    .split(',')
+    .map((s) => s.trim().replace(/^["']|["']$/g, '').trim())
+    .filter(Boolean);
   if (!audience.length) throw badRequest('Google sign in is not configured', 'GOOGLE_NOT_CONFIGURED');
   const ticket = await new OAuth2Client().verifyIdToken({ idToken, audience });
   const p = ticket.getPayload();
@@ -217,6 +221,8 @@ export async function googleLogin(idToken: string, role: SelfServeRole = 'custom
     profile = await verifyGoogle(idToken);
   } catch (err) {
     if (err instanceof Error && 'status' in err) throw err;
+    // the reason is only logged (never the token): "Wrong recipient" = the Client ID on the website and on the API differ
+    if (env().NODE_ENV !== 'test') console.error('Google sign in rejected:', err instanceof Error ? err.message : err);
     throw unauthorized('Invalid Google token', 'GOOGLE_TOKEN_INVALID');
   }
   const byGoogle = await User.findOne({ googleId: profile.sub });
