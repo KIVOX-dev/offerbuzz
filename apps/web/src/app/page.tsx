@@ -42,6 +42,22 @@ const categories: Category[] = [
   { name: 'Travel & Lifestyle', slug: 'travel', offers: '70+', from: '#fee6f1', to: '#fee4f0', text: 'text-pink-600', btn: 'bg-pink-500' },
 ];
 
+// Where each home page category opens in search: the matching real vendor category (pets has none, so it searches).
+const SEARCH_BY_SLUG: Record<string, string> = {
+  grocery: 'category=Grocery',
+  fashion: 'category=Fashion',
+  electronics: 'category=Mobile%20and%20Electronics',
+  home: 'category=Home%20Appliance',
+  beauty: 'category=Salon%20and%20Spa',
+  health: 'category=Medical',
+  fitness: 'category=Fitness%20and%20Sports',
+  baby: 'category=Baby%20Products',
+  food: 'category=Food%20and%20Restaurant',
+  automotive: 'category=Automobiles',
+  pets: 'q=pet',
+  travel: 'category=Travels',
+};
+
 // Sample deal cards until the Phase 2 API feeds real offers.
 const deals = [
   { title: 'Flat 30% off on skincare', shop: 'Beauty & Personal Care', off: '30% OFF', cat: 4 },
@@ -349,8 +365,8 @@ export default function Home() {
                           <div className="flex flex-1 flex-col gap-1 p-3">
                             <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold">{d.title}</p>
                             <p className="line-clamp-2 text-small text-muted">{d.shop}</p>
-                            <Link href="/login" className="btn-accent btn-sm mt-auto w-full gap-1">
-                              <TagIcon size={16} /> Claim offer
+                            <Link href={`/search?${SEARCH_BY_SLUG[categories[d.cat].slug]}`} className="btn-accent btn-sm mt-auto w-full gap-1">
+                              <TagIcon size={16} /> View offers
                             </Link>
                           </div>
                         </article>

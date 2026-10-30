@@ -198,7 +198,7 @@ export interface GoogleProfile {
 type GoogleVerifier = (idToken: string) => Promise<GoogleProfile>;
 
 const defaultVerifier: GoogleVerifier = async (idToken) => {
-  const audience = env().GOOGLE_CLIENT_IDS.split(',').map((s) => s.trim()).filter(Boolean);
+  const audience = `${env().GOOGLE_CLIENT_IDS},${env().GOOGLE_CLIENT_ID ?? ''}`.split(',').map((s) => s.trim()).filter(Boolean);
   if (!audience.length) throw badRequest('Google sign in is not configured', 'GOOGLE_NOT_CONFIGURED');
   const ticket = await new OAuth2Client().verifyIdToken({ idToken, audience });
   const p = ticket.getPayload();

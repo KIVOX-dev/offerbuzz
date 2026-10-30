@@ -27,6 +27,8 @@ const schema = z
     OTP_SECRET: z.string().min(32),
     OTP_DEV_MODE: bool,
     GOOGLE_CLIENT_IDS: z.string().default(''),
+    // accepted as well, because it is the name most people reach for first
+    GOOGLE_CLIENT_ID: z.string().optional(),
     // one Google Maps key shared by web, Android and this API (reverse geocoding when a vendor saves a pin)
     GOOGLE_MAPS_API_KEY: z.string().optional(),
     // Offera AI (Groq free tier). Models are tried in this order; if one is rate limited or down the next is used.
