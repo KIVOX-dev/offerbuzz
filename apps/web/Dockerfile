@@ -1,7 +1,7 @@
 # Build context is the repo root:
 #   docker buildx build --platform linux/amd64 -f apps/web/Dockerfile -t offerbuzz-web:latest .
 # NEXT_PUBLIC_* values are inlined at build time, so pass them as build args.
-FROM node:20-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /repo
 ARG NEXT_PUBLIC_API_URL=https://api.offerbuzz.co/api/v1
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=
@@ -18,7 +18,7 @@ COPY packages/shared packages/shared
 COPY apps/web apps/web
 RUN npm run build -w @offerbuzz/shared && npm run build -w @offerbuzz/web
 
-FROM node:20-alpine AS runtime
+FROM node:25-alpine AS runtime
 ENV NODE_ENV=production HOSTNAME=0.0.0.0 NEXT_TELEMETRY_DISABLED=1
 WORKDIR /repo
 # standalone output already contains only the production dependencies it traced
