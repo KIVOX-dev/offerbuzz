@@ -1,7 +1,7 @@
 'use client';
 
 import { fmtDate, useWallet } from '@/components/account/useWallet';
-import { StoreIcon } from '@/components/Icons';
+import { DuoStoreIcon, StoreIcon } from '@/components/Icons';
 
 export default function IntermediaryShops() {
   const { wallet, error } = useWallet();
@@ -19,7 +19,7 @@ export default function IntermediaryShops() {
         <p className="text-muted">Loading...</p>
       ) : wallet.shops.length === 0 ? (
         <div className="surface flex flex-col items-center p-8 text-center">
-          <StoreIcon size={40} className="text-purple-300" />
+          <DuoStoreIcon size={56} />
           <p className="mt-3 font-semibold">No shops yet</p>
           <p className="mt-1 text-muted">Share your QR code with shop owners to get started.</p>
         </div>

@@ -1,15 +1,16 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, type ComponentType } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { DuoStoreIcon, DuoUsersIcon } from '@/components/Icons';
 import { Logo } from '@/components/Logo';
 import { OtpLogin } from '@/components/OtpLogin';
 
 type Role = 'merchant' | 'intermediary';
 
-const CARDS: { role: Role; title: string; tagline: string; icon: string }[] = [
-  { role: 'merchant', title: 'Vendor', tagline: 'Vendor: post your offers and reach nearby customers', icon: '🏪' },
-  { role: 'intermediary', title: 'Intermediary', tagline: 'Intermediary: refer shops and earn credits', icon: '🤝' },
+const CARDS: { role: Role; title: string; tagline: string; icon: ComponentType<{ size?: number }> }[] = [
+  { role: 'merchant', title: 'Vendor', tagline: 'Vendor: post your offers and reach nearby customers', icon: DuoStoreIcon },
+  { role: 'intermediary', title: 'Intermediary', tagline: 'Intermediary: refer shops and earn credits', icon: DuoUsersIcon },
 ];
 
 function LoginInner() {
@@ -33,8 +34,8 @@ function LoginInner() {
           <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
             {CARDS.map((c) => (
               <div key={c.role} className="surface-hover flex flex-col items-center p-6 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-md bg-purple-100 text-title ring-1 ring-purple-200" aria-hidden>
-                  {c.icon}
+                <div className="flex h-16 w-16 items-center justify-center rounded-md bg-sky-50 ring-1 ring-sky-100" aria-hidden>
+                  <c.icon size={44} />
                 </div>
                 <h2 className="mt-3 text-section font-bold">{c.title}</h2>
                 <p className="mt-1 flex-1 text-muted">{c.tagline}</p>

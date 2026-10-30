@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAccount } from '@/components/account/AccountShell';
 import { rs, useWallet } from '@/components/account/useWallet';
 import { HistoryList, Stat } from '@/components/account/WalletParts';
-import { ClockIcon, QrIcon, StoreIcon, WalletIcon } from '@/components/Icons';
+import { DuoClockIcon, DuoStoreIcon, DuoWalletIcon, QrIcon } from '@/components/Icons';
 
 export default function IntermediaryDashboard() {
   const { user } = useAccount();
@@ -33,10 +33,10 @@ export default function IntermediaryDashboard() {
       {error && <p role="alert" className="text-small text-danger">{error}</p>}
 
       <section aria-label="Overview" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Balance" value={rs(wallet?.balance ?? 0)} hint="1 credit = Rs 1" icon={WalletIcon} tone="bg-purple-100 text-purple-700" />
-        <Stat label="Available" value={rs(wallet?.available ?? 0)} hint="Ready to withdraw" icon={WalletIcon} tone="bg-green-100 text-green-700" />
-        <Stat label="On hold" value={rs(wallet?.onHold ?? 0)} hint={wallet ? `Released after ${wallet.holdDays} days` : undefined} icon={ClockIcon} tone="bg-amber-100 text-amber-700" />
-        <Stat label="Shops referred" value={String(wallet?.shops.length ?? 0)} hint={wallet ? `${wallet.commissionCredits} credits per paid month` : undefined} icon={StoreIcon} tone="bg-sky-100 text-sky-700" />
+        <Stat label="Balance" value={rs(wallet?.balance ?? 0)} hint="1 credit = Rs 1" icon={DuoWalletIcon} tone="bg-purple-100 text-purple-700" />
+        <Stat label="Available" value={rs(wallet?.available ?? 0)} hint="Ready to withdraw" icon={DuoWalletIcon} tone="bg-green-100 text-green-700" />
+        <Stat label="On hold" value={rs(wallet?.onHold ?? 0)} hint={wallet ? `Released after ${wallet.holdDays} days` : undefined} icon={DuoClockIcon} tone="bg-amber-100 text-amber-700" />
+        <Stat label="Shops referred" value={String(wallet?.shops.length ?? 0)} hint={wallet ? `${wallet.commissionCredits} credits per paid month` : undefined} icon={DuoStoreIcon} tone="bg-sky-100 text-sky-700" />
       </section>
 
       <section aria-labelledby="recent">

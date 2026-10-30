@@ -1,10 +1,17 @@
 /* eslint-disable @next/next/no-img-element */
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
 import {
   ArrowRightIcon,
   ChevronRightIcon,
   ClockIcon,
+  DuoHeartIcon,
+  DuoPinIcon,
+  DuoStoreIcon,
+  DuoTagIcon,
   HeartIcon,
   PhoneIcon,
   PinIcon,
@@ -50,10 +57,10 @@ const deals = [
 ];
 
 const perks = [
-  { icon: TagIcon, text: 'Best offers near you' },
-  { icon: StoreIcon, text: 'Shop local, save more' },
-  { icon: PinIcon, text: 'Discover new stores' },
-  { icon: HeartIcon, text: 'Support small businesses' },
+  { icon: DuoTagIcon, text: 'Best offers near you' },
+  { icon: DuoStoreIcon, text: 'Shop local, save more' },
+  { icon: DuoPinIcon, text: 'Discover new stores' },
+  { icon: DuoHeartIcon, text: 'Support small businesses' },
 ];
 
 function SectionHead({ title }: { title: string }) {
@@ -68,8 +75,16 @@ function SectionHead({ title }: { title: string }) {
 }
 
 export default function Home() {
+  // -1 = "All"; picking a category re-tints the whole page with that category's colour
+  const [active, setActive] = useState(-1);
+  const theme = active >= 0 ? categories[active] : null;
+  const shownDeals = theme ? deals.filter((d) => categories[d.cat] === theme) : deals;
+
   return (
-    <main>
+    <main
+      style={{ backgroundColor: theme ? theme.from : undefined }}
+      className="min-h-screen transition-colors duration-500"
+    >
       <div className="h-1 bg-brand" aria-hidden />
 
       <header className="sticky top-0 z-20 border-b border-purple-100 bg-card">
@@ -113,11 +128,16 @@ export default function Home() {
       {/* category strip */}
       <nav aria-label="Categories" className="border-b border-purple-100 bg-card">
         <ul className="container-page flex gap-2 overflow-x-auto py-2 [scrollbar-width:none]">
-          {categories.map((c) => (
+          {[{ name: 'All' }, ...categories].map((c, i) => (
             <li key={c.name} className="shrink-0">
-              <Link href="/login" className="chip">
+              <button
+                type="button"
+                aria-pressed={active === i - 1}
+                onClick={() => setActive(i - 1)}
+                className={`chip ${active === i - 1 ? 'chip-active' : ''}`}
+              >
                 {c.name}
-              </Link>
+              </button>
             </li>
           ))}
         </ul>
@@ -151,30 +171,29 @@ export default function Home() {
         {/* shop by category */}
         <section>
           <SectionHead title="Shop by Category" />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((c) => (
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {categories.map((c, i) => (
               <Link
                 key={c.slug}
                 href="/login"
-                style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }}
-                className="group relative flex h-[170px] flex-col justify-between overflow-hidden rounded-md p-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-card-hover"
+                className={`group flex flex-col rounded-lg bg-card p-3 shadow-card transition duration-200 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:shadow-card-hover ${
+                  active === i ? 'ring-2 ring-purple-600' : ''
+                }`}
               >
-                <img
-                  src={`/categories/${c.slug}.webp`}
-                  alt=""
-                  loading="lazy"
-                  className="pointer-events-none absolute inset-y-0 right-0 h-full w-[62%] object-cover object-left transition duration-300 [mask-image:linear-gradient(to_right,transparent,black_22%)] group-hover:scale-105"
-                />
-                <div className="relative">
-                  <h3 className="max-w-[55%] text-body font-extrabold uppercase leading-tight text-ink">{c.name}</h3>
-                  <p className="mt-1 text-small text-muted">{c.offers} Offers</p>
+                <h3 className="line-clamp-2 min-h-[2.5rem] text-body font-bold leading-tight text-ink">{c.name}</h3>
+                <div
+                  style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }}
+                  className="mt-2 aspect-square overflow-hidden rounded-md"
+                >
+                  <img
+                    src={`/categories/${c.slug}.webp`}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                  />
                 </div>
-                <span className={`relative inline-flex items-center gap-2 text-small font-semibold ${c.text}`}>
-                  View All
-                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-white ${c.btn}`}>
-                    <ArrowRightIcon size={16} />
-                  </span>
-                </span>
+                <p className="mt-2 text-small text-muted">{c.offers} offers</p>
+                <span className={`text-small font-semibold ${c.text}`}>Shop now</span>
               </Link>
             ))}
           </div>
@@ -182,7 +201,7 @@ export default function Home() {
           <ul className="surface mt-4 grid grid-cols-2 gap-4 p-4 md:grid-cols-4">
             {perks.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-center gap-3 text-small font-semibold uppercase text-ink">
-                <Icon size={28} className="shrink-0 text-purple-700" />
+                <Icon size={40} className="shrink-0" />
                 {text}
               </li>
             ))}
@@ -193,8 +212,8 @@ export default function Home() {
         <section>
           <SectionHead title="Don't Miss Your Best Offers" />
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-            {deals.map((d) => (
-              <article key={d.title} className="surface-hover relative overflow-hidden">
+            {shownDeals.map((d) => (
+              <article key={d.title} className="surface-hover relative overflow-hidden rounded-lg">
                 <span className="badge-discount absolute left-2 top-2 z-10">{d.off}</span>
                 <button
                   type="button"

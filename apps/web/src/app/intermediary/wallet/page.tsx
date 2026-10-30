@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useAccount } from '@/components/account/AccountShell';
 import { rs, useWallet } from '@/components/account/useWallet';
 import { HistoryList, Stat } from '@/components/account/WalletParts';
-import { ClockIcon, WalletIcon } from '@/components/Icons';
+import { DuoClockIcon, DuoWalletIcon } from '@/components/Icons';
 import { ApiRequestError, requestPayout } from '@/lib/api';
 
 export default function IntermediaryWallet() {
@@ -43,9 +43,9 @@ export default function IntermediaryWallet() {
       {(loadError || error) && <p role="alert" className="text-small text-danger">{error ?? loadError}</p>}
 
       <section aria-label="Balances" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Stat label="Balance" value={rs(wallet?.balance ?? 0)} hint="All credits in your wallet" icon={WalletIcon} tone="bg-purple-100 text-purple-700" />
-        <Stat label="Available" value={rs(wallet?.available ?? 0)} hint={wallet ? `Payout from ${rs(wallet.payoutThreshold)}` : undefined} icon={WalletIcon} tone="bg-green-100 text-green-700" />
-        <Stat label="On hold" value={rs(wallet?.onHold ?? 0)} hint={wallet ? `Released ${wallet.holdDays} days after each credit` : undefined} icon={ClockIcon} tone="bg-amber-100 text-amber-700" />
+        <Stat label="Balance" value={rs(wallet?.balance ?? 0)} hint="All credits in your wallet" icon={DuoWalletIcon} tone="bg-purple-100 text-purple-700" />
+        <Stat label="Available" value={rs(wallet?.available ?? 0)} hint={wallet ? `Payout from ${rs(wallet.payoutThreshold)}` : undefined} icon={DuoWalletIcon} tone="bg-green-100 text-green-700" />
+        <Stat label="On hold" value={rs(wallet?.onHold ?? 0)} hint={wallet ? `Released ${wallet.holdDays} days after each credit` : undefined} icon={DuoClockIcon} tone="bg-amber-100 text-amber-700" />
       </section>
 
       {wallet && (

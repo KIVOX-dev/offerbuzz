@@ -10,7 +10,7 @@ export function Stat({ label, value, hint, icon: Icon, tone }: { label: string; 
   return (
     <div className="surface flex items-start gap-3 p-4">
       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md ${tone}`} aria-hidden>
-        <Icon size={22} />
+        <Icon size={32} />
       </span>
       <div className="min-w-0">
         <p className="text-small text-muted">{label}</p>

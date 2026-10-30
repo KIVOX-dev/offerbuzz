@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
 import type { MyOffersResponse, OfferDTO } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
-import { ClockIcon, EyeIcon, OffersIcon, PlusIcon, TagIcon, TrashIcon } from '@/components/Icons';
+import { DuoClockIcon, DuoOffersIcon, DuoTagIcon, EyeIcon, PlusIcon, TagIcon, TrashIcon } from '@/components/Icons';
 import { ApiRequestError, deleteOffer, getMyOffers } from '@/lib/api';
 
 const STATUS_STYLE: Record<OfferDTO['status'], string> = {
@@ -41,7 +41,7 @@ function Stat({ label, value, hint, icon: Icon, tone }: { label: string; value: 
   return (
     <div className="surface flex items-start gap-3 p-4">
       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md ${tone}`} aria-hidden>
-        <Icon size={22} />
+        <Icon size={32} />
       </span>
       <div className="min-w-0">
         <p className="text-small text-muted">{label}</p>
@@ -124,9 +124,9 @@ export default function MerchantDashboard() {
       )}
 
       <section aria-label="Overview" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Live now" value={totals?.active ?? 0} hint="Customers can see these" icon={TagIcon} tone="bg-green-100 text-green-700" />
-        <Stat label="Waiting for approval" value={totals?.pending ?? 0} hint="Reviewed by our team" icon={ClockIcon} tone="bg-amber-100 text-amber-700" />
-        <Stat label="Total offers" value={totals?.offers ?? 0} hint="Everything you posted" icon={OffersIcon} tone="bg-purple-100 text-purple-700" />
+        <Stat label="Live now" value={totals?.active ?? 0} hint="Customers can see these" icon={DuoTagIcon} tone="bg-green-100 text-green-700" />
+        <Stat label="Waiting for approval" value={totals?.pending ?? 0} hint="Reviewed by our team" icon={DuoClockIcon} tone="bg-amber-100 text-amber-700" />
+        <Stat label="Total offers" value={totals?.offers ?? 0} hint="Everything you posted" icon={DuoOffersIcon} tone="bg-purple-100 text-purple-700" />
         <Stat label="Views" value={totals?.views ?? 0} hint="Times your offers were opened" icon={EyeIcon} tone="bg-sky-100 text-sky-700" />
       </section>
 
@@ -149,7 +149,7 @@ export default function MerchantDashboard() {
           <p className="text-muted">Loading...</p>
         ) : data.offers.length === 0 ? (
           <div className="surface flex flex-col items-center p-8 text-center">
-            <TagIcon size={40} className="text-purple-300" />
+            <DuoTagIcon size={56} />
             <p className="mt-3 font-semibold">You have not posted an offer yet</p>
             <p className="mt-1 text-muted">Offers you post are reviewed first, then shown to customers nearby.</p>
             <Link href="/merchant/offers/new" className="btn-primary mt-4 gap-2">

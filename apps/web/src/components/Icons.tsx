@@ -234,3 +234,80 @@ export const QrIcon = (p: IconProps) => (
     <path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h.01" />
   </Svg>
 );
+
+/* ---- duotone illustration icons: navy outline, light-blue fill, green "+" accent ---- */
+const NAVY = '#0f1b3d';
+const BLUE = '#8ecbf0';
+const GREEN = '#12b76a';
+
+function Duo({ size = 40, children, ...rest }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
+      stroke={NAVY}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      {...rest}
+    >
+      {children}
+      <path d="M38 4v8M34 8h8" stroke={GREEN} />
+    </svg>
+  );
+}
+
+export const DuoTagIcon = (p: IconProps) => (
+  <Duo {...p}>
+    <path d="M6 24V8a2 2 0 0 1 2-2h16l17 17a2 2 0 0 1 0 3L26 41a2 2 0 0 1-3 0L6 24Z" fill={BLUE} />
+    <circle cx="15" cy="15" r="3" fill="#fff" />
+  </Duo>
+);
+export const DuoStoreIcon = (p: IconProps) => (
+  <Duo {...p}>
+    <path d="M8 20v22h28V20" />
+    <path d="M6 20 9 8h26l3 12c0 3-2.5 5-5 5s-5-2-5-5c0 3-2.5 5-5 5s-5-2-5-5c0 3-2.5 5-5 5s-5-2-5-5Z" fill={BLUE} />
+    <path d="M18 42V32h8v10" fill="#fff" />
+    <path d="M4 42h36" />
+  </Duo>
+);
+export const DuoPinIcon = (p: IconProps) => (
+  <Duo {...p}>
+    <path d="M20 42S6 30 6 19a14 14 0 0 1 28 0C34 30 20 42 20 42Z" fill={BLUE} />
+    <circle cx="20" cy="19" r="5" fill="#fff" />
+  </Duo>
+);
+export const DuoHeartIcon = (p: IconProps) => (
+  <Duo {...p}>
+    <path d="M22 41S5 31 5 19a9 9 0 0 1 17-4 9 9 0 0 1 17 4C39 31 22 41 22 41Z" fill={BLUE} />
+  </Duo>
+);
+export const DuoWalletIcon = (p: IconProps) => (
+  <Duo {...p}>
+    <path d="M6 14a4 4 0 0 1 4-4h22v6M6 14v22a4 4 0 0 0 4 4h28V18H10a4 4 0 0 1-4-4Z" fill={BLUE} />
+    <circle cx="31" cy="29" r="2.5" fill="#fff" />
+  </Duo>
+);
+export const DuoClockIcon = (p: IconProps) => (
+  <Duo {...p}>
+    <circle cx="21" cy="25" r="16" fill={BLUE} />
+    <path d="M21 15v10l6 4" />
+  </Duo>
+);
+export const DuoOffersIcon = (p: IconProps) => (
+  <Duo {...p}>
+    <path d="M6 24V8a2 2 0 0 1 2-2h16l17 17a2 2 0 0 1 0 3L26 41a2 2 0 0 1-3 0L6 24Z" fill={BLUE} />
+    <path d="m27 16-10 10M18 17h.01M26 25h.01" />
+  </Duo>
+);
+export const DuoUsersIcon = (p: IconProps) => (
+  <Duo {...p}>
+    <circle cx="16" cy="18" r="6" fill={BLUE} />
+    <path d="M4 40c0-7 5-11 12-11s12 4 12 11Z" fill={BLUE} />
+    <circle cx="30" cy="16" r="4.5" />
+    <path d="M32 27c5 0 9 3 9 9" />
+  </Duo>
+);
