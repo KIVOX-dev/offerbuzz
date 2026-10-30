@@ -8,7 +8,7 @@ import type { PublicOfferDTO } from '@offerbuzz/shared';
 import { BottomNav, type NavKey } from '@/components/home/BottomNav';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { LocationPrompt } from '@/components/maps/LocationPrompt';
-import { discountLabel } from '@/components/OfferPreview';
+import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
 import { getNearbyOffers } from '@/lib/api';
 import { useVisitorLocation } from '@/lib/location';
@@ -65,17 +65,27 @@ const banners = [
  * not there yet, the category art sits on the right and fades into the background instead of ending in a hard edge.
  */
 function BannerArt({ image, fallback }: { image: string; fallback: string }) {
-  const [custom, setCustom] = useState(true);
-  return custom ? (
-    <>
-      <img src={image} alt="" onError={() => setCustom(false)} className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right" />
-      <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 to-transparent md:via-white/20" />
-    </>
-  ) : (
+  // start with the category art and only switch once the banner photo has really loaded, so a missing file never
+  // shows a broken image (an onError handler can fire before the page is interactive and be missed)
+  const [custom, setCustom] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const probe = new window.Image();
+    probe.onload = () => !cancelled && setCustom(true);
+    probe.src = image;
+    return () => {
+      cancelled = true;
+    };
+  }, [image]);
+
+  // one soft fade from the slide colour into the picture, so nothing ends in a hard edge and the photo stays vivid
+  return (
     <img
-      src={fallback}
+      src={custom ? image : fallback}
       alt=""
-      className="pointer-events-none absolute inset-y-0 right-0 h-full w-[58%] object-cover mix-blend-multiply [mask-image:linear-gradient(to_right,transparent,black_45%)]"
+      className={`pointer-events-none absolute inset-y-0 right-0 h-full w-[68%] object-cover md:w-[62%] ${
+        custom ? '' : 'mix-blend-multiply'
+      } [mask-image:linear-gradient(to_right,transparent,rgba(0,0,0,0.55)_22%,black_48%)]`}
     />
   );
 }
@@ -89,13 +99,6 @@ const perks = [
 
 const NEARBY_RADIUS_KM = 15;
 const REFRESH_MS = 60_000;
-
-/** "Ends today", "Ends tomorrow", "Ends in 3 days" for an end date (YYYY-MM-DD). */
-function endsLabel(endsAt: string): string {
-  const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`).getTime();
-  const days = Math.round((new Date(`${endsAt}T00:00:00Z`).getTime() - today) / 86_400_000);
-  return days <= 0 ? 'Ends today' : days === 1 ? 'Ends tomorrow' : `Ends in ${days} days`;
-}
 
 function SectionHead({ title, live }: { title: string; live?: boolean }) {
   return (
@@ -273,7 +276,7 @@ export default function Home() {
                     className="relative flex h-full items-center overflow-hidden p-6 pb-10 md:p-10 md:pb-12"
                   >
                     <BannerArt image={b.image} fallback={`/categories/${c.slug}.webp`} />
-                    <div className="relative max-w-[55%]">
+                    <div className="relative max-w-[58%] md:max-w-[46%]">
                       <span className={`inline-flex rounded-full bg-white/80 px-3 py-1 text-small font-bold ${c.text}`}>{b.off}</span>
                       <h2 className="mt-3 text-[26px] font-extrabold leading-tight tracking-tight text-ink md:text-[34px]">{b.title}</h2>
                       <p className="mt-2 text-body text-ink/70">{b.sub}</p>
@@ -329,24 +332,7 @@ export default function Home() {
                   <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-6">
                     {nearby.map((o, i) => (
                       <Reveal key={o.id} delay={i * 60} className="w-[200px] shrink-0 snap-start md:w-auto">
-                        <Link href={`/offers/${o.id}`} className="surface-hover relative block overflow-hidden rounded-lg active:scale-[0.98]">
-                          <span className="badge-discount absolute left-2 top-2 z-10">
-                            {discountLabel(o.discountType, o.discountValue === undefined ? '' : String(o.discountValue))}
-                          </span>
-                          <div className="aspect-[4/3] bg-purple-50">
-                            {o.imageUrl && <img src={o.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />}
-                          </div>
-                          <div className="space-y-1 p-3">
-                            <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold">{o.title}</p>
-                            <p className="truncate text-small text-muted">{o.shop.name}</p>
-                            <p className="flex items-center justify-between text-small font-semibold">
-                              <span className="text-purple-700">
-                                {o.distanceKm === undefined ? '' : o.distanceKm < 1 ? 'Under 1 km' : `${o.distanceKm.toFixed(1)} km away`}
-                              </span>
-                              <span className="text-amber-700">{endsLabel(o.endsAt)}</span>
-                            </p>
-                          </div>
-                        </Link>
+                        <OfferCard o={o} />
                       </Reveal>
                     ))}
                   </div>

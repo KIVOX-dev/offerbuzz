@@ -10,6 +10,7 @@ import type {
   MyOffersResponse,
   NearbyOffersResponse,
   PublicOfferDTO,
+  SuggestResponse,
   ReferralLookup,
   WalletResponse,
   OfferDTO,
@@ -130,6 +131,18 @@ export const updateProfile = (body: UpdateProfileInput) =>
 export const getPublicOffer = (id: string) => api<{ offer: PublicOfferDTO }>(`/offers/${encodeURIComponent(id)}`);
 export const getNearbyOffers = (lat: number, lng: number, radiusKm = 10) =>
   api<NearbyOffersResponse>(`/offers/nearby?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`);
+
+export const suggestSearch = (q: string) => api<SuggestResponse>(`/search/suggest?q=${encodeURIComponent(q)}`);
+export const searchOffers = (p: { q?: string; category?: string; lat?: number; lng?: number }) => {
+  const params = new URLSearchParams();
+  if (p.q) params.set('q', p.q);
+  if (p.category) params.set('category', p.category);
+  if (p.lat !== undefined && p.lng !== undefined) {
+    params.set('lat', String(p.lat));
+    params.set('lng', String(p.lng));
+  }
+  return api<NearbyOffersResponse>(`/offers/search?${params}`);
+};
 
 export const lookupReferral = (code: string) => api<ReferralLookup>(`/referral/${encodeURIComponent(code)}`);
 export const getWallet = () => authApi<WalletResponse>('/wallet');

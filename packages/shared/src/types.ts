@@ -70,6 +70,12 @@ export interface PublicOfferDTO extends OfferDTO {
   distanceKm?: number;
 }
 
+export interface SuggestResponse {
+  categories: string[];
+  shops: { id: string; name: string }[];
+  offers: { id: string; title: string; shop: string }[];
+}
+
 export interface NearbyOffersResponse {
   offers: PublicOfferDTO[];
 }

@@ -1,7 +1,13 @@
 import express, { Router } from 'express';
 import mongoose from 'mongoose';
 import {
+  CATEGORIES,
   nearbyQuerySchema,
+  searchQuerySchema,
+  suggestQuerySchema,
+  type SearchQuery,
+  type SuggestQuery,
+  type SuggestResponse,
   offerInputSchema,
   type MyOffersResponse,
   type NearbyOffersResponse,
@@ -151,6 +157,76 @@ offersRouter.get(
     const offers = rows.flatMap((r) => toPublicOffer(r.offer, r.vendor, r.distanceM) ?? []);
     const body: NearbyOffersResponse = { offers };
     res.set('cache-control', 'public, max-age=60');
+    res.json(body);
+  }),
+);
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Straight line distance in metres between two points. */
+function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const h = Math.sin(rad(bLat - aLat) / 2) ** 2 + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(rad(bLng - aLng) / 2) ** 2;
+  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+}
+
+const liveWindow = () => {
+  const today = startOfToday();
+  return { status: 'active' as const, startsAt: { $lte: today }, endsAt: { $gte: today } };
+};
+
+// What to show under the search box while typing: matching categories, shops and live offers.
+offersRouter.get(
+  '/search/suggest',
+  validate(suggestQuerySchema, 'query'),
+  wrap(async (req, res) => {
+    const { q } = req.query as unknown as SuggestQuery;
+    const rx = new RegExp(escapeRegex(q), 'i');
+    const [shops, offers] = await Promise.all([
+      User.find({ role: 'merchant', status: 'active', shopName: rx, 'location.coordinates.0': { $exists: true } }).select('shopName').limit(4),
+      Offer.find({ ...liveWindow(), title: rx }).select('title merchantId').sort({ createdAt: -1 }).limit(5),
+    ]);
+    const owners = await User.find({ _id: { $in: offers.map((o) => o.merchantId) } }).select('shopName name');
+    const ownerName = new Map(owners.map((u) => [String(u._id), u.shopName || u.name || 'Shop']));
+    const body: SuggestResponse = {
+      categories: CATEGORIES.filter((c) => rx.test(c)).slice(0, 4),
+      shops: shops.map((u) => ({ id: String(u._id), name: u.shopName as string })),
+      offers: offers.map((o) => ({ id: String(o._id), title: o.title, shop: ownerName.get(String(o.merchantId)) ?? 'Shop' })),
+    };
+    res.set('cache-control', 'public, max-age=30');
+    res.json(body);
+  }),
+);
+
+// Full results for a search or a category. With lat/lng the nearest shops come first, otherwise the newest offers.
+offersRouter.get(
+  '/offers/search',
+  validate(searchQuerySchema, 'query'),
+  wrap(async (req, res) => {
+    const q = req.query as unknown as SearchQuery;
+    const filter: Record<string, unknown> = { ...liveWindow() };
+    if (q.category) filter.category = q.category;
+    if (q.q) {
+      const rx = new RegExp(escapeRegex(q.q), 'i');
+      const shopIds = await User.find({ role: 'merchant', status: 'active', shopName: rx }).select('_id').limit(50);
+      filter.$or = [{ title: rx }, { description: rx }, { category: rx }, { area: rx }, { merchantId: { $in: shopIds.map((u) => u._id) } }];
+    }
+    const docs = await Offer.find(filter).sort({ createdAt: -1 }).limit(200);
+    const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName location locationAddress placeId');
+    const byId = new Map(vendors.map((v) => [String(v._id), v]));
+    const here = q.lat !== undefined && q.lng !== undefined ? { lat: q.lat, lng: q.lng } : undefined;
+    const offers = docs
+      .flatMap((o) => {
+        const v = byId.get(String(o.merchantId));
+        const c = v?.location?.coordinates;
+        if (!v || !c) return [];
+        const dto = toPublicOffer(o, v, here ? distanceM(here.lat, here.lng, c[1], c[0]) : undefined);
+        return dto ? [dto] : [];
+      })
+      // newest first from the query above; with a location the nearest shops come first (sort is stable)
+      .sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0))
+      .slice(0, q.limit);
+    const body: NearbyOffersResponse = { offers };
     res.json(body);
   }),
 );

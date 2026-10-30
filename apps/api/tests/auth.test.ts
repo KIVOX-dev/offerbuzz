@@ -502,6 +502,40 @@ describe('vendor offers and profile', () => {
     expect((await request(app).get(`/api/v1/offers/${b.id}`)).status).toBe(404);
   });
 
+  it('suggests and searches live offers by text, shop, and category', async () => {
+    const a = await signUp({ role: 'merchant', category: 'Fashion' }, 'sa@example.com');
+    const b = await signUp({ role: 'merchant', category: 'Grocery' }, 'sb@example.com');
+    await User.updateOne({ email: 'sa@example.com' }, { shopName: 'Glow Boutique', location: { type: 'Point', coordinates: [76.96, 11.0] } });
+    await User.updateOne({ email: 'sb@example.com' }, { shopName: 'Green Basket', location: { type: 'Point', coordinates: [77.2, 11.2] } });
+    const today = new Date().toISOString().slice(0, 10);
+    const live = { ...OFFER, startsAt: today, endsAt: '2099-01-01' };
+    await post(a.body.accessToken, { ...live, category: 'Fashion', title: 'Festive saree sale' });
+    await post(b.body.accessToken, { ...live, category: 'Grocery', title: 'Fresh vegetables combo' });
+    await Offer.updateMany({}, { status: 'active' });
+
+    const sug = await request(app).get('/api/v1/search/suggest?q=gl');
+    expect(sug.status).toBe(200);
+    expect(sug.body.shops).toEqual([{ id: expect.any(String), name: 'Glow Boutique' }]);
+    const sug2 = await request(app).get('/api/v1/search/suggest?q=fas');
+    expect(sug2.body.categories).toEqual(['Fashion']);
+    const sug3 = await request(app).get('/api/v1/search/suggest?q=vegetab');
+    expect(sug3.body.offers).toMatchObject([{ title: 'Fresh vegetables combo', shop: 'Green Basket' }]);
+    expect((await request(app).get('/api/v1/search/suggest?q=a')).status).toBe(400);
+
+    const titles = (r: { body: { offers: { title: string }[] } }) => r.body.offers.map((o) => o.title);
+    expect(titles(await request(app).get('/api/v1/offers/search?q=saree'))).toEqual(['Festive saree sale']);
+    expect(titles(await request(app).get('/api/v1/offers/search?q=green%20basket'))).toEqual(['Fresh vegetables combo']);
+    expect(titles(await request(app).get('/api/v1/offers/search?category=Grocery'))).toEqual(['Fresh vegetables combo']);
+    expect(titles(await request(app).get('/api/v1/offers/search?q=zzzz'))).toEqual([]);
+    // special characters are matched literally, never as a pattern
+    expect(titles(await request(app).get('/api/v1/offers/search?q=.*'))).toEqual([]);
+    expect((await request(app).get('/api/v1/offers/search')).status).toBe(400);
+
+    const near = await request(app).get('/api/v1/offers/search?q=e&lat=11.2&lng=77.2');
+    expect(titles(near)[0]).toBe('Fresh vegetables combo');
+    expect(near.body.offers[0].distanceKm).toBe(0);
+  });
+
   it('validates the offer form', async () => {
     const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
     const t = v.body.accessToken;

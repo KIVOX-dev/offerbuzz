@@ -2,9 +2,9 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronDownIcon, DuoCategoryIcon, HeartIcon, PinIcon, SearchIcon } from '../Icons';
+import { ChevronDownIcon, DuoCategoryIcon, HeartIcon, PinIcon } from '../Icons';
 import { Logo } from '../Logo';
-import { ScanButton } from '../Scanner';
+import { SearchBox } from './SearchBox';
 
 export type HomeCategory = { name: string; slug: string; from: string; to: string };
 
@@ -52,45 +52,19 @@ export function HomeHeader({
     </button>
   );
 
-  const search = (
-    <form action="/login" className="relative flex h-12 min-w-0 flex-1 items-center rounded-2xl bg-white shadow-card">
-      <SearchIcon size={20} className="pointer-events-none absolute left-4 text-purple-700" />
-      <input
-        value={query}
-        onChange={(e) => onQuery(e.target.value)}
-        className="h-full min-w-0 flex-1 rounded-2xl bg-transparent pl-12 pr-2 text-body text-ink outline-none placeholder:text-muted"
-        placeholder="Search offers, shops and categories"
-        aria-label="Search"
-      />
-      <span aria-hidden className="h-6 w-px bg-purple-100" />
-      <ScanButton onResult={onScan} className="flex h-full w-12 items-center justify-center rounded-r-2xl text-purple-700 hover:bg-purple-50" />
-    </form>
-  );
+  const search = <SearchBox value={query} onChange={onQuery} onScan={onScan} variant="mobile" />;
 
-  const desktopSearch = (
-    <form action="/login" className="flex h-search min-w-0 flex-1">
-      <input
-        value={query}
-        onChange={(e) => onQuery(e.target.value)}
-        className="input h-full rounded-none border-r-0"
-        placeholder="Search offers, shops and categories"
-        aria-label="Search"
-      />
-      <ScanButton onResult={onScan} className="flex w-12 items-center justify-center border-y border-purple-200 bg-card text-purple-700 hover:bg-purple-50" />
-      <button type="submit" aria-label="Search" className="flex w-12 items-center justify-center rounded-r-md bg-accent text-ink hover:brightness-105">
-        <SearchIcon />
-      </button>
-    </form>
-  );
+  const desktopSearch = <SearchBox value={query} onChange={onQuery} onScan={onScan} variant="desktop" />;
 
   return (
-    <header className="relative z-30 overflow-hidden rounded-b-[28px] bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b md:border-purple-100 md:bg-card md:bg-none md:text-ink md:shadow-none">
-      <span aria-hidden className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-purple-400/25 blur-3xl md:hidden" />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.10] md:hidden"
-        style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '22px 22px' }}
-      />
+    <header className="relative z-30 rounded-b-[28px] bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b md:border-purple-100 md:bg-card md:bg-none md:text-ink md:shadow-none">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-b-[28px] md:hidden">
+        <span className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-purple-400/25 blur-3xl" />
+        <span
+          className="absolute inset-0 opacity-[0.10]"
+          style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '22px 22px' }}
+        />
+      </div>
 
       <div className="container-page relative pt-3">
         {/* phones: location + logo, then search + saved */}

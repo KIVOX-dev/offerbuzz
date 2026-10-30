@@ -82,6 +82,20 @@ export const nearbyQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(30),
 });
 
+/** GET /search/suggest: what to offer while the customer is still typing. */
+export const suggestQuerySchema = z.object({ q: z.string().trim().min(2, 'Type at least 2 characters').max(60) });
+
+/** GET /offers/search: free text and/or one category; lat/lng sort the results by distance. */
+export const searchQuerySchema = z
+  .object({
+    q: z.string().trim().max(60).optional(),
+    category: z.enum(CATEGORIES).optional(),
+    lat: z.coerce.number().min(-90).max(90).optional(),
+    lng: z.coerce.number().min(-180).max(180).optional(),
+    limit: z.coerce.number().int().min(1).max(60).default(40),
+  })
+  .refine((v) => Boolean(v.q) || Boolean(v.category), { message: 'Type something to search for' });
+
 /** Every field optional: send only what changed. Empty strings clear optional fields. */
 export const updateProfileSchema = z.object({
   name: name.optional(),
@@ -121,6 +135,8 @@ export const offerInputSchema = z
   });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type SuggestQuery = z.infer<typeof suggestQuerySchema>;
+export type SearchQuery = z.infer<typeof searchQuerySchema>;
 export type LocationInput = z.infer<typeof locationInputSchema>;
 export type NearbyQuery = z.infer<typeof nearbyQuerySchema>;
 export type OfferInput = z.infer<typeof offerInputSchema>;
