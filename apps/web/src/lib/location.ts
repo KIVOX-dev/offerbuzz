@@ -36,7 +36,7 @@ function write(v: Stored) {
 const join = (...parts: (string | undefined)[]) => [...new Set(parts.filter(Boolean))].join(', ') || undefined;
 
 /** Free reverse lookup that needs no key, built for browsers. Gives e.g. "R.S. Puram, Coimbatore". */
-async function nameFromBigDataCloud(lat: number, lng: number): Promise<string | undefined> {
+export async function nameFromBigDataCloud(lat: number, lng: number): Promise<string | undefined> {
   try {
     const res = await fetch(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,

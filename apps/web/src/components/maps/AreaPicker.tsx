@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { nameFromBigDataCloud } from '@/lib/location';
 import { loadMaps, mapsConfigured } from '@/lib/maps';
 import { PinIcon } from '../Icons';
 
@@ -12,8 +13,23 @@ const DEBOUNCE_MS = 450;
 /** "RS Puram, Coimbatore, Tamil Nadu, India" -> "RS Puram, Coimbatore, Tamil Nadu" */
 const shorten = (s: string) => s.replace(/,\s*India$/i, '');
 
-/** Area and city for a point, looked up once when the vendor taps "Use my current location". */
+/**
+ * Area and city for a point, looked up once when the vendor taps "Use my current location". Google when the Maps key is
+ * set; otherwise (or if Google fails) a free key-less lookup, so the button always works.
+ */
 async function areaFromCoords(lat: number, lng: number): Promise<string | undefined> {
+  if (mapsConfigured) {
+    try {
+      const area = await googleArea(lat, lng);
+      if (area) return area;
+    } catch {
+      /* fall through to the free lookup */
+    }
+  }
+  return nameFromBigDataCloud(lat, lng);
+}
+
+async function googleArea(lat: number, lng: number): Promise<string | undefined> {
   await loadMaps();
   const { Geocoder } = (await google.maps.importLibrary('geocoding')) as google.maps.GeocodingLibrary;
   const { results } = await new Geocoder().geocode({ location: { lat, lng } });
@@ -153,8 +169,7 @@ export function AreaPicker({
         aria-expanded={ready ? open && items.length > 0 : undefined}
       />
 
-      {mapsConfigured && (
-        <div className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-2 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={useMyLocation}
@@ -172,8 +187,7 @@ export function AreaPicker({
               <PinIcon size={16} className="shrink-0" /> <span className="truncate">Use my shop location</span>
             </button>
           )}
-        </div>
-      )}
+      </div>
       {error && <p role="alert" className="mt-1 text-small text-danger">{error}</p>}
 
       {open && items.length > 0 && (
