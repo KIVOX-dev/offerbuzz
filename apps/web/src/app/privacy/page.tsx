@@ -64,6 +64,7 @@ const sections: LegalSection[] = [
     bullets: [
       "Publicly: a Vendor's offers, photos, shop name and area are visible to everyone who uses OfferBuzz.",
       'Intermediaries: an Intermediary can see the names of shops that joined with their referral code and the status of the related rewards.',
+      'A place-name lookup: if you allow location, your approximate coordinates (rounded to about 100 m) are sent once from your browser to a reverse-geocoding service (BigDataCloud, or Google Maps if configured) to show your area name. They are not tied to your account and are not stored on our servers.',
       'Service providers who work for us under confidentiality: email delivery (we use Brevo to send emails), hosting and database providers, and Google if you choose Google sign-in. They may process data only to provide their service to us.',
       'Authorities and advisers: courts, regulators, law enforcement, auditors and professional advisers where the law requires it or to protect our rights, users or the public.',
       'Business changes: if OfferBuzz is merged, sold or reorganised, your data may transfer to the new owner, who must honour this policy.',

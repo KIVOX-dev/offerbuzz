@@ -28,8 +28,24 @@ function write(v: Stored) {
   window.dispatchEvent(new Event(EVENT));
 }
 
-/** Short place name for a point, e.g. "RS Puram, Coimbatore". Looked up once per new location, then cached by the caller. */
-async function placeName(lat: number, lng: number): Promise<string | undefined> {
+const join = (...parts: (string | undefined)[]) => [...new Set(parts.filter(Boolean))].join(', ') || undefined;
+
+/** Free reverse lookup that needs no key, built for browsers. Gives e.g. "R.S. Puram, Coimbatore". */
+async function nameFromBigDataCloud(lat: number, lng: number): Promise<string | undefined> {
+  try {
+    const res = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
+      { signal: AbortSignal.timeout(5000) },
+    );
+    if (!res.ok) return undefined;
+    const d = (await res.json()) as { locality?: string; city?: string; principalSubdivision?: string };
+    return join(d.locality, d.city || d.principalSubdivision);
+  } catch {
+    return undefined;
+  }
+}
+
+async function nameFromGoogle(lat: number, lng: number): Promise<string | undefined> {
   if (!mapsConfigured) return undefined;
   try {
     await loadMaps();
@@ -37,12 +53,15 @@ async function placeName(lat: number, lng: number): Promise<string | undefined> 
     const { results } = await new Geocoder().geocode({ location: { lat, lng } });
     const parts = results[0]?.address_components ?? [];
     const pick = (...types: string[]) => parts.find((c) => types.some((t) => c.types.includes(t)))?.long_name;
-    const area = pick('sublocality_level_1', 'sublocality', 'neighborhood');
-    const city = pick('locality', 'administrative_area_level_2');
-    return [area, city].filter(Boolean).join(', ') || undefined;
+    return join(pick('sublocality_level_1', 'sublocality', 'neighborhood'), pick('locality', 'administrative_area_level_2'));
   } catch {
     return undefined;
   }
+}
+
+/** Short place name for a point. Looked up once per new location and then cached in the browser by the caller. */
+async function placeName(lat: number, lng: number): Promise<string | undefined> {
+  return (await nameFromBigDataCloud(lat, lng)) ?? (await nameFromGoogle(lat, lng));
 }
 
 /**

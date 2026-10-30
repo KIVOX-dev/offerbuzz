@@ -15,6 +15,7 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { ScanButton } from '@/components/Scanner';
 import {
   ArrowRightIcon,
+  ChevronDownIcon,
   ChevronRightIcon,
   DuoCategoryIcon,
   DuoHeartIcon,
@@ -162,12 +163,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* mobile location */}
-        <button type="button" onClick={request} className="container-page flex w-full items-center gap-1.5 pb-2 text-left text-small md:hidden">
-          <PinIcon size={16} className="shrink-0 text-purple-700" />
-          <span className="truncate font-semibold">{coords ? (placeLabel ?? 'Near you') : status === 'asking' ? 'Locating...' : 'Select a Location'}</span>
-        </button>
-
         {/* mobile search */}
         <form action="/login" className="container-page flex pb-2 md:hidden">
           <input
@@ -182,6 +177,31 @@ export default function Home() {
             <SearchIcon />
           </button>
         </form>
+
+        {/* mobile location bar, like the delivery bar in shopping apps */}
+        <div className="container-page pb-3 md:hidden">
+          <button
+            type="button"
+            onClick={request}
+            aria-label="Change location"
+            className="flex w-full items-center gap-2.5 rounded-xl bg-purple-100 px-3.5 py-2.5 text-left transition active:scale-[0.99]"
+          >
+            <PinIcon size={22} className="shrink-0 text-purple-800" />
+            <span className="min-w-0 flex-1 truncate text-body text-ink">
+              {coords ? (
+                <>
+                  <span className="text-purple-800/80">Offers near </span>
+                  <b className="font-semibold">{placeLabel ?? 'you'}</b>
+                </>
+              ) : status === 'asking' ? (
+                'Locating you...'
+              ) : (
+                <b className="font-semibold">Select your location</b>
+              )}
+            </span>
+            <ChevronDownIcon size={18} className="shrink-0 text-purple-800" />
+          </button>
+        </div>
       </header>
 
       {/* category strip */}
