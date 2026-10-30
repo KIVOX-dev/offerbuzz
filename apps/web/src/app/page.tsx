@@ -225,7 +225,7 @@ export default function Home() {
               </div>
             </div>
 
-            <PromoCard theme="blue" image="/banners/electronics.webp" imagePosition="52% center" label="Sale is live" href={`/search?category=${encodeURIComponent('Mobile and Electronics')}`}
+            <PromoCard theme="blue" image="/banners/electronics.webp" label="Sale is live" href={`/search?category=${encodeURIComponent('Mobile and Electronics')}`}
               burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} />}>
               <span className="text-[27px] font-black uppercase leading-[0.95] tracking-tight [text-shadow:0_2px_14px_rgba(255,255,255,0.55)] sm:text-[34px] md:text-[40px]">Sale is live</span>
               <OffPill>50 - 80% Off</OffPill>
@@ -240,7 +240,7 @@ export default function Home() {
               <span className="text-[18px] font-bold text-amber-200 sm:text-[22px]">From Rs 99</span>
             </PromoCard>
 
-            <PromoCard theme="teal" image="/banners/grocery.webp" imagePosition="88% center" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
+            <PromoCard theme="teal" image="/banners/grocery.webp" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
               burst={<Burst lines={['FRESH', 'EVERY', 'DAY']} size={62} />}>
               <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight sm:text-[30px] md:text-[34px]">Fresh groceries</span>
               <span className="hidden text-[15px] font-medium text-white/90 sm:block">Stock up at your neighbourhood store</span>
