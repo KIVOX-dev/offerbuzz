@@ -151,4 +151,41 @@ describe('Offera AI', () => {
     expect(ok.status).toBe(200);
     expect(ok.body.offers.length).toBeGreaterThan(0);
   });
+
+  it('rewrites a vendor offer description, vendors only, and falls back to a tidy-up without the model', async () => {
+    const signup = async (email: string, role: 'merchant' | 'customer') => {
+      const sent = await request(app).post('/api/v1/auth/send-otp').send({ email, mode: 'signup', role });
+      const v = await request(app).post('/api/v1/auth/verify-otp').send({ email, code: sent.body.devOtp, mode: 'signup', name: 'Test User', role });
+      return v.body.accessToken as string;
+    };
+    const vendor = await signup('rw-vendor@example.com', 'merchant');
+    const customer = await signup('rw-customer@example.com', 'customer');
+    const body = { title: 'Diwali sale', description: 'flat 30% off on all sarees till sunday   visit shop' };
+    const post = (token?: string, payload: object = body) => {
+      const r = request(app).post('/api/v1/ai/rewrite');
+      return (token ? r.set('authorization', `Bearer ${token}`) : r).send(payload);
+    };
+
+    expect((await post()).status).toBe(401);
+    expect((await post(customer)).status).toBe(403);
+    expect((await post(vendor, { description: 'short' })).status).toBe(400);
+
+    // no AI key: tidied up, still useful
+    const basic = await post(vendor);
+    expect(basic.status).toBe(200);
+    expect(basic.body).toEqual({ description: 'Flat 30% off on all sarees till sunday visit shop.', source: 'basic' });
+
+    // with the model: its text is used, trimmed to 600 characters
+    withKey();
+    vi.stubGlobal('fetch', vi.fn(async () => groqReply({ description: 'Enjoy flat 30% off on all sarees until Sunday. Visit the shop to claim it.' })));
+    const ai = await post(vendor);
+    expect(ai.body).toEqual({ description: 'Enjoy flat 30% off on all sarees until Sunday. Visit the shop to claim it.', source: 'ai' });
+
+    vi.stubGlobal('fetch', vi.fn(async () => groqReply({ description: 'x'.repeat(900) })));
+    expect((await post(vendor)).body.description.length).toBe(600);
+
+    // an unusable answer falls back instead of failing
+    vi.stubGlobal('fetch', vi.fn(async () => groqReply({ nope: true })));
+    expect((await post(vendor)).body.source).toBe('basic');
+  });
 });

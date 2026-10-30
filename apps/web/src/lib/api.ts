@@ -2,6 +2,8 @@ import type {
   AdminAnalytics,
   AiChatInput,
   AiChatResponse,
+  AiRewriteInput,
+  AiRewriteResponse,
   AdminOffersResponse,
   AdminOverview,
   AdminUsersResponse,
@@ -149,6 +151,9 @@ export const searchOffers = (p: { q?: string; category?: string; lat?: number; l
 export const getOffersByIds = (ids: string[]) => api<NearbyOffersResponse>(`/offers/by-ids?ids=${ids.map(encodeURIComponent).join(',')}`);
 
 export const askOfferaAI = (body: AiChatInput) => api<AiChatResponse>('/ai/chat', { method: 'POST', json: body });
+
+export const rewriteDescription = (body: AiRewriteInput) =>
+  authApi<AiRewriteResponse>('/ai/rewrite', { method: 'POST', json: body });
 
 export const lookupReferral = (code: string) => api<ReferralLookup>(`/referral/${encodeURIComponent(code)}`);
 export const getWallet = () => authApi<WalletResponse>('/wallet');

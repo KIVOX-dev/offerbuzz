@@ -7,14 +7,15 @@ import { CATEGORIES, offerInputSchema, type DiscountType } from '@offerbuzz/shar
 import { useAccount } from '@/components/account/AccountShell';
 import { Select } from '@/components/Select';
 import { OfferPreview } from '@/components/OfferPreview';
-import { ApiRequestError, createOffer, uploadOfferImage } from '@/lib/api';
+import { OfferaMark } from '@/components/agent/OfferaMark';
+import { ApiRequestError, createOffer, rewriteDescription, updateProfile, uploadOfferImage } from '@/lib/api';
 import { shrinkImage } from '@/lib/image';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function NewOfferPage() {
   const router = useRouter();
-  const { user } = useAccount();
+  const { user, setUser } = useAccount();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -62,7 +63,29 @@ export default function NewOfferPage() {
     if (fileRef.current) fileRef.current.value = '';
   }
 
-  const needsSetup = !user.category || !user.location;
+  // the category can be chosen right here the first time; the location still comes from the profile
+  const needsLocation = !user.location;
+
+  // AI rewrite of the description: shown as a suggestion the vendor accepts or ignores
+  const [rewriting, setRewriting] = useState(false);
+  const [suggestion, setSuggestion] = useState<{ text: string; source: 'ai' | 'basic' }>();
+  const [rewriteError, setRewriteError] = useState('');
+  async function rewrite() {
+    setRewriteError('');
+    setRewriting(true);
+    try {
+      const res = await rewriteDescription({
+        title: form.title || undefined,
+        category: (user.category ?? (form.category || undefined)) as (typeof CATEGORIES)[number] | undefined,
+        description: form.description,
+      });
+      setSuggestion({ text: res.description, source: res.source });
+    } catch (err) {
+      setRewriteError(err instanceof ApiRequestError ? err.message : 'Could not rewrite right now. Please try again.');
+    } finally {
+      setRewriting(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,6 +98,11 @@ export default function NewOfferPage() {
     if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? 'Check the form');
     setBusy(true);
     try {
+      if (!user.category) {
+        // first offer: save the chosen category to the shop first (it is locked afterwards)
+        const saved = await updateProfile({ category: parsed.data.category });
+        setUser({ ...user, ...saved.user });
+      }
       const { offer } = await createOffer(parsed.data);
       if (photo) {
         try {
@@ -113,11 +141,9 @@ export default function NewOfferPage() {
 
       <div className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <form onSubmit={submit} className="surface space-y-4 p-4 md:p-6" noValidate>
-          {needsSetup && (
+          {needsLocation && (
             <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">
-              Before you can post, add your {!user.category ? 'shop category' : ''}
-              {!user.category && !user.location ? ' and ' : ''}
-              {!user.location ? 'shop location' : ''} in your{' '}
+              Before you can post, add your shop location in your{' '}
               <Link href="/merchant/profile" className="font-semibold underline">profile</Link>.
             </p>
           )}
@@ -131,7 +157,35 @@ export default function NewOfferPage() {
             <label className="mb-1 block text-small font-semibold" htmlFor="o-desc">Description</label>
             <textarea id="o-desc" className="input h-28 py-2" value={form.description} maxLength={600}
               onChange={(e) => set('description', e.target.value)} placeholder="What do customers get, and what should they do to claim it?" />
-            <p className="mt-1 text-right text-small text-muted">{form.description.length}/600</p>
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => void rewrite()}
+                disabled={rewriting || form.description.trim().length < 10}
+                className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-small font-bold text-purple-800 transition hover:bg-purple-100 active:scale-95 disabled:opacity-50"
+              >
+                <OfferaMark size={20} />
+                {rewriting ? 'Rewriting...' : 'Rewrite with AI'}
+              </button>
+              <span className="text-small text-muted">{form.description.length}/600</span>
+            </div>
+            {form.description.trim().length < 10 && <p className="mt-1 text-small text-muted">Write a few words about the offer, then let AI polish them.</p>}
+            {rewriteError && <p role="alert" className="mt-1 text-small text-danger">{rewriteError}</p>}
+            {suggestion && (
+              <div className="ob-fade-up mt-2 rounded-xl border border-purple-200 bg-purple-50 p-3">
+                <p className="text-small font-bold text-purple-800">{suggestion.source === 'ai' ? 'Suggested by Offera AI' : 'Tidied up (AI is busy right now)'}</p>
+                <p className="mt-1 whitespace-pre-line text-body">{suggestion.text}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button type="button" className="btn-primary btn-sm" onClick={() => { set('description', suggestion.text); setSuggestion(undefined); }}>
+                    Use this
+                  </button>
+                  <button type="button" className="btn-outline btn-sm" onClick={() => void rewrite()} disabled={rewriting}>
+                    {rewriting ? 'Rewriting...' : 'Try again'}
+                  </button>
+                  <button type="button" className="btn-ghost btn-sm" onClick={() => setSuggestion(undefined)}>Keep mine</button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -156,16 +210,23 @@ export default function NewOfferPage() {
 
           <div>
             <label className="mb-1 block text-small font-semibold" htmlFor="o-cat">Category</label>
-            <input id="o-cat" className="input bg-purple-50" value={user.category ?? ''} readOnly placeholder="Not chosen yet" />
-            <p className="mt-1 text-small text-muted">
-              {user.category ? (
-                'Your shop posts offers in this category only.'
-              ) : (
-                <>
-                  Choose your shop category in your <Link href="/merchant/profile" className="font-semibold text-purple-700 underline">profile</Link> before posting.
-                </>
-              )}
-            </p>
+            {user.category ? (
+              <>
+                <input id="o-cat" className="input bg-purple-50" value={user.category} readOnly />
+                <p className="mt-1 text-small text-muted">Your shop posts offers in this category only.</p>
+              </>
+            ) : (
+              <>
+                <Select
+                  id="o-cat"
+                  value={form.category}
+                  onChange={(v) => set('category', v)}
+                  placeholder="Choose your shop category"
+                  options={CATEGORIES.map((c) => ({ value: c as string, label: c }))}
+                />
+                <p className="mt-1 text-small text-muted">All your offers go in this category. It is locked after your first offer, so choose carefully.</p>
+              </>
+            )}
           </div>
 
           <fieldset>

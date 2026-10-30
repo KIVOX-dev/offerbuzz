@@ -83,6 +83,12 @@ export interface AiChatResponse {
   source: 'ai' | 'basic';
 }
 
+export interface AiRewriteResponse {
+  description: string;
+  /** `basic` = only tidied up, because the AI model could not be reached */
+  source: 'ai' | 'basic';
+}
+
 export interface NearbyOffersResponse {
   offers: PublicOfferDTO[];
 }

@@ -104,6 +104,13 @@ export const aiChatSchema = z.object({
   lng: z.number().min(-180).max(180).optional(),
 });
 
+/** POST /ai/rewrite: a vendor's rough offer description to be polished. */
+export const aiRewriteSchema = z.object({
+  title: z.string().trim().max(100).optional(),
+  category: z.enum(CATEGORIES).optional(),
+  description: z.string().trim().min(10, 'Write a few words first').max(600),
+});
+
 /** Every field optional: send only what changed. Empty strings clear optional fields. */
 export const updateProfileSchema = z.object({
   name: name.optional(),
@@ -143,6 +150,7 @@ export const offerInputSchema = z
   });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type AiRewriteInput = z.infer<typeof aiRewriteSchema>;
 export type AiChatInput = z.infer<typeof aiChatSchema>;
 export type SuggestQuery = z.infer<typeof suggestQuerySchema>;
 export type SearchQuery = z.infer<typeof searchQuerySchema>;
