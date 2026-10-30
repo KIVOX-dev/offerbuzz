@@ -27,7 +27,7 @@ export function CookieBanner() {
       setAnalytics(saved !== 'essential');
       setShow(!saved);
     } catch {
-      setShow(false);
+      setShow(true); // storage blocked (common in in-app browsers): still ask, the answer lasts until the page is closed
     }
     const reopen = () => {
       setManaging(true);

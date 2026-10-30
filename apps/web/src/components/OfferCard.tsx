@@ -17,7 +17,7 @@ export function OfferCard({ o }: { o: PublicOfferDTO }) {
   const { has, toggle } = useSaved();
   const saved = has(o.id);
   return (
-    <Link href={`/offers/${o.id}`} className="surface-hover relative block overflow-hidden rounded-lg active:scale-[0.98]">
+    <Link href={`/offers/${o.id}`} className="surface-hover relative flex h-full flex-col overflow-hidden rounded-lg active:scale-[0.98]">
       <span className="badge-discount absolute left-2 top-2 z-10">
         {discountLabel(o.discountType, o.discountValue === undefined ? '' : String(o.discountValue))}
       </span>
@@ -37,10 +37,10 @@ export function OfferCard({ o }: { o: PublicOfferDTO }) {
       <div className="aspect-[4/3] bg-purple-50">
         {o.imageUrl && <img src={o.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />}
       </div>
-      <div className="space-y-1 p-3">
+      <div className="flex flex-1 flex-col gap-1 p-3">
         <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold">{o.title}</p>
         <p className="truncate text-small text-muted">{o.shop.name}</p>
-        <p className="flex items-center justify-between text-small font-semibold">
+        <p className="mt-auto flex items-center justify-between pt-1 text-small font-semibold">
           <span className="text-purple-700">{o.distanceKm === undefined ? '' : o.distanceKm < 1 ? 'Under 1 km' : `${o.distanceKm.toFixed(1)} km away`}</span>
           <span className="text-amber-700">{endsLabel(o.endsAt)}</span>
         </p>

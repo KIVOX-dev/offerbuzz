@@ -12,14 +12,19 @@ export type LocationStatus = 'unknown' | 'asking' | 'granted' | 'denied' | 'unsu
 
 type Stored = { lat?: number; lng?: number; name?: string; skippedAt?: number };
 
+// used when the browser blocks storage, so the choice still holds for the current visit
+let memory: Stored = {};
+
 function read(): Stored {
   try {
-    return JSON.parse(localStorage.getItem(KEY) ?? '{}') as Stored;
+    const raw = localStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as Stored) : memory;
   } catch {
-    return {};
+    return memory;
   }
 }
 function write(v: Stored) {
+  memory = v;
   try {
     localStorage.setItem(KEY, JSON.stringify(v));
   } catch {

@@ -6,16 +6,22 @@ const KEY = 'offerbuzz.saved';
 const EVENT = 'offerbuzz:saved';
 const MAX = 50;
 
+// used when the browser blocks storage, so hearts still work for the current visit
+let memory: string[] = [];
+
 function read(): string[] {
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return memory;
+    const v = JSON.parse(raw);
     return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, MAX) : [];
   } catch {
-    return [];
+    return memory;
   }
 }
 
 function write(ids: string[]) {
+  memory = ids.slice(0, MAX);
   try {
     localStorage.setItem(KEY, JSON.stringify(ids.slice(0, MAX)));
   } catch {

@@ -42,7 +42,7 @@ function Heading({ children }: { children: string }) {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-10 bg-accent text-ink">
+    <footer className="mt-10 hidden bg-accent text-ink md:block">
       {/* dotted top edge */}
       <div
         aria-hidden

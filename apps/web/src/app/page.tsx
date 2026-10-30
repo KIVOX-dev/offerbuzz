@@ -303,7 +303,7 @@ export default function Home() {
                   <SectionHead title="Offers near you" live />
                   <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-6">
                     {nearby.map((o, i) => (
-                      <Reveal key={o.id} delay={i * 60} className="w-[200px] shrink-0 snap-start md:w-auto">
+                      <Reveal key={o.id} delay={i * 60} className="h-full w-[200px] shrink-0 snap-start md:w-auto">
                         <OfferCard o={o} />
                       </Reveal>
                     ))}
@@ -337,8 +337,8 @@ export default function Home() {
                 ) : (
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
                     {shownDeals.map((d, i) => (
-                      <Reveal key={d.title} delay={i * 60}>
-                        <article className="surface-hover relative h-full overflow-hidden rounded-lg">
+                      <Reveal key={d.title} delay={i * 60} className="h-full">
+                        <article className="surface-hover relative flex h-full flex-col overflow-hidden rounded-lg">
                           <span className="badge-discount absolute left-2 top-2 z-10">{d.off}</span>
                           <div
                             style={{ backgroundImage: `linear-gradient(120deg, ${categories[d.cat].from}, ${categories[d.cat].to})` }}
@@ -346,10 +346,10 @@ export default function Home() {
                           >
                             <img src={`/categories/${categories[d.cat].slug}.webp`} alt="" loading="lazy" className="h-full w-full object-cover" />
                           </div>
-                          <div className="space-y-1 p-3">
-                            <p className="line-clamp-2 text-small font-semibold">{d.title}</p>
-                            <p className="text-small text-muted">{d.shop}</p>
-                            <Link href="/login" className="btn-accent btn-sm mt-1 w-full gap-1">
+                          <div className="flex flex-1 flex-col gap-1 p-3">
+                            <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold">{d.title}</p>
+                            <p className="line-clamp-2 text-small text-muted">{d.shop}</p>
+                            <Link href="/login" className="btn-accent btn-sm mt-auto w-full gap-1">
                               <TagIcon size={16} /> Claim offer
                             </Link>
                           </div>
