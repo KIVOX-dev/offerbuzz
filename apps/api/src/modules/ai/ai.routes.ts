@@ -5,7 +5,7 @@ import { aiLimiter } from '../../middleware/rateLimit';
 import { validate } from '../../middleware/validate';
 import { wrap } from '../../utils/async';
 import { env } from '../../config/env';
-import { modelList } from '../../services/groq';
+import { modelList, probeModels } from '../../services/groq';
 import { askOffera } from './ai.service';
 import { rewriteDescription } from './rewrite.service';
 
@@ -37,3 +37,12 @@ aiRouter.post(
 aiRouter.get('/ai/status', (_req, res) => {
   res.json({ configured: Boolean(env().GROQ_API_KEY), models: modelList() });
 });
+
+// Diagnostic: asks Groq once per model and reports the answer (rate limited like the rest of the AI).
+aiRouter.get(
+  '/ai/probe',
+  aiLimiter(),
+  wrap(async (_req, res) => {
+    res.json({ results: await probeModels() });
+  }),
+);

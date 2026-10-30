@@ -58,3 +58,37 @@ export async function chatJson(messages: LlmMessage[]): Promise<{ text: string; 
   }
   throw new LlmUnavailableError('No Groq model could answer');
 }
+
+export interface ProbeResult {
+  model: string;
+  ok: boolean;
+  status?: number;
+  message?: string;
+}
+
+/**
+ * Sends one tiny request to every model in the list and reports what Groq answered, to find out why the AI is not
+ * answering (401 = wrong key, 404 = model retired, 429 = rate limited, "fetch failed" = the server cannot reach Groq).
+ * Does not touch the cooldowns and never returns the key.
+ */
+export async function probeModels(): Promise<ProbeResult[]> {
+  const key = env().GROQ_API_KEY;
+  if (!key) return modelList().map((model) => ({ model, ok: false, message: 'GROQ_API_KEY is not set' }));
+  return Promise.all(
+    modelList().map(async (model): Promise<ProbeResult> => {
+      try {
+        const res = await fetch(URL, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Reply with the JSON {"ok": true}' }], max_tokens: 12, response_format: { type: 'json_object' } }),
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+        });
+        if (res.ok) return { model, ok: true, status: res.status };
+        const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
+        return { model, ok: false, status: res.status, message: String(body.error?.message ?? '').slice(0, 160) };
+      } catch (err) {
+        return { model, ok: false, message: err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 160) : 'request failed' };
+      }
+    }),
+  );
+}

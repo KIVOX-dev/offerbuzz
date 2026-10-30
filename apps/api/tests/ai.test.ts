@@ -142,6 +142,23 @@ describe('Offera AI', () => {
     expect(res2.offers.length).toBeGreaterThan(0);
   });
 
+  it('probes every model and reports what Groq answered, without the key', async () => {
+    withKey();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: { body: string }) => {
+        const model = JSON.parse(init.body).model as string;
+        return model === 'model-a' ? new Response(JSON.stringify({ error: { message: 'Invalid API Key' } }), { status: 401 }) : groqReply({ ok: true });
+      }),
+    );
+    const res = await request(app).get('/api/v1/ai/probe');
+    expect(res.body.results).toEqual([
+      { model: 'model-a', ok: false, status: 401, message: 'Invalid API Key' },
+      { model: 'model-b', ok: true, status: 200 },
+    ]);
+    expect(JSON.stringify(res.body)).not.toContain('test-key');
+  });
+
   it('validates the request over HTTP', async () => {
     expect((await request(app).post('/api/v1/ai/chat').send({ messages: [] })).status).toBe(400);
     expect((await request(app).post('/api/v1/ai/chat').send({ messages: [{ role: 'user', content: 'x'.repeat(501) }] })).status).toBe(400);
