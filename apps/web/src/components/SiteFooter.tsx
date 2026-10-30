@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Logo } from './Logo';
 import { ClockIcon, PhoneIcon, PinIcon } from './Icons';
 import { CookieSettingsButton } from './CookieBanner';
 
@@ -49,6 +50,10 @@ export function SiteFooter() {
         style={{ backgroundImage: 'repeating-linear-gradient(90deg, #a78bfa 0 4px, transparent 4px 8px)' }}
       />
       <div className="container-page py-12">
+        <div className="mb-10 flex flex-wrap items-center gap-4">
+          <Logo height={56} variant="light" />
+          <p className="text-body text-purple-200">Offers and deals from your favourite local stores.</p>
+        </div>
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {COLUMNS.map((col) => (
             <nav key={col.title} aria-label={col.title}>
