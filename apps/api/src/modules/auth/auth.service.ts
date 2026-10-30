@@ -209,6 +209,21 @@ const defaultVerifier: GoogleVerifier = async (idToken) => {
   if (!p?.sub || !p.email || !p.email_verified) throw unauthorized('Google account email is not verified');
   return { sub: p.sub, email: p.email.toLowerCase(), name: p.name };
 };
+/**
+ * What Google sign in is set up with, safe to show publicly: a Client ID is public anyway, and anything else that was
+ * pasted into the variable by mistake (such as a client secret) is reported as "not a Client ID" without echoing it.
+ */
+export function googleSetupStatus() {
+  const raw = `${env().GOOGLE_CLIENT_IDS},${env().GOOGLE_CLIENT_ID ?? ''}`
+    .split(',')
+    .map((s) => s.trim().replace(/^["']|["']$/g, '').trim())
+    .filter(Boolean);
+  return {
+    configured: raw.length > 0,
+    clientIds: raw.map((v) => (/^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$/i.test(v) ? { ok: true, value: v } : { ok: false, value: 'NOT A CLIENT ID (it should end with .apps.googleusercontent.com)' })),
+  };
+}
+
 let verifyGoogle = defaultVerifier;
 /** Test seam. */
 export const setGoogleVerifier = (v: GoogleVerifier = defaultVerifier) => {

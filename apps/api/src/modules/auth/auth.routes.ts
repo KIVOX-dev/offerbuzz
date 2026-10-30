@@ -54,6 +54,11 @@ authRouter.post(
   }),
 );
 
+// Diagnostic: shows which Google Client ID(s) the server is set up with (public values only).
+authRouter.get('/auth/google/status', (_req, res) => {
+  res.json(svc.googleSetupStatus());
+});
+
 // Unlisted: not linked from the role cards. Email + password for admin accounts only.
 authRouter.post(
   '/auth/admin/login',

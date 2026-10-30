@@ -393,6 +393,20 @@ describe('password', () => {
 });
 
 describe('google sign in errors', () => {
+  it('reports what Google sign in is set up with, and never echoes a secret pasted by mistake', async () => {
+    const prev = process.env.GOOGLE_CLIENT_IDS;
+    const { resetEnvCache } = await import('../src/config/env');
+    process.env.GOOGLE_CLIENT_IDS = ' "177421000110-4390dovd17qpu20vf621ek4hgkv3mnj6.apps.googleusercontent.com" , GOCSPX-secretsecretsecret';
+    resetEnvCache();
+    const res = await request(app).get('/api/v1/auth/google/status');
+    process.env.GOOGLE_CLIENT_IDS = prev ?? '';
+    resetEnvCache();
+    expect(res.body.configured).toBe(true);
+    expect(res.body.clientIds[0]).toEqual({ ok: true, value: '177421000110-4390dovd17qpu20vf621ek4hgkv3mnj6.apps.googleusercontent.com' });
+    expect(res.body.clientIds[1].ok).toBe(false);
+    expect(JSON.stringify(res.body)).not.toContain('GOCSPX');
+  });
+
   it('says so plainly when the Client ID on the server differs from the website', async () => {
     svc.setGoogleVerifier(async () => {
       throw new Error('Wrong recipient, payload audience != requiredAudience');
