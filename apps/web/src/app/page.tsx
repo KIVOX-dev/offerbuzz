@@ -97,7 +97,7 @@ export default function Home() {
   const [query, setQuery] = useState('');
 
   // offers from shops near the visitor, once they have shared their location
-  const { coords, status, request } = useVisitorLocation();
+  const { coords, name: placeLabel, status, request } = useVisitorLocation();
   const [nearby, setNearby] = useState<PublicOfferDTO[]>([]);
   useEffect(() => {
     if (!coords) return;
@@ -137,7 +137,7 @@ export default function Home() {
             <PinIcon className="text-purple-700" />
             <span className="text-left leading-tight">
               <span className="block text-muted">Your Location</span>
-              <span className="font-semibold">{coords ? 'Near you' : status === 'asking' ? 'Locating...' : 'Select a Location'}</span>
+              <span className="font-semibold">{coords ? (placeLabel ?? 'Near you') : status === 'asking' ? 'Locating...' : 'Select a Location'}</span>
             </span>
           </button>
 
@@ -161,6 +161,12 @@ export default function Home() {
             </Link>
           </div>
         </div>
+
+        {/* mobile location */}
+        <button type="button" onClick={request} className="container-page flex w-full items-center gap-1.5 pb-2 text-left text-small md:hidden">
+          <PinIcon size={16} className="shrink-0 text-purple-700" />
+          <span className="truncate font-semibold">{coords ? (placeLabel ?? 'Near you') : status === 'asking' ? 'Locating...' : 'Select a Location'}</span>
+        </button>
 
         {/* mobile search */}
         <form action="/login" className="container-page flex pb-2 md:hidden">

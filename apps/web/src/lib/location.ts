@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { loadMaps, mapsConfigured } from './maps';
 
 const KEY = 'offerbuzz.loc';
 const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -9,7 +10,7 @@ const EVENT = 'offerbuzz:location';
 export type Coords = { lat: number; lng: number };
 export type LocationStatus = 'unknown' | 'asking' | 'granted' | 'denied' | 'unsupported';
 
-type Stored = { lat?: number; lng?: number; skippedAt?: number };
+type Stored = { lat?: number; lng?: number; name?: string; skippedAt?: number };
 
 function read(): Stored {
   try {
@@ -27,12 +28,30 @@ function write(v: Stored) {
   window.dispatchEvent(new Event(EVENT));
 }
 
+/** Short place name for a point, e.g. "RS Puram, Coimbatore". Looked up once per new location, then cached by the caller. */
+async function placeName(lat: number, lng: number): Promise<string | undefined> {
+  if (!mapsConfigured) return undefined;
+  try {
+    await loadMaps();
+    const { Geocoder } = (await google.maps.importLibrary('geocoding')) as google.maps.GeocodingLibrary;
+    const { results } = await new Geocoder().geocode({ location: { lat, lng } });
+    const parts = results[0]?.address_components ?? [];
+    const pick = (...types: string[]) => parts.find((c) => types.some((t) => c.types.includes(t)))?.long_name;
+    const area = pick('sublocality_level_1', 'sublocality', 'neighborhood');
+    const city = pick('locality', 'administrative_area_level_2');
+    return [area, city].filter(Boolean).join(', ') || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * The visitor's location. It stays in this browser only, rounded to about 100 m, and is used to ask the API for
  * offers nearby. `request()` triggers the browser's own permission prompt.
  */
 export function useVisitorLocation() {
   const [coords, setCoords] = useState<Coords>();
+  const [name, setName] = useState<string>();
   const [status, setStatus] = useState<LocationStatus>('unknown');
   const [skipped, setSkipped] = useState(true);
 
@@ -40,6 +59,7 @@ export function useVisitorLocation() {
     const s = read();
     if (s.lat !== undefined && s.lng !== undefined) {
       setCoords({ lat: s.lat, lng: s.lng });
+      setName(s.name);
       setStatus('granted');
     }
     setSkipped(Boolean(s.skippedAt && Date.now() - s.skippedAt < SNOOZE_MS));
@@ -58,7 +78,13 @@ export function useVisitorLocation() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const round = (n: number) => Math.round(n * 1000) / 1000;
-        write({ lat: round(pos.coords.latitude), lng: round(pos.coords.longitude) });
+        const lat = round(pos.coords.latitude);
+        const lng = round(pos.coords.longitude);
+        const prev = read();
+        const samePlace = prev.lat === lat && prev.lng === lng && prev.name;
+        write({ lat, lng, name: samePlace ? prev.name : undefined });
+        // one lookup per new location; the name is then cached in this browser and Google is not asked again
+        if (!samePlace) void placeName(lat, lng).then((n) => n && write({ lat, lng, name: n }));
       },
       () => {
         setStatus('denied');
@@ -70,5 +96,5 @@ export function useVisitorLocation() {
 
   const skip = useCallback(() => write({ skippedAt: Date.now() }), []);
 
-  return { coords, status, skipped, request, skip };
+  return { coords, name, status, skipped, request, skip };
 }
