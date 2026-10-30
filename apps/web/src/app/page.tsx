@@ -382,8 +382,7 @@ export default function Home() {
                   <div style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }} className="mt-2 aspect-square overflow-hidden rounded-md">
                     <img src={`/categories/${c.slug}.webp`} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                   </div>
-                  <p className="mt-2 text-small text-muted">{c.offers} offers</p>
-                  <span className={`text-small font-semibold ${c.text}`}>Shop now</span>
+                  <span className={`mt-2 text-small font-semibold ${c.text}`}>Shop now</span>
                 </button>
               </Reveal>
             ))}
