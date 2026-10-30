@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { ClockIcon, PhoneIcon, PinIcon } from './Icons';
+import { CookieSettingsButton } from './CookieBanner';
 
-const ACCOUNTS = [
+type FooterLink = { label: string; href: string };
+
+const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: 'Vendors',
     links: [
@@ -16,40 +19,77 @@ const ACCOUNTS = [
       { label: 'Intermediary login', href: '/login?role=intermediary&mode=signin' },
     ],
   },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms & Conditions', href: '/terms' },
+      { label: 'Cookie Policy', href: '/cookies' },
+    ],
+  },
 ];
+
+/** Small mono heading followed by a hairline, like the column titles in the reference footer. */
+function Heading({ children }: { children: string }) {
+  return (
+    <div className="mb-5 flex items-center gap-3">
+      <h2 className="font-mono text-[12px] uppercase tracking-wider text-purple-300">{children}</h2>
+      <span aria-hidden className="h-px max-w-[120px] flex-1 bg-purple-300/40" />
+    </div>
+  );
+}
 
 export function SiteFooter() {
   return (
-    <footer className="mt-6 border-t border-purple-100 bg-card py-6">
-      <div className="container-page space-y-3 text-small text-muted">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="flex items-center gap-2"><PhoneIcon size={16} /> 93 45 97 57 47</span>
-          <span className="flex items-center gap-2"><ClockIcon size={16} /> 09:00 AM – 09:00 PM</span>
-          <span>© OfferBuzz</span>
-        </div>
-        <address className="flex items-start gap-2 not-italic">
-          <PinIcon size={16} className="mt-0.5 shrink-0" />
-          <span>#3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045</span>
-        </address>
-        <div className="grid gap-6 border-t border-purple-100 pt-4 sm:grid-cols-2">
-          {ACCOUNTS.map((g) => (
-            <nav key={g.title} aria-label={g.title}>
-              <p className="mb-2 text-small font-bold uppercase tracking-wider text-purple-700">{g.title}</p>
-              <ul className="space-y-1.5 font-medium">
-                {g.links.map((l) => (
+    <footer className="mt-10 bg-[#150a3a] text-purple-100">
+      {/* dotted top edge */}
+      <div
+        aria-hidden
+        className="h-2"
+        style={{ backgroundImage: 'repeating-linear-gradient(90deg, #a78bfa 0 4px, transparent 4px 8px)' }}
+      />
+      <div className="container-page py-12">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {COLUMNS.map((col) => (
+            <nav key={col.title} aria-label={col.title}>
+              <Heading>{col.title}</Heading>
+              <ul className="space-y-3.5">
+                {col.links.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="hover:text-purple-700">{l.label}</Link>
+                    <Link href={l.href} className="text-body text-white transition hover:text-accent">
+                      {l.label}
+                    </Link>
                   </li>
                 ))}
+                {col.title === 'Legal' && (
+                  <li>
+                    <CookieSettingsButton className="text-body text-white transition hover:text-accent" />
+                  </li>
+                )}
               </ul>
             </nav>
           ))}
+
+          <div>
+            <Heading>Contact</Heading>
+            <ul className="space-y-3.5 text-body text-white">
+              <li className="flex items-center gap-2">
+                <PhoneIcon size={16} className="shrink-0 text-purple-300" /> 93 45 97 57 47
+              </li>
+              <li className="flex items-center gap-2">
+                <ClockIcon size={16} className="shrink-0 text-purple-300" /> 09:00 AM – 09:00 PM
+              </li>
+              <li>
+                <address className="flex items-start gap-2 not-italic">
+                  <PinIcon size={16} className="mt-1 shrink-0 text-purple-300" />
+                  <span>#3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045</span>
+                </address>
+              </li>
+            </ul>
+          </div>
         </div>
-        <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-1 border-t border-purple-100 pt-3 font-medium">
-          <Link href="/terms" className="hover:text-purple-700">Terms &amp; Conditions</Link>
-          <Link href="/privacy" className="hover:text-purple-700">Privacy Policy</Link>
-          <Link href="/cookies" className="hover:text-purple-700">Cookie Policy</Link>
-        </nav>
+
+        <p className="mt-12 border-t border-purple-300/20 pt-6 text-small text-purple-300">© 2026 OfferBuzz</p>
       </div>
     </footer>
   );
