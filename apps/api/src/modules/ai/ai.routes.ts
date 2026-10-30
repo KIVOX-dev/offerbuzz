@@ -35,7 +35,18 @@ aiRouter.post(
 
 // Diagnostic: is the AI switched on, and which models are in the fallback chain? Never returns the key itself.
 aiRouter.get('/ai/status', (_req, res) => {
-  res.json({ configured: Boolean(env().GROQ_API_KEY), models: modelList() });
+  const key = env().GROQ_API_KEY ?? '';
+  // only the shape is reported, so a mistake is visible (a list of keys, quotes, spaces) without revealing the key
+  const keyFormat = !key
+    ? 'missing'
+    : key.includes(',')
+      ? 'several_keys_in_one_value'
+      : /^\s|\s$|^["']|["']$/.test(key)
+        ? 'has_spaces_or_quotes'
+        : /^gsk_[A-Za-z0-9]{20,}$/.test(key)
+          ? 'ok'
+          : 'does_not_look_like_a_groq_key';
+  res.json({ configured: Boolean(key), keyFormat, models: modelList() });
 });
 
 // Diagnostic: asks Groq once per model and reports the answer (rate limited like the rest of the AI).

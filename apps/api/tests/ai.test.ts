@@ -191,7 +191,20 @@ describe('Offera AI', () => {
     const basic = await post(vendor);
     expect(basic.status).toBe(200);
     expect(basic.body).toEqual({ description: 'Flat 30% off on all sarees till sunday visit shop.', source: 'basic', note: 'no_key' });
-    expect((await request(app).get('/api/v1/ai/status')).body).toEqual({ configured: false, models: ['model-a', 'model-b'] });
+    expect((await request(app).get('/api/v1/ai/status')).body).toEqual({ configured: false, keyFormat: 'missing', models: ['model-a', 'model-b'] });
+    const shape = async (value: string) => {
+      process.env.GROQ_API_KEY = value;
+      resetEnvCache();
+      const body = (await request(app).get('/api/v1/ai/status')).body;
+      expect(JSON.stringify(body)).not.toContain('gsk_');
+      return body.keyFormat;
+    };
+    expect(await shape('gsk_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toBe('ok');
+    expect(await shape('gsk_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,gsk_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')).toBe('several_keys_in_one_value');
+    expect(await shape('"gsk_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"')).toBe('has_spaces_or_quotes');
+    expect(await shape('AIzaSomethingElse')).toBe('does_not_look_like_a_groq_key');
+    process.env.GROQ_API_KEY = '';
+    resetEnvCache();
 
     // with the model: its text is used, trimmed to 600 characters
     withKey();
