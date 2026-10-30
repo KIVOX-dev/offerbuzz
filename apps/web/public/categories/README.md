@@ -9,7 +9,7 @@ name to change it. All are from Pexels (Pexels License: free for commercial use,
 | `fashion.webp` | 6461401 |
 | `electronics.webp` | 2933604 |
 | `home.webp` | 5825398 |
-| `beauty.webp` | 5632323 |
+| `beauty.webp` | 7797009 |
 | `health.webp` | 20140041 |
 | `fitness.webp` | 3927387 |
 | `baby.webp` | 7946392 |

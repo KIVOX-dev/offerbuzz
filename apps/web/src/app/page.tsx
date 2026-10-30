@@ -71,7 +71,7 @@ const perks = [
 const NEARBY_RADIUS_KM = 15;
 const REFRESH_MS = 60_000;
 
-function SectionHead({ title, live }: { title: string; live?: boolean }) {
+function SectionHead({ title, live, href = '/search' }: { title: string; live?: boolean; href?: string }) {
   return (
     <div className="mb-3 flex items-center justify-between">
       <h2 className="flex items-center gap-2 text-section font-bold text-ink">
@@ -86,7 +86,7 @@ function SectionHead({ title, live }: { title: string; live?: boolean }) {
           </span>
         )}
       </h2>
-      <Link href="/login" className="btn-ghost btn-sm gap-1">
+      <Link href={href} className="btn-ghost btn-sm gap-1">
         View all <ChevronRightIcon size={16} />
       </Link>
     </div>

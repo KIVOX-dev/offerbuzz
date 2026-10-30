@@ -529,7 +529,8 @@ describe('vendor offers and profile', () => {
     expect(titles(await request(app).get('/api/v1/offers/search?q=zzzz'))).toEqual([]);
     // special characters are matched literally, never as a pattern
     expect(titles(await request(app).get('/api/v1/offers/search?q=.*'))).toEqual([]);
-    expect((await request(app).get('/api/v1/offers/search')).status).toBe(400);
+    // no text and no category lists every live offer
+    expect(titles(await request(app).get('/api/v1/offers/search')).sort()).toEqual(['Festive saree sale', 'Fresh vegetables combo']);
 
     const near = await request(app).get('/api/v1/offers/search?q=e&lat=11.2&lng=77.2');
     expect(titles(near)[0]).toBe('Fresh vegetables combo');

@@ -25,10 +25,6 @@ function Results() {
   useEffect(() => setText(q), [q]);
 
   useEffect(() => {
-    if (!q && !category) {
-      setOffers([]);
-      return;
-    }
     let stale = false;
     setOffers(undefined);
     setError('');
@@ -40,7 +36,7 @@ function Results() {
     };
   }, [q, category, coords?.lat, coords?.lng]);
 
-  const title = category ? category : q ? `Results for "${q}"` : 'Search';
+  const title = category ? category : q ? `Results for "${q}"` : 'All offers';
 
   return (
     <main className="min-h-screen">
@@ -78,8 +74,8 @@ function Results() {
         {offers && offers.length === 0 && !error && (
           <div className="surface flex flex-col items-center gap-3 p-10 text-center">
             <DuoOffersIcon size={56} />
-            <p className="text-section font-bold">{q || category ? 'No offers found' : 'Type something to search'}</p>
-            <p className="text-muted">Try a different word, a shop name or a category such as Fashion or Grocery.</p>
+            <p className="text-section font-bold">{q || category ? 'No offers found' : 'No live offers yet'}</p>
+            <p className="text-muted">{q || category ? 'Try a different word, a shop name or a category such as Fashion or Grocery.' : 'New shops post offers every day. Please check back soon.'}</p>
             <Link href="/" className="btn-primary px-6">Back to home</Link>
           </div>
         )}
