@@ -52,12 +52,33 @@ const deals = [
 ];
 
 // Banner slides after the intro slide; indexes point into `categories`. Sample copy until the API feeds real offers.
+// `image` is an optional wide banner photo in public/banners; until it exists the category art is used instead.
 const banners = [
-  { cat: 1, title: 'Festive fashion sale', sub: 'New styles from local boutiques', off: 'UP TO 50% OFF' },
-  { cat: 2, title: 'Latest gadgets, best prices', sub: 'Phones, laptops and accessories nearby', off: 'UP TO 20% OFF' },
-  { cat: 0, title: 'Fresh groceries, daily savings', sub: 'Stock up at your neighbourhood store', off: 'FLAT 15% OFF' },
-  { cat: 11, title: 'Weekend getaway packages', sub: 'Short trips, great deals', off: '15% OFF' },
+  { cat: 1, title: 'Festive fashion sale', sub: 'New styles from local boutiques', off: 'UP TO 50% OFF', image: '/banners/fashion.webp' },
+  { cat: 2, title: 'Latest gadgets, best prices', sub: 'Phones, laptops and accessories nearby', off: 'UP TO 20% OFF', image: '/banners/electronics.webp' },
+  { cat: 0, title: 'Fresh groceries, daily savings', sub: 'Stock up at your neighbourhood store', off: 'FLAT 15% OFF', image: '/banners/grocery.webp' },
+  { cat: 11, title: 'Weekend getaway packages', sub: 'Short trips, great deals', off: '15% OFF', image: '/banners/travel.webp' },
 ];
+
+/**
+ * Banner picture. A wide photo from public/banners fills the slide with a soft fade behind the text; if that file is
+ * not there yet, the category art sits on the right and fades into the background instead of ending in a hard edge.
+ */
+function BannerArt({ image, fallback }: { image: string; fallback: string }) {
+  const [custom, setCustom] = useState(true);
+  return custom ? (
+    <>
+      <img src={image} alt="" onError={() => setCustom(false)} className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right" />
+      <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 to-transparent md:via-white/20" />
+    </>
+  ) : (
+    <img
+      src={fallback}
+      alt=""
+      className="pointer-events-none absolute inset-y-0 right-0 h-full w-[58%] object-cover mix-blend-multiply [mask-image:linear-gradient(to_right,transparent,black_45%)]"
+    />
+  );
+}
 
 const perks = [
   { icon: DuoTagIcon, text: 'Best offers near you' },
@@ -251,11 +272,7 @@ export default function Home() {
                     style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }}
                     className="relative flex h-full items-center overflow-hidden p-6 pb-10 md:p-10 md:pb-12"
                   >
-                    <img
-                      src={`/categories/${c.slug}.webp`}
-                      alt=""
-                      className="pointer-events-none absolute inset-y-0 right-0 h-full w-1/2 object-cover mix-blend-multiply"
-                    />
+                    <BannerArt image={b.image} fallback={`/categories/${c.slug}.webp`} />
                     <div className="relative max-w-[55%]">
                       <span className={`inline-flex rounded-full bg-white/80 px-3 py-1 text-small font-bold ${c.text}`}>{b.off}</span>
                       <h2 className="mt-3 text-[26px] font-extrabold leading-tight tracking-tight text-ink md:text-[34px]">{b.title}</h2>
