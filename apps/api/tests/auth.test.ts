@@ -291,6 +291,29 @@ describe('admin login', () => {
     expect(missing.status).toBe(401);
     expect(wrong.body.error.message).toBe(missing.body.error.message);
   });
+
+  it('signs in an existing admin with Google, but never creates an account or lets a non-admin in', async () => {
+    await User.create({ email: 'admin@offerbuzz.co', role: 'admin', referralCode: svc.generateReferralCode() });
+    await User.create({ email: 'shop@gmail.com', role: 'merchant', referralCode: svc.generateReferralCode() });
+    const post = () => request(app).post('/api/v1/auth/admin/google').send({ idToken: 'x'.repeat(20) });
+
+    svc.setGoogleVerifier(async () => ({ sub: 'g-admin', email: 'Admin@OfferBuzz.co', name: 'Admin' }));
+    const ok = await post();
+    expect(ok.status).toBe(200);
+    expect(ok.body.user.role).toBe('admin');
+    expect((await User.findOne({ email: 'admin@offerbuzz.co' }))?.googleId).toBe('g-admin');
+
+    // a different Google account for the same email is refused once linked
+    svc.setGoogleVerifier(async () => ({ sub: 'g-other', email: 'admin@offerbuzz.co' }));
+    expect((await post()).status).toBe(401);
+
+    svc.setGoogleVerifier(async () => ({ sub: 'g-shop', email: 'shop@gmail.com' }));
+    expect((await post()).status).toBe(401);
+    svc.setGoogleVerifier(async () => ({ sub: 'g-new', email: 'stranger@gmail.com' }));
+    expect((await post()).status).toBe(401);
+    expect(await User.countDocuments()).toBe(2);
+    svc.setGoogleVerifier();
+  });
 });
 
 describe('google sign in', () => {

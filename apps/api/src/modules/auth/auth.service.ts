@@ -230,10 +230,9 @@ export const setGoogleVerifier = (v: GoogleVerifier = defaultVerifier) => {
   verifyGoogle = v;
 };
 
-export async function googleLogin(idToken: string, role: SelfServeRole = 'customer') {
-  let profile: GoogleProfile;
+async function verifiedGoogleProfile(idToken: string): Promise<GoogleProfile> {
   try {
-    profile = await verifyGoogle(idToken);
+    return await verifyGoogle(idToken);
   } catch (err) {
     if (err instanceof Error && 'status' in err) throw err;
     // the reason is only logged (never the token): "Wrong recipient" = the Client ID on the website and on the API differ
@@ -244,6 +243,10 @@ export async function googleLogin(idToken: string, role: SelfServeRole = 'custom
     }
     throw unauthorized('Invalid Google token', 'GOOGLE_TOKEN_INVALID');
   }
+}
+
+export async function googleLogin(idToken: string, role: SelfServeRole = 'customer') {
+  const profile = await verifiedGoogleProfile(idToken);
   const byGoogle = await User.findOne({ googleId: profile.sub });
   if (byGoogle) {
     const { user, isNewUser } = await findOrCreate({ email: byGoogle.email as string }, role);
@@ -266,6 +269,20 @@ export async function adminLogin(email: string, password: string) {
   const ok = await bcrypt.compare(password, hash);
   if (!user || !ok) throw unauthorized('Incorrect email or password', 'INVALID_CREDENTIALS');
   if (user.status !== 'active') throw forbidden('This account is disabled', 'ACCOUNT_BLOCKED');
+  return respond(user, false);
+}
+
+/** Google sign in for an existing admin account only. It never creates an account and never accepts other roles. */
+export async function adminGoogleLogin(idToken: string) {
+  const profile = await verifiedGoogleProfile(idToken);
+  const user = await User.findOne({ email: profile.email, role: 'admin' });
+  if (!user) throw unauthorized('This Google account is not an admin', 'INVALID_CREDENTIALS');
+  if (user.status !== 'active') throw forbidden('This account is disabled', 'ACCOUNT_BLOCKED');
+  if (user.googleId && user.googleId !== profile.sub) throw unauthorized('This Google account is not an admin', 'INVALID_CREDENTIALS');
+  if (!user.googleId) {
+    user.googleId = profile.sub;
+    await user.save();
+  }
   return respond(user, false);
 }
 

@@ -88,7 +88,8 @@ export const setPassword = (token: string, password: string) =>
 export const googleLogin = (idToken: string, role?: 'merchant' | 'intermediary') =>
   api<AuthResponse>('/auth/google', { method: 'POST', json: { idToken, role } });
 
-export const adminLogin = (email: string, password: string) =>
+export const adminGoogleLogin = (idToken: string) => api<AuthResponse>('/auth/admin/google', { method: 'POST', json: { idToken } });
+export const adminLogin =(email: string, password: string) =>
   api<AuthResponse>('/auth/admin/login', { method: 'POST', json: { email, password } });
 
 // One refresh at a time: refresh tokens are single use, so two parallel refreshes would look like a replay

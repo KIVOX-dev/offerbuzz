@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { GoogleButton } from '@/components/GoogleButton';
 import { Logo } from '@/components/Logo';
 import { PasswordInput } from '@/components/PasswordInput';
-import { ApiRequestError, adminLogin } from '@/lib/api';
+import { ApiRequestError, adminGoogleLogin, adminLogin } from '@/lib/api';
 import { clearSession, loadSession, saveSession } from '@/lib/session';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,6 +40,21 @@ export default function AdminLoginPage() {
     }
   }
 
+  const googleError = useCallback((message: string) => setError(message), []);
+
+  async function signInWithGoogle(idToken: string) {
+    setBusy(true);
+    setError('');
+    try {
+      saveSession(await adminGoogleLogin(idToken));
+      router.push('/admin/dashboard');
+    } catch (err) {
+      clearSession();
+      setError(err instanceof ApiRequestError ? err.message : 'Something went wrong, please try again');
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="container-page flex min-h-screen flex-col items-center justify-center py-8">
       <Logo height={60} />
@@ -64,6 +80,12 @@ export default function AdminLoginPage() {
         <button className="btn-primary w-full" disabled={busy || !valid}>
           {busy ? 'Signing in...' : 'Sign in'}
         </button>
+        <div className="flex items-center gap-3 text-small text-muted">
+          <span className="h-px flex-1 bg-current opacity-20" />
+          or
+          <span className="h-px flex-1 bg-current opacity-20" />
+        </div>
+        <GoogleButton onCredential={signInWithGoogle} onError={googleError} />
         {error && (
           <p role="alert" className="text-small text-danger">
             {error}

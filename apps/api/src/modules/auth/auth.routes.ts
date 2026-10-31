@@ -71,6 +71,16 @@ authRouter.post(
 );
 
 authRouter.post(
+  '/auth/admin/google',
+  loginLimiter(),
+  validate(googleSchema),
+  wrap(async (req, res) => {
+    const b = req.body as GoogleInput;
+    res.json(await svc.adminGoogleLogin(b.idToken));
+  }),
+);
+
+authRouter.post(
   '/auth/login',
   loginLimiter(),
   validate(passwordLoginSchema),
