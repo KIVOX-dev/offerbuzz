@@ -11,6 +11,23 @@ import { SearchBox } from './SearchBox';
 
 export type HomeCategory = { name: string; slug: string; from: string; to: string };
 
+/** Phone header colours, one per category (the header fades between them, like a shopping app). */
+const THEMES: { match: RegExp; bg: string }[] = [
+  { match: /grocer|organic|medic|health|pharm/, bg: 'linear-gradient(160deg,#14532d 0%,#15803d 55%,#22c55e 130%)' },
+  { match: /fashion|cloth|jewel|beauty|salon|spa/, bg: 'linear-gradient(160deg,#831843 0%,#be185d 55%,#f472b6 130%)' },
+  { match: /mobile|electron|gadget/, bg: 'linear-gradient(160deg,#172554 0%,#1d4ed8 55%,#60a5fa 130%)' },
+  { match: /appliance|home|living/, bg: 'linear-gradient(160deg,#0c4a6e 0%,#0369a1 55%,#38bdf8 130%)' },
+  { match: /food|restaurant|cafe|bakery|bakeries|beverage/, bg: 'linear-gradient(160deg,#9a3412 0%,#ea580c 55%,#fb923c 130%)' },
+  { match: /travel|tour/, bg: 'linear-gradient(160deg,#134e4a 0%,#0f766e 55%,#2dd4bf 130%)' },
+  { match: /fitness|sport|auto|vehicle|car/, bg: 'linear-gradient(160deg,#312e81 0%,#4338ca 55%,#818cf8 130%)' },
+  { match: /gift|toy|baby|kid/, bg: 'linear-gradient(160deg,#701a75 0%,#a21caf 55%,#e879f9 130%)' },
+  { match: /educat|school|book/, bg: 'linear-gradient(160deg,#78350f 0%,#b45309 55%,#fbbf24 130%)' },
+  { match: /real|estate|property/, bg: 'linear-gradient(160deg,#334155 0%,#475569 55%,#94a3b8 130%)' },
+];
+const FALLBACKS = THEMES.map((t) => t.bg);
+const themeFor = (c: { name: string; slug: string }, i: number) =>
+  THEMES.find((t) => t.match.test(`${c.name} ${c.slug}`.toLowerCase()))?.bg ?? FALLBACKS[i % FALLBACKS.length];
+
 export type Promo = { cat: number; title: string; off: string };
 
 /**
@@ -77,6 +94,14 @@ export function HomeHeader({
   return (
     <header className="relative z-30 rounded-b-[28px] bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b md:border-purple-100 md:bg-card md:bg-none md:text-ink md:shadow-none">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-b-[28px] md:hidden">
+        {/* one colour layer per category: the active one fades in over the purple, so the header changes colour smoothly */}
+        {categories.map((c, i) => (
+          <span
+            key={c.slug}
+            className="absolute inset-0 transition-opacity duration-500 ease-out"
+            style={{ background: themeFor(c, i), opacity: active === i ? 1 : 0 }}
+          />
+        ))}
         <span className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-purple-400/25 blur-3xl" />
         <span
           className="absolute inset-0 opacity-[0.10]"
