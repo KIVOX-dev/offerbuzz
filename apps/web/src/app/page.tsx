@@ -211,7 +211,7 @@ export default function Home() {
           <span
             key={c}
             className="absolute inset-0 transition-opacity duration-700 ease-out"
-            style={{ background: `linear-gradient(180deg, ${c} 0%, ${c}b3 40%, ${c}00 100%)`, opacity: heroIdx === i ? 1 : 0 }}
+            style={{ background: `linear-gradient(180deg, ${c}38 0%, ${c}1f 45%, ${c}00 100%)`, opacity: heroIdx === i ? 1 : 0 }}
           />
         ))}
       </div>
