@@ -3,13 +3,13 @@
 import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '../Icons';
 
-const SLIDE_MS = 10_000;
+const SLIDE_MS = 8_000;
 
 /**
  * A row of banner cards, several visible at once with the next one peeking in. It advances by one card every
- * 10 seconds and loops, pauses while the pointer is over it or the tab is hidden, and can be swiped or scrolled.
+ * 8 seconds and loops, pauses while the pointer is over it or the tab is hidden, and can be swiped or scrolled.
  */
-export function HeroRail({ children, label }: { children: ReactNode; label: string }) {
+export function HeroRail({ children, label, onIndexChange }: { children: ReactNode; label: string; /** called with the card in view, so the page can match its colour */ onIndexChange?: (i: number) => void }) {
   const cards = Children.toArray(children);
   const count = cards.length;
   const rail = useRef<HTMLDivElement>(null);
@@ -53,7 +53,11 @@ export function HeroRail({ children, label }: { children: ReactNode; label: stri
     setIndex(best);
   }, []);
 
-  // every 10 seconds move to the next card; any change of card restarts the 10 seconds
+  useEffect(() => {
+    onIndexChange?.(index);
+  }, [index, onIndexChange]);
+
+  // every 8 seconds slide to the next card (right to left); any change of card restarts the 8 seconds
   useEffect(() => {
     if (paused || reduced || count < 2) return;
     const id = setTimeout(() => {

@@ -43,6 +43,9 @@ const categories: Category[] = [
 ];
 
 // Where each home page category opens in search: the matching real vendor category (pets has none, so it searches).
+/** The colour behind the page top for each hero card, in card order. */
+const HERO_TINTS = ['#6d28d9', '#3b82f6', '#4f46e5', '#14b8a6', '#f97316', '#fbbf24'];
+
 const SEARCH_BY_SLUG: Record<string, string> = {
   grocery: 'category=Grocery',
   fashion: 'category=Fashion',
@@ -121,6 +124,8 @@ function ViewAllButton({ href = '/search', label = 'View all offers' }: { href?:
 export default function Home() {
   // -1 = "All"; picking a category re-tints the whole page with that category's colour
   const [active, setActive] = useState(-1);
+  // which hero card is showing: the page colour behind it follows
+  const [heroIdx, setHeroIdx] = useState(0);
   const theme = active >= 0 ? categories[active] : null;
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -199,10 +204,22 @@ export default function Home() {
         onLocation={request}
       />
 
-      <div className="container-page space-y-7 py-5 md:py-6">
-        {/* hero: a rail of banner cards, one new card every 10 seconds */}
+      <div className="relative">
+      {/* colour wash behind the page top: one layer per hero card, the one in view fades in */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden">
+        {HERO_TINTS.map((c, i) => (
+          <span
+            key={c}
+            className="absolute inset-0 transition-opacity duration-700 ease-out"
+            style={{ background: `linear-gradient(180deg, ${c} 0%, ${c}b3 40%, ${c}00 100%)`, opacity: heroIdx === i ? 1 : 0 }}
+          />
+        ))}
+      </div>
+
+      <div className="container-page relative space-y-7 py-5 md:py-6">
+        {/* hero: a rail of banner cards, one new card every 8 seconds, sliding right to left */}
         <Reveal>
-          <HeroRail label="Featured offers">
+          <HeroRail label="Featured offers" onIndexChange={setHeroIdx}>
             {/* intro card */}
             <div className="h-[300px] overflow-hidden rounded-2xl shadow-card sm:h-[400px]">
               <div className="relative flex h-full items-center overflow-hidden bg-hero px-4 py-4 text-white sm:px-5 sm:py-6">
@@ -351,6 +368,7 @@ export default function Home() {
             </ul>
           </Reveal>
         </section>
+      </div>
       </div>
 
       <SiteFooter />
