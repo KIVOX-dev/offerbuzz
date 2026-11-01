@@ -204,8 +204,8 @@ export default function Home() {
         <Reveal>
           <HeroRail label="Featured offers">
             {/* intro card */}
-            <div className="h-[400px] overflow-hidden rounded-2xl shadow-card sm:h-[420px]">
-              <div className="relative flex h-full items-center overflow-hidden bg-hero px-5 py-6 text-white">
+            <div className="h-[300px] overflow-hidden rounded-2xl shadow-card sm:h-[400px]">
+              <div className="relative flex h-full items-center overflow-hidden bg-hero px-4 py-4 text-white sm:px-5 sm:py-6">
                 {/* soft glows and a faint dot grid */}
                 <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-purple-400/25 blur-3xl" />
                 <span aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
@@ -219,13 +219,13 @@ export default function Home() {
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-small font-semibold text-accent backdrop-blur">
                     <TagIcon size={14} /> Shop more. Save more.
                   </span>
-                  <h1 className="mt-5 text-[28px] font-extrabold leading-[1.05] tracking-tight md:text-[32px]">
+                  <h1 className="mt-3 text-[24px] font-extrabold leading-[1.05] tracking-tight sm:mt-5 sm:text-[28px]">
                     Offers and deals <span className="bg-gradient-to-r from-accent to-amber-300 bg-clip-text text-transparent">near you</span>
                   </h1>
-                  <p className="mt-4 max-w-md text-body text-purple-100 md:text-[17px]">
+                  <p className="mt-2 max-w-md text-small text-purple-100 sm:mt-4 sm:text-body">
                     Don&apos;t miss the best offers from your favourite local stores.
                   </p>
-                  <ul className="mt-4 flex flex-wrap gap-2 text-small font-medium">
+                  <ul className="mt-4 hidden flex-wrap gap-2 text-small font-medium sm:flex">
                     {['Free for customers', 'Verified local shops', 'New offers daily'].map((t) => (
                       <li key={t} className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-ink">✓</span>
@@ -249,21 +249,21 @@ export default function Home() {
               burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} size={60} />}>
               <span className="font-serif text-[26px] font-bold uppercase leading-[0.95] tracking-wide ">Festivals</span>
               <span className="-mt-1 font-serif text-[14px] uppercase tracking-[0.2em] text-white/90 sm:-mt-2 ">of India</span>
-              <span aria-hidden className="hidden h-px w-28 bg-gradient-to-r from-amber-300 to-transparent" />
+              <span aria-hidden className="hidden h-px w-28 bg-gradient-to-r from-amber-300 to-transparent sm:block" />
               <span className="text-[18px] font-bold text-amber-200 ">From Rs 99</span>
             </PromoCard>
 
             <PromoCard theme="teal" image="/banners/grocery.webp" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
               burst={<Burst lines={['FRESH', 'EVERY', 'DAY']} size={62} />}>
               <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight ">Fresh groceries</span>
-              <span className="text-[15px] font-medium text-white/90">Stock up at your neighbourhood store</span>
+              <span className="hidden text-[15px] font-medium text-white/90 sm:block">Stock up at your neighbourhood store</span>
               <OffPill>Min. 15% Off</OffPill>
             </PromoCard>
 
             <PromoCard theme="orange" image="/banners/travel.webp" label="Weekend getaways" href={`/search?category=${encodeURIComponent('Travels')}`}
               burst={<Burst lines={['WEEK', 'END', 'SALE']} size={62} />}>
               <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight ">Weekend getaways</span>
-              <span className="text-[15px] font-medium text-white/95">Short trips, great deals</span>
+              <span className="hidden text-[15px] font-medium text-white/95 sm:block">Short trips, great deals</span>
               <OffPill>Up to 30% Off</OffPill>
             </PromoCard>
 

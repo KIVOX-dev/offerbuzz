@@ -61,7 +61,7 @@ export function PromoCard({
   cutout?: boolean;
 }) {
   const body = (
-    <div className={`relative h-[400px] overflow-hidden rounded-2xl bg-gradient-to-br shadow-card sm:h-[420px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
+    <div className={`relative h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br shadow-card sm:h-[400px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-25"
@@ -74,10 +74,10 @@ export function PromoCard({
       <span aria-hidden className="pointer-events-none absolute -left-10 -top-10 h-44 w-44 rounded-full bg-white/25 blur-2xl" />
 
       {/* headline on top */}
-      <div className="relative z-10 flex flex-col items-start gap-2 p-4">{children}</div>
+      <div className="relative z-10 flex flex-col items-start gap-1.5 p-3 sm:gap-2 sm:p-4">{children}</div>
 
       {/* photo panel below, like a poster */}
-      <div className="absolute inset-x-3 bottom-3 h-[50%]">
+      <div className="absolute inset-x-2.5 bottom-2.5 h-[48%] sm:inset-x-3 sm:bottom-3 sm:h-[50%]">
         {burst && <span className="absolute -top-9 right-1 z-20">{burst}</span>}
         {cutout ? (
           <img
@@ -105,10 +105,10 @@ export function PromoCard({
 
 /** The dark navy "50 - 80% Off" style pill. */
 export function OffPill({ children }: { children: ReactNode }) {
-  return <span className="whitespace-nowrap rounded-xl border border-white/25 bg-[#1e1b6b] px-3 py-1.5 text-[14px] font-extrabold text-white shadow-lg sm:px-4 sm:py-2 sm:text-[17px]">{children}</span>;
+  return <span className="whitespace-nowrap rounded-lg border border-white/25 bg-[#1e1b6b] px-2.5 py-1 text-[13px] font-extrabold text-white shadow-lg sm:rounded-xl sm:px-4 sm:py-2 sm:text-[17px]">{children}</span>;
 }
 
 /** The small white strip along the bottom of a card ("Up to Rs 100 off on your first order"). */
 export function InfoStrip({ children }: { children: ReactNode }) {
-  return <span className="rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold leading-tight text-ink shadow-card">{children}</span>;
+  return <span className="hidden rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold leading-tight text-ink shadow-card sm:inline-block">{children}</span>;
 }
