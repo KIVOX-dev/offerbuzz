@@ -23,6 +23,15 @@ const THEMES: { match: RegExp; bg: string }[] = [
   { match: /educat|school|book/, bg: 'linear-gradient(160deg,#78350f 0%,#b45309 55%,#fbbf24 130%)' },
   { match: /real|estate|property/, bg: 'linear-gradient(160deg,#334155 0%,#475569 55%,#94a3b8 130%)' },
 ];
+/** Phone header colour while "All" is selected: follows the hero card in view (same order as the cards; the first is the default purple). */
+const HERO_HEADERS = [
+  '',
+  'linear-gradient(160deg,#1e3a8a 0%,#2563eb 55%,#60a5fa 130%)',
+  'linear-gradient(160deg,#312e81 0%,#4338ca 55%,#818cf8 130%)',
+  'linear-gradient(160deg,#134e4a 0%,#0f766e 55%,#2dd4bf 130%)',
+  'linear-gradient(160deg,#9a3412 0%,#ea580c 55%,#fb923c 130%)',
+  'linear-gradient(160deg,#92400e 0%,#d97706 55%,#fbbf24 130%)',
+];
 const FALLBACKS = THEMES.map((t) => t.bg);
 const themeFor = (c: { name: string; slug: string }, i: number) =>
   THEMES.find((t) => t.match.test(`${c.name} ${c.slug}`.toLowerCase()))?.bg ?? FALLBACKS[i % FALLBACKS.length];
@@ -43,6 +52,7 @@ export function HomeHeader({
   locationLabel,
   locationHint,
   onLocation,
+  heroIndex = 0,
 }: {
   categories: HomeCategory[];
   promos: Promo[];
@@ -54,6 +64,8 @@ export function HomeHeader({
   locationLabel: string;
   locationHint: string;
   onLocation: () => void;
+  /** the hero banner card in view: colours the header while no category is picked */
+  heroIndex?: number;
 }) {
   // signed in people go to their own area, everyone else to the sign in page (read after mount: no SSR mismatch)
   const [accountHref, setAccountHref] = useState('/login');
@@ -87,6 +99,15 @@ export function HomeHeader({
     <header className="relative z-30 rounded-b-[28px] bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b md:border-purple-100 md:bg-card md:bg-none md:text-ink md:shadow-none">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-b-[28px] md:hidden">
         {/* one colour layer per category: the active one fades in over the purple, so the header changes colour smoothly */}
+        {HERO_HEADERS.map((bg, i) =>
+          bg ? (
+            <span
+              key={i}
+              className="absolute inset-0 transition-opacity duration-700 ease-out"
+              style={{ background: bg, opacity: active === -1 && heroIndex === i ? 1 : 0 }}
+            />
+          ) : null,
+        )}
         {categories.map((c, i) => (
           <span
             key={c.slug}

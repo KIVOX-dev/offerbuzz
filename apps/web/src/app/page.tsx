@@ -196,6 +196,7 @@ export default function Home() {
         promos={banners}
         active={active}
         onPick={setActive}
+        heroIndex={heroIdx}
         query={query}
         onQuery={setQuery}
         onScan={onScan}
