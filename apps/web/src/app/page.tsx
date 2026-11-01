@@ -207,7 +207,7 @@ export default function Home() {
 
       <div className="relative">
       {/* colour wash behind the page top: one layer per hero card, the one in view fades in */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden md:h-[460px] md:opacity-60">
         {HERO_TINTS.map((c, i) => (
           <span
             key={c}
