@@ -82,10 +82,10 @@ export function SiteFooter() {
             </p>
             <ul className="mt-6 space-y-3 text-body font-medium text-ink">
               <li>
-                <address className="flex items-start gap-3 not-italic">
+                <div className="flex items-start gap-3">
                   <PinIcon size={18} className="mt-0.5 shrink-0 text-purple-900" />
-                  <span>#3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045</span>
-                </address>
+                  <span>We are in Chennai, Bangalore, Coimbatore</span>
+                </div>
               </li>
               <li className="flex items-center gap-3">
                 <PhoneIcon size={18} className="shrink-0 text-purple-900" />
