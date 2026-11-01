@@ -35,10 +35,25 @@ const SOCIALS = [
     label: 'Instagram',
     href: 'https://www.instagram.com/offerbuzzdotco?utm_source=qr&obrf=aXl0YnVkaTYxajJi',
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <rect x="3" y="3" width="18" height="18" rx="5" />
-        <circle cx="12" cy="12" r="4" />
-        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden>
+        <defs>
+          <radialGradient id="ig-grad" cx="0.3" cy="1.05" r="1.2">
+            <stop offset="0" stopColor="#FFDD55" />
+            <stop offset="0.1" stopColor="#FFDD55" />
+            <stop offset="0.5" stopColor="#FF543E" />
+            <stop offset="1" stopColor="#C837AB" />
+          </radialGradient>
+          <linearGradient id="ig-grad2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#3771C8" />
+            <stop offset="0.3" stopColor="#3771C8" />
+            <stop offset="1" stopColor="#6600FF" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="10" fill="url(#ig-grad)" />
+        <rect width="40" height="40" rx="10" fill="url(#ig-grad2)" />
+        <rect x="10" y="10" width="20" height="20" rx="6" fill="none" stroke="#fff" strokeWidth="2.2" />
+        <circle cx="20" cy="20" r="4.8" fill="none" stroke="#fff" strokeWidth="2.2" />
+        <circle cx="26.2" cy="13.8" r="1.4" fill="#fff" />
       </svg>
     ),
   },
@@ -46,8 +61,12 @@ const SOCIALS = [
     label: 'Facebook',
     href: 'https://www.facebook.com/share/1DkpQ8yg6x/',
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-        <path d="M13.5 21v-8h2.7l.4-3.2h-3.1V7.8c0-.9.3-1.5 1.6-1.5h1.7V3.4c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.5-4 4.1v2.4H7.7V13h2.7v8h3.1z" />
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden>
+        <circle cx="20" cy="20" r="20" fill="#1877F2" />
+        <path
+          fill="#fff"
+          d="M27.8 25.8l.9-5.8h-5.5v-3.8c0-1.6.8-3.1 3.2-3.1h2.5V8.2s-2.3-.4-4.4-.4c-4.5 0-7.5 2.7-7.5 7.6V20h-5v5.8h5V40h6.2V25.8h4.6z"
+        />
       </svg>
     ),
   },
@@ -107,7 +126,7 @@ export function SiteFooter() {
                     rel="noopener noreferrer"
                     aria-label={s.label}
                     title={s.label}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-900 text-white transition hover:bg-purple-800"
+                    className="block h-10 w-10 overflow-hidden rounded-full transition hover:scale-110 [&_svg]:h-full [&_svg]:w-full first:rounded-[10px]"
                   >
                     {s.icon}
                   </a>
