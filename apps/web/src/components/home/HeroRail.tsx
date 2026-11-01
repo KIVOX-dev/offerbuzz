@@ -75,7 +75,7 @@ export function HeroRail({ children, label }: { children: ReactNode; label: stri
       <div
         ref={rail}
         onScroll={onScroll}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {cards.map((c, i) => (
           <div
@@ -83,7 +83,7 @@ export function HeroRail({ children, label }: { children: ReactNode; label: stri
             role="group"
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${count}`}
-            className="w-[88%] shrink-0 snap-start sm:w-[62%] lg:w-[calc(42%-8px)]"
+            className="w-[72%] shrink-0 snap-start sm:w-[44%] md:w-[31%] lg:w-[23.5%]"
           >
             {c}
           </div>

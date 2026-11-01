@@ -212,7 +212,9 @@ export async function offersOverview(q: AdminOffersQuery): Promise<AdminOffersRe
   const vendorOf = new Map(vendors.map((v) => [String(v._id), v]));
   const offers: AdminOfferDTO[] = docs.map((o) => {
     const v = vendorOf.get(String(o.merchantId));
-    return { ...toOfferDTO(o), vendor: v?.shopName || v?.name || v?.email || 'Vendor', vendorEmail: v?.email ?? undefined };
+    const c = o.location?.coordinates;
+    const mapUrl = c && c.length === 2 ? `https://www.google.com/maps/search/?api=1&query=${c[1]},${c[0]}` : undefined;
+    return { ...toOfferDTO(o), vendor: v?.shopName || v?.name || v?.email || 'Vendor', vendorEmail: v?.email ?? undefined, mapUrl };
   });
   return { categories, offers };
 }

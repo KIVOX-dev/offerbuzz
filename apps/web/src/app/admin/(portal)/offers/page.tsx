@@ -4,6 +4,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { AdminOffersResponse, OfferDTO } from '@offerbuzz/shared';
+import { ShareOffer } from '@/components/admin/ShareOffer';
 import { ApiRequestError, getAdminOffers, setOfferStatus } from '@/lib/api';
 
 const VIEWS = [
@@ -123,6 +124,7 @@ export default function AdminOffers() {
                   <p className="mt-1 text-small text-muted">{o.views} views · {o.claims} claims</p>
                 </div>
                 <div className="flex gap-2">
+                  {o.status === 'active' && <ShareOffer o={o} />}
                   {o.status !== 'active' && o.status !== 'expired' && (
                     <button type="button" className="btn-primary btn-sm" disabled={busy === o.id} onClick={() => decide(o.id, 'active')}>Approve</button>
                   )}

@@ -124,8 +124,6 @@ export default function Home() {
   const theme = active >= 0 ? categories[active] : null;
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [tab, setTab] = useState<'near' | 'top'>('top');
-  const [tabTouched, setTabTouched] = useState(false);
   const [nav, setNav] = useState<NavKey>('home');
 
   // offers from shops near the visitor, refreshed every minute while the page is open
@@ -153,11 +151,6 @@ export default function Home() {
     };
   }, [coords]);
 
-  // show the nearby tab on its own as soon as there is something to show, unless the visitor already chose
-  useEffect(() => {
-    if (!tabTouched && nearby.length > 0) setTab('near');
-  }, [nearby, tabTouched]);
-
   // an OfferBuzz link opens straight away; anything else (a product barcode, plain text) fills the search box
   const onScan = useCallback(
     (text: string) => {
@@ -183,14 +176,9 @@ export default function Home() {
     setNav(k);
     if (k === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
     if (k === 'categories') goTo('categories');
-    if (k === 'near') {
-      setTab('near');
-      setTabTouched(true);
-      goTo('offers');
-    }
+    if (k === 'near') goTo('offers');
   };
 
-  const shownDeals = theme ? deals.filter((d) => categories[d.cat] === theme) : deals;
   const locationLabel = coords ? (placeLabel ?? 'Near you') : status === 'asking' ? 'Locating...' : 'Select location';
   const locationHint = coords ? 'Showing offers near you' : 'Tap to see offers near you';
 
@@ -216,8 +204,8 @@ export default function Home() {
         <Reveal>
           <HeroRail label="Featured offers">
             {/* intro card */}
-            <div className="h-[232px] overflow-hidden rounded-2xl shadow-card sm:h-[290px] md:h-[310px]">
-              <div className="relative flex h-full items-center overflow-hidden bg-hero px-5 pb-6 pt-6 text-white md:px-8">
+            <div className="h-[400px] overflow-hidden rounded-2xl shadow-card sm:h-[420px]">
+              <div className="relative flex h-full items-center overflow-hidden bg-hero px-5 py-6 text-white">
                 {/* soft glows and a faint dot grid */}
                 <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-purple-400/25 blur-3xl" />
                 <span aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
@@ -237,7 +225,7 @@ export default function Home() {
                   <p className="mt-4 max-w-md text-body text-purple-100 md:text-[17px]">
                     Don&apos;t miss the best offers from your favourite local stores.
                   </p>
-                  <ul className="mt-4 hidden flex-wrap gap-2 text-small font-medium sm:flex">
+                  <ul className="mt-4 flex flex-wrap gap-2 text-small font-medium">
                     {['Free for customers', 'Verified local shops', 'New offers daily'].map((t) => (
                       <li key={t} className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-ink">✓</span>
@@ -252,68 +240,45 @@ export default function Home() {
 
             <PromoCard theme="blue" image="/banners/electronics.webp" label="Sale is live" href={`/search?category=${encodeURIComponent('Mobile and Electronics')}`}
               burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} />}>
-              <span className="text-[27px] font-black uppercase leading-[0.95] tracking-tight [text-shadow:0_2px_14px_rgba(255,255,255,0.55)] sm:text-[34px] md:text-[40px]">Sale is live</span>
+              <span className="text-[27px] font-black uppercase leading-[0.95] tracking-tight [text-shadow:0_2px_14px_rgba(255,255,255,0.55)] ">Sale is live</span>
               <OffPill>50 - 80% Off</OffPill>
               <InfoStrip>Up to Rs 100 instant off on your first order</InfoStrip>
             </PromoCard>
 
             <PromoCard theme="indigo" image="/banners/fashion.webp" label="Festivals of India" href={`/search?category=${encodeURIComponent('Fashion')}`}
               burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} size={60} />}>
-              <span className="font-serif text-[26px] font-bold uppercase leading-[0.95] tracking-wide sm:text-[34px] md:text-[38px]">Festivals</span>
-              <span className="-mt-1 font-serif text-[14px] uppercase tracking-[0.2em] text-white/90 sm:-mt-2 sm:text-[20px]">of India</span>
-              <span aria-hidden className="hidden h-px w-28 bg-gradient-to-r from-amber-300 to-transparent sm:block" />
-              <span className="text-[18px] font-bold text-amber-200 sm:text-[22px]">From Rs 99</span>
+              <span className="font-serif text-[26px] font-bold uppercase leading-[0.95] tracking-wide ">Festivals</span>
+              <span className="-mt-1 font-serif text-[14px] uppercase tracking-[0.2em] text-white/90 sm:-mt-2 ">of India</span>
+              <span aria-hidden className="hidden h-px w-28 bg-gradient-to-r from-amber-300 to-transparent" />
+              <span className="text-[18px] font-bold text-amber-200 ">From Rs 99</span>
             </PromoCard>
 
             <PromoCard theme="teal" image="/banners/grocery.webp" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
               burst={<Burst lines={['FRESH', 'EVERY', 'DAY']} size={62} />}>
-              <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight sm:text-[30px] md:text-[34px]">Fresh groceries</span>
-              <span className="hidden text-[15px] font-medium text-white/90 sm:block">Stock up at your neighbourhood store</span>
+              <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight ">Fresh groceries</span>
+              <span className="text-[15px] font-medium text-white/90">Stock up at your neighbourhood store</span>
               <OffPill>Min. 15% Off</OffPill>
             </PromoCard>
 
             <PromoCard theme="orange" image="/banners/travel.webp" label="Weekend getaways" href={`/search?category=${encodeURIComponent('Travels')}`}
               burst={<Burst lines={['WEEK', 'END', 'SALE']} size={62} />}>
-              <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight sm:text-[30px] md:text-[34px]">Weekend getaways</span>
-              <span className="hidden text-[15px] font-medium text-white/95 sm:block">Short trips, great deals</span>
+              <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight ">Weekend getaways</span>
+              <span className="text-[15px] font-medium text-white/95">Short trips, great deals</span>
               <OffPill>Up to 30% Off</OffPill>
             </PromoCard>
 
             <PromoCard theme="gold" dark image="/categories/home.webp" label="First order offer">
               <span className="text-small font-extrabold uppercase tracking-wider text-purple-800">First order</span>
-              <span className="text-[34px] font-black leading-none sm:text-[44px] md:text-[52px]">Rs 50 off</span>
+              <span className="text-[34px] font-black leading-none ">Rs 50 off</span>
               <InfoStrip>Claim it on your first order</InfoStrip>
             </PromoCard>
           </HeroRail>
         </Reveal>
 
-        {/* offers: near you / top deals */}
+        {/* offers near you */}
         <section id="offers" className="scroll-mt-4">
-          <div role="tablist" aria-label="Offers" className="relative mb-4 grid grid-cols-2 rounded-full bg-purple-100 p-1">
-            <span
-              aria-hidden
-              className="absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-card shadow-card transition-transform duration-300 ease-out"
-              style={{ transform: tab === 'near' ? 'translateX(0)' : 'translateX(100%)' }}
-            />
-            {([['near', 'Near you'], ['top', 'Top deals']] as const).map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                role="tab"
-                aria-selected={tab === k}
-                onClick={() => {
-                  setTab(k);
-                  setTabTouched(true);
-                }}
-                className={`relative z-10 min-h-touch rounded-full text-body font-bold transition-colors ${tab === k ? 'text-purple-800' : 'text-purple-600'}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div key={tab} className="ob-fade-up">
-            {tab === 'near' ? (
+          <div className="ob-fade-up">
+            {(
               nearby.length > 0 ? (
                 <>
                   <SectionHead title="Offers near you" live />
@@ -339,43 +304,12 @@ export default function Home() {
                     <>
                       <p className="text-section font-bold">{nearbyLoaded ? 'No offers near you yet' : 'Looking for offers near you...'}</p>
                       <p className="text-muted">
-                        {nearbyLoaded ? `New shops join every day. Check Top deals while you wait.` : 'This updates on its own.'}
+                        {nearbyLoaded ? `New shops join every day. Check back soon.` : 'This updates on its own.'}
                       </p>
                     </>
                   )}
                 </div>
               )
-            ) : (
-              <>
-                <SectionHead title="Don't Miss Your Best Offers" />
-                {shownDeals.length === 0 ? (
-                  <p className="surface p-6 text-center text-muted">No deals in this category yet. Pick All to see everything.</p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-                    {shownDeals.map((d, i) => (
-                      <Reveal key={d.title} delay={i * 60} className="h-full">
-                        <article className="surface-hover relative flex h-full flex-col overflow-hidden rounded-lg">
-                          <span className="badge-discount absolute left-2 top-2 z-10">{d.off}</span>
-                          <div
-                            style={{ backgroundImage: `linear-gradient(120deg, ${categories[d.cat].from}, ${categories[d.cat].to})` }}
-                            className="aspect-[4/3] overflow-hidden"
-                          >
-                            <img src={`/categories/${categories[d.cat].slug}.webp`} alt="" loading="lazy" className="h-full w-full object-cover" />
-                          </div>
-                          <div className="flex flex-1 flex-col gap-1 p-3">
-                            <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold">{d.title}</p>
-                            <p className="line-clamp-2 text-small text-muted">{d.shop}</p>
-                            <Link href={`/search?${SEARCH_BY_SLUG[categories[d.cat].slug]}`} className="btn-accent btn-sm mt-auto w-full gap-1">
-                              <TagIcon size={16} /> View offers
-                            </Link>
-                          </div>
-                        </article>
-                      </Reveal>
-                    ))}
-                  </div>
-                )}
-                {shownDeals.length > 0 && <ViewAllButton />}
-              </>
             )}
           </div>
         </section>
@@ -390,9 +324,7 @@ export default function Home() {
                   type="button"
                   onClick={() => {
                     setActive(i);
-                    setTab('top');
-                    setTabTouched(true);
-                    goTo('offers');
+                    router.push(`/search?${SEARCH_BY_SLUG[c.slug] ?? `q=${encodeURIComponent(c.name)}`}`);
                   }}
                   className={`group flex h-full w-full flex-col rounded-lg bg-card p-3 text-left shadow-card transition duration-200 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:shadow-card-hover ${
                     active === i ? 'ring-2 ring-purple-600' : ''

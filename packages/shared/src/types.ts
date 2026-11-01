@@ -188,6 +188,8 @@ export interface AdminUsersResponse {
 export interface AdminOfferDTO extends OfferDTO {
   vendor: string;
   vendorEmail?: string;
+  /** Google Maps link to the offer's spot, for sharing */
+  mapUrl?: string;
 }
 
 export interface AdminCategoryCount {

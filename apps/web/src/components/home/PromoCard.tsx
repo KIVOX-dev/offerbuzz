@@ -61,7 +61,7 @@ export function PromoCard({
   cutout?: boolean;
 }) {
   const body = (
-    <div className={`relative h-[232px] overflow-hidden rounded-2xl bg-gradient-to-br shadow-card sm:h-[290px] md:h-[310px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
+    <div className={`relative h-[400px] overflow-hidden rounded-2xl bg-gradient-to-br shadow-card sm:h-[420px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-25"
@@ -73,26 +73,24 @@ export function PromoCard({
       />
       <span aria-hidden className="pointer-events-none absolute -left-10 -top-10 h-44 w-44 rounded-full bg-white/25 blur-2xl" />
 
-      {cutout ? (
-        <img
-          src={image}
-          alt=""
-          loading="lazy"
-          className="pointer-events-none absolute -bottom-2 right-1 h-[104%] w-auto max-w-[44%] object-contain object-bottom sm:max-w-[52%] drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
-        />
-      ) : (
-        <img
-          src={image}
-          alt=""
-          loading="lazy"
-          style={{ objectPosition: imagePosition }}
-          className="absolute inset-y-0 right-0 h-full w-[38%] object-cover shadow-[-12px_0_24px_rgba(0,0,0,0.18)] sm:w-[46%]"
-        />
-      )}
+      {/* headline on top */}
+      <div className="relative z-10 flex flex-col items-start gap-2 p-4">{children}</div>
 
-      <div className="relative z-10 flex h-full max-w-[64%] flex-col items-start justify-center gap-1.5 p-4 sm:max-w-[56%] sm:gap-3 sm:p-5 md:p-6">
-        {burst}
-        {children}
+      {/* photo panel below, like a poster */}
+      <div className="absolute inset-x-3 bottom-3 h-[50%]">
+        {burst && <span className="absolute -top-9 right-1 z-20">{burst}</span>}
+        {cutout ? (
+          <img
+            src={image}
+            alt=""
+            loading="lazy"
+            className="pointer-events-none h-full w-full object-contain object-bottom drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
+          />
+        ) : (
+          <div className="h-full w-full overflow-hidden rounded-xl border-2 border-white/60 shadow-card">
+            <img src={image} alt="" loading="lazy" style={{ objectPosition: imagePosition }} className="h-full w-full object-cover" />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -112,5 +110,5 @@ export function OffPill({ children }: { children: ReactNode }) {
 
 /** The small white strip along the bottom of a card ("Up to Rs 100 off on your first order"). */
 export function InfoStrip({ children }: { children: ReactNode }) {
-  return <span className="hidden rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold leading-tight text-ink shadow-card sm:inline-block">{children}</span>;
+  return <span className="rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold leading-tight text-ink shadow-card">{children}</span>;
 }
