@@ -70,7 +70,8 @@ export default function NewOfferPage() {
   // the category can be chosen right here the first time; the location still comes from the profile
   // exact spot for directions: chosen here, else the shop pin from the profile
   const [spot, setSpot] = useState<LocationInput>();
-  const needsLocation = !user.location && !spot;
+  // using the current location is compulsory: every offer needs its own pinned spot
+  const needsLocation = !spot;
 
   // AI rewrite of the description: shown as a suggestion the vendor accepts or ignores
   const [rewriting, setRewriting] = useState(false);
@@ -102,6 +103,7 @@ export default function NewOfferPage() {
       terms: form.terms || undefined,
       location: spot,
     });
+    if (!spot) return setError('Tap "Use my current location" to pin this offer before posting');
     if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? 'Check the form');
     setBusy(true);
     try {
@@ -150,8 +152,7 @@ export default function NewOfferPage() {
         <form onSubmit={submit} className="surface space-y-4 p-4 md:p-6" noValidate>
           {needsLocation && (
             <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">
-              Before you can post, share this offer&apos;s location below (&quot;Use my current location&quot;), or save your shop location in your{' '}
-              <Link href="/merchant/profile" className="font-semibold underline">profile</Link>.
+              Before you can post, tap &quot;Use my current location&quot; below while you are at the shop. It is required so customers can get directions.
             </p>
           )}
           <div>
@@ -279,10 +280,8 @@ export default function NewOfferPage() {
                   <span className="font-semibold text-green-700">Exact location saved.</span> Customers will get directions to this spot
                   ({spot.lat.toFixed(5)}, {spot.lng.toFixed(5)}).
                 </>
-              ) : user.location ? (
-                'Customers will get directions to your shop location. To use a different spot (another branch), tap "Use my current location" while you are there.'
               ) : (
-                'Tap "Use my current location" so customers can get directions to this offer.'
+                <span className="font-semibold text-danger">Required: tap &quot;Use my current location&quot; so customers can get directions to this offer.</span>
               )}
             </p>
           </div>
