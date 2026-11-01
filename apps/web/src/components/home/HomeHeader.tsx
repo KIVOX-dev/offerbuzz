@@ -3,9 +3,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useSaved } from '@/lib/saved';
 import { homeFor, loadSession } from '@/lib/session';
-import { ChevronDownIcon, DuoCategoryIcon, HeartIcon, PinIcon, UserIcon } from '../Icons';
+import { ChevronDownIcon, DuoCategoryIcon, PinIcon, UserIcon } from '../Icons';
 import { Logo } from '../Logo';
 import { SearchBox } from './SearchBox';
 
@@ -56,11 +55,6 @@ export function HomeHeader({
   locationHint: string;
   onLocation: () => void;
 }) {
-  const { count: savedCount } = useSaved();
-  const savedBadge = savedCount > 0 && (
-    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-ink">{savedCount}</span>
-  );
-
   // signed in people go to their own area, everyone else to the sign in page (read after mount: no SSR mismatch)
   const [accountHref, setAccountHref] = useState('/login');
   const [signedIn, setSignedIn] = useState(false);
@@ -117,15 +111,11 @@ export function HomeHeader({
           {search}
         </div>
 
-        {/* desktop: logo | location | search | saved */}
+        {/* desktop: logo | location | search | account */}
         <div className="hidden h-header items-center gap-3 md:flex">
           <Logo height={48} />
           {location}
           {desktopSearch}
-          <Link href="/saved" aria-label="Saved offers" className="btn-ghost relative !px-2">
-            <HeartIcon />
-            {savedBadge}
-          </Link>
           <Link href={accountHref} className="btn-ghost gap-2">
             <UserIcon /> {signedIn ? 'Account' : 'Sign in'}
           </Link>
