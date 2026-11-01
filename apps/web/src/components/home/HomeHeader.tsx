@@ -36,7 +36,6 @@ export type Promo = { cat: number; title: string; off: string };
  */
 export function HomeHeader({
   categories,
-  promos,
   active,
   onPick,
   query,
@@ -70,7 +69,6 @@ export function HomeHeader({
     setSignedIn(!!s);
     if (s && s.user.role !== 'customer') setAccountHref(homeFor(s.user.role));
   }, []);
-  const accountLabel = signedIn ? 'My account' : 'Sign in or create account';
 
   const location = (
     <button type="button" onClick={onLocation} aria-label="Change location" className="flex min-w-0 items-center gap-2.5 text-left">
@@ -110,21 +108,13 @@ export function HomeHeader({
       </div>
 
       <div className="container-page relative pt-3">
-        {/* phones: location + logo, then search + saved */}
+        {/* phones: location + logo, then search (saved and account are in the bottom bar) */}
         <div className="flex items-center justify-between gap-3 md:hidden">
           {location}
           <Logo height={34} variant="light" />
         </div>
         <div className="mt-3 flex items-center gap-2 md:hidden">
           {search}
-          <Link href="/saved" aria-label="Saved offers" className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white transition active:scale-95">
-            <HeartIcon />
-            {savedBadge}
-          </Link>
-          <Link href={accountHref} aria-label={accountLabel} className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white transition active:scale-95">
-            <UserIcon />
-            {signedIn && <span aria-hidden className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-purple-700 bg-green-400" />}
-          </Link>
         </div>
 
         {/* desktop: logo | location | search | saved */}
@@ -143,7 +133,7 @@ export function HomeHeader({
       </div>
 
       {/* category tabs */}
-      <nav aria-label="Categories" className="relative mt-2 md:mt-0 md:border-t md:border-purple-100 md:pt-2">
+      <nav aria-label="Categories" className="relative mt-2 pb-4 md:mt-0 md:border-t md:border-purple-100 md:pb-0 md:pt-2">
         <ul className="container-page flex gap-1 overflow-x-auto [scrollbar-width:none]">
           {[{ name: 'All', slug: 'all', from: '#e9e4fb', to: '#ffffff' }, ...categories].map((c, i) => {
             const on = active === i - 1;
@@ -162,30 +152,6 @@ export function HomeHeader({
         </ul>
       </nav>
 
-      {/* phones: offer cards that keep scrolling (pauses while touched) */}
-      <div aria-label="Featured deals" className="relative mt-3 overflow-hidden pb-5 pl-4 md:hidden">
-        <div className="ob-marquee flex w-max">
-          {[...promos, ...promos].map((p, i) => (
-            <button
-              key={`${p.title}-${i}`}
-              type="button"
-              aria-hidden={i >= promos.length}
-              tabIndex={i >= promos.length ? -1 : 0}
-              onClick={() => onPick(p.cat)}
-              className="mr-3 w-[132px] shrink-0 overflow-hidden rounded-2xl bg-gradient-to-b from-amber-300 to-accent p-2.5 text-left text-ink shadow-card"
-            >
-              <span className="block text-[11px] font-extrabold uppercase text-purple-900">{p.off}</span>
-              <span className="mt-0.5 line-clamp-2 h-9 text-[13px] font-extrabold leading-tight">{p.title}</span>
-              <span
-                style={{ backgroundImage: `linear-gradient(120deg, ${categories[p.cat].from}, ${categories[p.cat].to})` }}
-                className="mt-2 block aspect-[4/3] overflow-hidden rounded-xl"
-              >
-                <img src={`/categories/${categories[p.cat].slug}.webp`} alt="" className="h-full w-full object-cover" />
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
     </header>
   );
 }
