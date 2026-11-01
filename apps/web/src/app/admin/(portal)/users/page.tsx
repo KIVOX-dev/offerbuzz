@@ -68,32 +68,38 @@ export default function AdminUsers() {
 
   // a plain function (not a component) so rows keep their state while the list re-renders
   const renderRow = (u: AdminUserDTO) => (
-    <li key={u.id} className="surface p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-bold">{u.name || u.email}</p>
-            <span className="rounded-sm bg-purple-100 px-2 py-0.5 text-small font-semibold text-purple-800">{ROLE_LABEL[u.role]}</span>
-            <span className={`rounded-sm px-2 py-0.5 text-small font-semibold ${STATUS_STYLE[u.status]}`}>{u.status === 'pending' ? 'Needs approval' : u.status}</span>
-          </div>
-          <p className="text-small text-muted">
-            {u.email}
-            {u.phone ? ` · ${u.phone}` : ''}
-            {u.city ? ` · ${u.city}` : ''}
-          </p>
-          <p className="text-small text-muted">
-            {u.shopName ? `Shop: ${u.shopName} · ` : ''}Joined {fmt(u.createdAt)}
-            {u.referredBy ? ` · Referred by ${u.referredBy}` : ''}
-          </p>
-          {u.role === 'merchant' && (
-            <p className={`mt-1 text-small font-semibold ${u.subscribed ? 'text-green-700' : 'text-amber-700'}`}>
-              {u.subscribed ? `Paid plan until ${fmt(u.paidUntil as string)}` : u.paidUntil ? `Plan ended ${fmt(u.paidUntil)}` : 'Not subscribed'}
-            </p>
-          )}
-        </div>
-
+    <tr key={u.id} className="align-top">
+      <td className="p-3">
+        <p className="font-semibold text-body">{u.name || u.email}</p>
+        <p className="text-muted">{u.email}</p>
+      </td>
+      <td className="p-3">
+        <span className="rounded-sm bg-purple-100 px-2 py-0.5 font-semibold text-purple-800">{ROLE_LABEL[u.role]}</span>
+      </td>
+      <td className="p-3">
+        <span className={`whitespace-nowrap rounded-sm px-2 py-0.5 font-semibold ${STATUS_STYLE[u.status]}`}>{u.status === 'pending' ? 'Needs approval' : u.status}</span>
+      </td>
+      <td className="p-3">
+        <p>{u.phone || '-'}</p>
+        <p className="text-muted">{u.city || ''}</p>
+      </td>
+      <td className="p-3">{u.shopName || '-'}</td>
+      <td className="p-3 whitespace-nowrap">
+        <p>{fmt(u.createdAt)}</p>
+        {u.referredBy && <p className="text-muted">by {u.referredBy}</p>}
+      </td>
+      <td className="p-3 whitespace-nowrap">
+        {u.role === 'merchant' ? (
+          <span className={`font-semibold ${u.subscribed ? 'text-green-700' : 'text-amber-700'}`}>
+            {u.subscribed ? `Paid until ${fmt(u.paidUntil as string)}` : u.paidUntil ? `Ended ${fmt(u.paidUntil)}` : 'Not subscribed'}
+          </span>
+        ) : (
+          '-'
+        )}
+      </td>
+      <td className="p-3">
         {u.role !== 'admin' && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {u.role === 'merchant' && (
               <>
                 <Select
@@ -123,12 +129,12 @@ export default function AdminUsers() {
             )}
           </div>
         )}
-      </div>
-    </li>
+      </td>
+    </tr>
   );
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
+    <div className="mx-auto max-w-7xl space-y-4">
       <div>
         <h1 className="text-title font-bold">Users</h1>
         <p className="mt-1 text-muted">Approve intermediaries, block accounts, and record vendor subscription payments.</p>
@@ -168,9 +174,23 @@ export default function AdminUsers() {
       ) : data.users.length === 0 ? (
         <p className="surface p-6 text-center text-muted">No users match.</p>
       ) : (
-        <ul className="space-y-3">
-          {data.users.map(renderRow)}
-        </ul>
+        <div className="surface overflow-x-auto">
+          <table className="w-full min-w-[960px] text-left text-small">
+            <thead className="border-b border-purple-100 text-muted">
+              <tr>
+                <th className="p-3 font-semibold">User</th>
+                <th className="p-3 font-semibold">Role</th>
+                <th className="p-3 font-semibold">Status</th>
+                <th className="p-3 font-semibold">Phone / City</th>
+                <th className="p-3 font-semibold">Shop</th>
+                <th className="p-3 font-semibold">Joined</th>
+                <th className="p-3 font-semibold">Plan</th>
+                <th className="p-3 text-right font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-purple-50">{data.users.map(renderRow)}</tbody>
+          </table>
+        </div>
       )}
 
       {data && data.total > data.pageSize && (

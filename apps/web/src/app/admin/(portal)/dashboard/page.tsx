@@ -4,10 +4,31 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { AdminAnalytics, AdminOverview } from '@offerbuzz/shared';
+import { ApprovalPopup } from '@/components/admin/ApprovalPopup';
 import { useAccount } from '@/components/account/AccountShell';
 import { ApiRequestError, getAdminAnalytics, getAdminOverview } from '@/lib/api';
 
 const n = (v: number) => v.toLocaleString('en-IN');
+
+/** Plain names for the page paths in the "Most visited" list. */
+const PAGE_NAMES: Record<string, string> = {
+  '/': 'Home',
+  '/login': 'Sign in / Sign up',
+  '/search': 'Search',
+  '/saved': 'Saved offers',
+  '/merchant/dashboard': 'Vendor dashboard',
+  '/merchant/offers/new': 'Vendor: post an offer',
+  '/merchant/profile': 'Vendor profile',
+  '/intermediary/dashboard': 'Intermediary dashboard',
+  '/intermediary/shops': 'Intermediary: referred shops',
+  '/intermediary/wallet': 'Intermediary wallet',
+  '/intermediary/qr': 'Intermediary QR code',
+  '/intermediary/profile': 'Intermediary profile',
+  '/terms': 'Terms & Conditions',
+  '/privacy': 'Privacy Policy',
+  '/cookies': 'Cookie Policy',
+};
+const pageName = (path: string) => (path.startsWith('/offers/') ? 'Offer details' : (PAGE_NAMES[path] ?? path));
 
 function Stat({ label, value, hint, href, alert }: { label: string; value: number; hint?: string; href?: string; alert?: boolean }) {
   const body = (
@@ -95,6 +116,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      <ApprovalPopup />
       <section className="rounded-md bg-hero p-5 text-white shadow-glow md:p-6">
         <span className="badge-discount !bg-accent !text-ink">Admin</span>
         <h1 className="mt-3 text-title font-bold">Welcome, {user.name || user.email}</h1>
@@ -128,7 +150,10 @@ export default function AdminDashboard() {
               {a.topPages.map((p) => (
                 <li key={p.path} className="text-small">
                   <div className="flex justify-between gap-3">
-                    <span className="truncate font-semibold">{p.path}</span>
+                    <span className="truncate">
+                      <span className="font-semibold">{pageName(p.path)}</span>
+                      <span className="ml-2 text-muted">{p.path}</span>
+                    </span>
                     <span className="shrink-0 text-muted">{n(p.views)}</span>
                   </div>
                   <div className="mt-1 h-1.5 rounded-full bg-purple-100">

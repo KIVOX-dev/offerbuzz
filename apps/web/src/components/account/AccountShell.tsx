@@ -10,7 +10,7 @@ import { clearSession, homeFor, loadSession, saveSession } from '@/lib/session';
 import { Logo } from '../Logo';
 import { LogoutIcon } from '../Icons';
 
-export type NavItem = { href: string; label: string; icon: ComponentType<{ size?: number }> };
+export type NavItem = { href: string; label: string; icon: ComponentType<{ size?: number }>; /** small count bubble, e.g. items waiting */ badge?: number };
 
 type AccountCtx = { user: UserDTO; setUser: (u: UserDTO) => void };
 const Ctx = createContext<AccountCtx | undefined>(undefined);
@@ -97,9 +97,10 @@ export function AccountShell({
             </div>
           </div>
           <nav aria-label={title} className="flex gap-1 overflow-x-auto border-t border-purple-100 px-3 py-1 [scrollbar-width:none] md:hidden">
-            {nav.map(({ href, label, icon: Icon }) => (
+            {nav.map(({ href, label, icon: Icon, badge }) => (
               <Link key={href} href={href} className={`chip shrink-0 gap-2 ${active(href) ? 'chip-active' : ''}`}>
                 <Icon size={16} /> {label}
+                {!!badge && <span className="rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{badge}</span>}
               </Link>
             ))}
           </nav>
@@ -109,7 +110,7 @@ export function AccountShell({
           <aside className="sticky top-[calc(theme(height.header)+4px)] hidden h-[calc(100vh-theme(height.header)-4px)] w-60 shrink-0 border-r border-purple-100 bg-card p-3 md:block">
             <p className="px-3 pb-2 text-small font-semibold uppercase tracking-wide text-muted">{title}</p>
             <nav aria-label={title} className="space-y-1">
-              {nav.map(({ href, label, icon: Icon }) => (
+              {nav.map(({ href, label, icon: Icon, badge }) => (
                 <Link
                   key={href}
                   href={href}
@@ -119,6 +120,7 @@ export function AccountShell({
                   }`}
                 >
                   <Icon size={20} /> {label}
+                  {!!badge && <span className="ml-auto rounded-full bg-danger px-2 py-0.5 text-[12px] font-bold text-white">{badge}</span>}
                 </Link>
               ))}
             </nav>

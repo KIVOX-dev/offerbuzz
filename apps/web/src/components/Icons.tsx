@@ -417,3 +417,10 @@ const duoCategoryPaths: Record<string, React.ReactNode> = {
 export function DuoCategoryIcon({ slug, ...p }: IconProps & { slug: string; plain?: boolean }) {
   return <Duo {...p}>{duoCategoryPaths[slug] ?? duoCategoryPaths.all}</Duo>;
 }
+
+export const CheckBadgeIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z" />
+    <path d="M8.5 12l2.5 2.5L15.5 10" />
+  </Svg>
+);
