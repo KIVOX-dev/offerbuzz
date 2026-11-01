@@ -12,6 +12,8 @@ const offerSchema = new Schema(
     startsAt: { type: Date, required: true },
     endsAt: { type: Date, required: true, index: true },
     area: { type: String, required: true, trim: true },
+    // older offers were posted before the number was compulsory
+    phone: { type: String, trim: true },
     terms: { type: String, trim: true },
     // new offers wait for admin approval before they show to customers
     status: { type: String, enum: OFFER_STATUSES, default: 'pending', index: true },

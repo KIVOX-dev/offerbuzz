@@ -1,4 +1,4 @@
-import type { PayoutRequestDTO, WalletEntryDTO, WalletResponse } from '@offerbuzz/shared';
+import type { PayoutRequestInput, PayoutRequestDTO,WalletEntryDTO, WalletResponse } from '@offerbuzz/shared';
 import { User } from '../../models/User';
 import { WalletEntry, type WalletEntryDoc } from '../../models/WalletEntry';
 import { PayoutRequest, type PayoutRequestDoc } from '../../models/PayoutRequest';
@@ -66,6 +66,12 @@ export const toPayoutDTO = (p: PayoutRequestDoc, intermediary: string): PayoutRe
   id: String(p._id),
   intermediaryId: String(p.intermediaryId),
   intermediary,
+  details:
+    p.method === 'upi' && p.upiNumber
+      ? { method: 'upi', upiNumber: p.upiNumber }
+      : p.method === 'bank' && p.accountNumber && p.ifsc
+        ? { method: 'bank', accountName: p.accountName ?? '', accountNumber: p.accountNumber, ifsc: p.ifsc }
+        : undefined,
   credits: p.credits,
   status: p.status,
   note: p.note ?? undefined,
@@ -105,7 +111,7 @@ export async function getWallet(intermediaryId: string): Promise<WalletResponse>
 // ---- Payouts -----------------------------------------------------------------------------------
 
 /** The intermediary asks to be paid everything that is available. Needs the configured minimum, and an approved account. */
-export async function requestPayout(intermediaryId: string) {
+export async function requestPayout(intermediaryId: string, details: PayoutRequestInput) {
   const user = await User.findById(intermediaryId).select('status role');
   if (!user || user.role !== 'intermediary') throw notFound('Account not found');
   if (user.status !== 'active') throw new HttpError(403, 'NOT_APPROVED', 'Your account must be approved before you can request a payout');
@@ -115,7 +121,7 @@ export async function requestPayout(intermediaryId: string) {
     throw badRequest(`You need at least ${wallet.payoutThreshold} credits available to request a payout`, 'PAYOUT_MINIMUM');
   }
   try {
-    return await PayoutRequest.create({ intermediaryId, credits: wallet.requestable });
+    return await PayoutRequest.create({ intermediaryId, credits: wallet.requestable, ...details });
   } catch (err) {
     // the unique index allows one waiting request per intermediary, so a double click cannot create two
     if ((err as { code?: number }).code === 11000) throw new HttpError(409, 'PAYOUT_PENDING', 'You already have a payout request waiting');

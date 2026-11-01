@@ -30,6 +30,29 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
+const SOCIALS = [
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/offerbuzzdotco?utm_source=qr&obrf=aXl0YnVkaTYxajJi',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Facebook',
+    href: 'https://www.facebook.com/share/1DkpQ8yg6x/',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M13.5 21v-8h2.7l.4-3.2h-3.1V7.8c0-.9.3-1.5 1.6-1.5h1.7V3.4c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.5-4 4.1v2.4H7.7V13h2.7v8h3.1z" />
+      </svg>
+    ),
+  },
+];
+
 /** Small mono heading followed by a hairline. */
 function Heading({ children }: { children: string }) {
   return (
@@ -72,6 +95,25 @@ export function SiteFooter() {
                 <ClockIcon size={18} className="shrink-0 text-purple-900" /> 09:00 AM – 09:00 PM
               </li>
             </ul>
+
+            <div className="mt-7">
+              <Heading>Follow us on</Heading>
+              <div className="flex items-center gap-3">
+                {SOCIALS.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    title={s.label}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-900 text-white transition hover:bg-purple-800"
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* link columns */}

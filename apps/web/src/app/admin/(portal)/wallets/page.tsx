@@ -74,6 +74,15 @@ export default function AdminWallets() {
                 <div>
                   <p className="font-bold">{p.intermediary}</p>
                   <p className="text-small text-muted">Requested {fmt(p.requestedAt)}</p>
+                  {p.details?.method === 'upi' && (
+                    <p className="mt-1 text-small"><span className="font-semibold">UPI:</span> {p.details.upiNumber}</p>
+                  )}
+                  {p.details?.method === 'bank' && (
+                    <p className="mt-1 text-small">
+                      <span className="font-semibold">Bank:</span> {p.details.accountName} · A/c {p.details.accountNumber} · IFSC {p.details.ifsc}
+                    </p>
+                  )}
+                  {!p.details && <p className="mt-1 text-small text-muted">No payment details (older request)</p>}
                 </div>
                 <p className="text-section font-bold">{rs(p.credits)}</p>
                 <div className="flex gap-2">

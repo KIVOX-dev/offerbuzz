@@ -54,6 +54,8 @@ export interface OfferDTO {
   startsAt: string;
   endsAt: string;
   area: string;
+  /** shop contact number (+91XXXXXXXXXX); older offers may not have one */
+  phone?: string;
   terms?: string;
   status: OfferStatus;
   views: number;
@@ -135,8 +137,14 @@ export interface ReferralLookup {
   name?: string;
 }
 
+/** Where the admin should send the money. Only the admin sees this. */
+export type PayoutDetailsDTO =
+  | { method: 'upi'; upiNumber: string }
+  | { method: 'bank'; accountName: string; accountNumber: string; ifsc: string };
+
 export interface PayoutRequestDTO {
   id: string;
+  details?: PayoutDetailsDTO;
   intermediaryId: string;
   intermediary: string;
   credits: number;

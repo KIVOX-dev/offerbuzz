@@ -12,6 +12,7 @@ import { AreaPicker } from '@/components/maps/AreaPicker';
 import type { LocationInput } from '@offerbuzz/shared';
 import { ApiRequestError, createOffer, rewriteDescription, updateProfile, uploadOfferImage } from '@/lib/api';
 import { shrinkImage } from '@/lib/image';
+import { ModuleTerms } from '@/components/ModuleTerms';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -27,6 +28,7 @@ export default function NewOfferPage() {
     startsAt: today(),
     endsAt: '',
     area: user.city ?? '',
+    phone: user.phone?.replace(/^\+91/, '') ?? '',
     terms: '',
   });
   const [photo, setPhoto] = useState<Blob>();
@@ -286,6 +288,15 @@ export default function NewOfferPage() {
           </div>
 
           <div>
+            <label className="mb-1 block text-small font-semibold" htmlFor="o-phone">
+              Shop phone number <span className="font-normal text-danger">(required)</span>
+            </label>
+            <input id="o-phone" type="tel" inputMode="numeric" autoComplete="tel-national" required className="input" maxLength={13}
+              value={form.phone} onChange={(e) => set('phone', e.target.value.replace(/[^\d+\s-]/g, ''))} placeholder="10 digit mobile number" />
+            <p className="mt-1 text-small text-muted">Customers will see this number on your offer so they can call the shop.</p>
+          </div>
+
+          <div>
             <label className="mb-1 block text-small font-semibold" htmlFor="o-terms">
               Terms <span className="font-normal text-muted">(optional)</span>
             </label>
@@ -306,6 +317,7 @@ export default function NewOfferPage() {
           <OfferPreview d={{ ...form, shop: user.shopName || user.name || '', imageSrc: photoUrl }} />
         </aside>
       </div>
+      <ModuleTerms id="vendorOffer" />
     </div>
   );
 }

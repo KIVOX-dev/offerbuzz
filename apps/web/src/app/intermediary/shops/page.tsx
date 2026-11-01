@@ -1,6 +1,7 @@
 'use client';
 
 import { fmtDate, useWallet } from '@/components/account/useWallet';
+import { ModuleTerms } from '@/components/ModuleTerms';
 import { DuoStoreIcon, StoreIcon } from '@/components/Icons';
 
 export default function IntermediaryShops() {
@@ -41,6 +42,7 @@ export default function IntermediaryShops() {
           </ul>
         </>
       )}
+      <ModuleTerms id="shops" />
     </div>
   );
 }

@@ -2,8 +2,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useSaved } from '@/lib/saved';
-import { ChevronDownIcon, DuoCategoryIcon, HeartIcon, PinIcon } from '../Icons';
+import { homeFor, loadSession } from '@/lib/session';
+import { ChevronDownIcon, DuoCategoryIcon, HeartIcon, PinIcon, UserIcon } from '../Icons';
 import { Logo } from '../Logo';
 import { SearchBox } from './SearchBox';
 
@@ -42,6 +44,16 @@ export function HomeHeader({
   const savedBadge = savedCount > 0 && (
     <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-ink">{savedCount}</span>
   );
+
+  // signed in people go to their own area, everyone else to the sign in page (read after mount: no SSR mismatch)
+  const [accountHref, setAccountHref] = useState('/login');
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    const s = loadSession();
+    setSignedIn(!!s);
+    if (s && s.user.role !== 'customer') setAccountHref(homeFor(s.user.role));
+  }, []);
+  const accountLabel = signedIn ? 'My account' : 'Sign in or create account';
 
   const location = (
     <button type="button" onClick={onLocation} aria-label="Change location" className="flex min-w-0 items-center gap-2.5 text-left">
@@ -84,6 +96,10 @@ export function HomeHeader({
             <HeartIcon />
             {savedBadge}
           </Link>
+          <Link href={accountHref} aria-label={accountLabel} className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white transition active:scale-95">
+            <UserIcon />
+            {signedIn && <span aria-hidden className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-purple-700 bg-green-400" />}
+          </Link>
         </div>
 
         {/* desktop: logo | location | search | saved */}
@@ -94,6 +110,9 @@ export function HomeHeader({
           <Link href="/saved" aria-label="Saved offers" className="btn-ghost relative !px-2">
             <HeartIcon />
             {savedBadge}
+          </Link>
+          <Link href={accountHref} className="btn-ghost gap-2">
+            <UserIcon /> {signedIn ? 'Account' : 'Sign in'}
           </Link>
         </div>
       </div>

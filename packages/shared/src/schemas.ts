@@ -135,6 +135,8 @@ export const offerInputSchema = z
     startsAt: day,
     endsAt: day,
     area: z.string().trim().min(2, 'Enter the area or city').max(100),
+    /** compulsory: the shop's contact number shown to customers on the offer */
+    phone: z.string().min(1, 'Enter the shop phone number').pipe(phoneSchema),
     terms: z.string().trim().max(300).optional(),
     /** exact spot for directions; when left out the shop's saved pin is used */
     location: locationInputSchema.optional(),
@@ -171,7 +173,25 @@ export const adminUsersQuerySchema = z.object({
 /** Only these two moves are allowed from the admin screen: approve/unblock, or block. */
 export const setUserStatusSchema = z.object({ status: z.enum(['active', 'blocked']) });
 export const recordPaymentSchema = z.object({ months: z.coerce.number().int().min(1).max(12).default(1) });
-export const rejectPayoutSchema = z.object({ note: z.string().trim().max(200).optional() });
+/** How the intermediary wants to be paid: a UPI mobile number, or full bank details. */
+export const payoutRequestSchema = z.discriminatedUnion('method', [
+  z.object({
+    method: z.literal('upi'),
+    upiNumber: z.string().trim().regex(/^[6-9]\d{9}$/, 'Enter the 10 digit mobile number linked to your UPI'),
+  }),
+  z.object({
+    method: z.literal('bank'),
+    accountName: z.string().trim().min(2, 'Enter the account holder name').max(80),
+    accountNumber: z.string().trim().regex(/^\d{9,18}$/, 'Account number must be 9 to 18 digits'),
+    ifsc: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Enter a valid IFSC code, like SBIN0001234'),
+  }),
+]);
+export type PayoutRequestInput = z.infer<typeof payoutRequestSchema>;
+export const rejectPayoutSchema =z.object({ note: z.string().trim().max(200).optional() });
 
 export const adminOffersQuerySchema = z.object({
   category: z.enum(CATEGORIES).optional(),

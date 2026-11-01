@@ -451,6 +451,7 @@ describe('vendor offers and profile', () => {
     startsAt: '2026-11-01',
     endsAt: '2026-11-30',
     area: 'RS Puram, Coimbatore',
+    phone: '9876543210',
   };
   const authed = (r: request.Test, token: string) => r.set('authorization', `Bearer ${token}`);
   const post = (token: string, body: Record<string, unknown>) => authed(request(app).post('/api/v1/offers'), token).send(body);
@@ -811,6 +812,7 @@ describe('admin area', () => {
     startsAt: '2020-01-01',
     endsAt: '2099-12-31',
     area: 'RS Puram, Coimbatore',
+    phone: '9876543210',
   };
 
   async function adminToken() {
@@ -897,7 +899,7 @@ describe('admin area', () => {
     const t = await adminToken();
     const { agent, vendor } = await agentAndVendor();
     const WalletEntry = (await import('../src/models/WalletEntry')).WalletEntry;
-    const request1 = () => authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({});
+    const request1 = () => authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({ method: 'upi', upiNumber: '9876543210' });
 
     // nothing earned yet
     expect((await request1()).body.error.code).toBe('PAYOUT_MINIMUM');
@@ -933,14 +935,14 @@ describe('admin area', () => {
     const WalletEntry = (await import('../src/models/WalletEntry')).WalletEntry;
     for (const period of ['2025-01', '2025-02', '2025-03', '2025-04']) await walletSvc.creditReferrerForSubscription(vendor.user.id, period);
     await WalletEntry.updateMany({}, { availableAt: new Date(Date.now() - 1000) });
-    const req = await authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({});
+    const req = await authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({ method: 'upi', upiNumber: '9876543210' });
     const rej = await send2(t, 'post', `/admin/payouts/${req.body.id}/reject`, { note: 'Bank details missing' });
     expect(rej.status).toBe(204);
     const w = (await authed(request(app).get('/api/v1/wallet'), agent.accessToken)).body;
     expect(w).toMatchObject({ balance: 120, available: 120, requested: 0, requestable: 120 });
 
     await User.updateOne({ _id: agent.user.id }, { status: 'pending' });
-    const again = await authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({});
+    const again = await authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({ method: 'upi', upiNumber: '9876543210' });
     expect(again.status).toBe(403);
   });
 
@@ -1050,6 +1052,7 @@ describe('offer photo', () => {
     startsAt: '2026-11-01',
     endsAt: '2026-11-30',
     area: 'RS Puram, Coimbatore',
+    phone: '9876543210',
   };
   // smallest real-looking headers: the API only checks the first bytes
   const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(200, 1)]);

@@ -43,6 +43,7 @@ export function toOfferDTO(o: OfferDoc): OfferDTO {
     startsAt: dateOnly(o.startsAt),
     endsAt: dateOnly(o.endsAt),
     area: o.area,
+    phone: o.phone ?? undefined,
     terms: o.terms ?? undefined,
     // an approved offer past its end date reads as expired without needing a background job
     status: o.status === 'active' && dateOnly(o.endsAt) < today ? 'expired' : o.status,
@@ -89,6 +90,7 @@ offersRouter.post(
       startsAt: new Date(`${b.startsAt}T00:00:00.000Z`),
       endsAt: new Date(`${b.endsAt}T00:00:00.000Z`),
       area: b.area,
+      phone: b.phone,
       terms: b.terms || undefined,
       location: { type: 'Point', coordinates: [spot.lng, spot.lat] },
       address: spot.address,

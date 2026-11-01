@@ -14,6 +14,7 @@ import type {
   MyOffersResponse,
   NearbyOffersResponse,
   PublicOfferDTO,
+  PayoutRequestInput,
   SuggestResponse,
   ReferralLookup,
   WalletResponse,
@@ -160,7 +161,8 @@ export const lookupReferral = (code: string) => api<ReferralLookup>(`/referral/$
 export const getWallet = () => authApi<WalletResponse>('/wallet');
 
 // ---- Intermediary payouts ------------------------------------------------------------------------
-export const requestPayout = () => authApi<{ id: string; credits: number }>('/wallet/payout-request', { method: 'POST', json: {} });
+export const requestPayout = (details: PayoutRequestInput) =>
+  authApi<{ id: string; credits: number }>('/wallet/payout-request', { method: 'POST', json: details });
 
 // ---- Admin ------------------------------------------------------------------------------------------
 const qs = (o: Record<string, string | number | undefined>) => {

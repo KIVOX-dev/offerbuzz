@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
 import type { MyOffersResponse, OfferDTO } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
+import { ModuleTerms } from '@/components/ModuleTerms';
 import { DuoClockIcon, DuoOffersIcon, DuoTagIcon, EyeIcon, PlusIcon, TagIcon, TrashIcon } from '@/components/Icons';
 import { ApiRequestError, deleteOffer, getMyOffers } from '@/lib/api';
 
@@ -201,6 +202,8 @@ export default function MerchantDashboard() {
           </ul>
         )}
       </section>
+
+      <ModuleTerms id="vendorPlan" />
     </div>
   );
 }

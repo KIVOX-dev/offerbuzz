@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { referralCodeSchema } from '@offerbuzz/shared';
+import { payoutRequestSchema, referralCodeSchema } from '@offerbuzz/shared';
 import { authenticate, requireRole } from '../../middleware/auth';
+import { validate } from '../../middleware/validate';
 import { wrap } from '../../utils/async';
 import { User } from '../../models/User';
 import { getWallet, requestPayout } from './wallet.service';
@@ -21,8 +22,9 @@ walletRouter.post(
   '/wallet/payout-request',
   authenticate,
   requireRole('intermediary'),
+  validate(payoutRequestSchema),
   wrap(async (req, res) => {
-    const p = await requestPayout(req.auth!.id);
+    const p = await requestPayout(req.auth!.id, req.body);
     res.status(201).json({ id: String(p._id), credits: p.credits, status: p.status });
   }),
 );

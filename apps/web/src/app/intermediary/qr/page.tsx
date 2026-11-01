@@ -1,4 +1,5 @@
 import { QrCard } from '@/components/account/QrCard';
+import { ModuleTerms } from '@/components/ModuleTerms';
 
 export default function IntermediaryQr() {
   return (
@@ -12,6 +13,7 @@ export default function IntermediaryQr() {
         blurb="A shop that scans this opens the vendor sign up with your code already filled in."
         target="vendor-signup"
       />
+      <ModuleTerms id="qr" />
     </div>
   );
 }
