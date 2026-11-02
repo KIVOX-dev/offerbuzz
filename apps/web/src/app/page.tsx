@@ -344,15 +344,17 @@ export default function Home() {
                     setActive(i);
                     router.push(`/search?${SEARCH_BY_SLUG[c.slug] ?? `q=${encodeURIComponent(c.name)}`}`);
                   }}
-                  className={`group flex h-full w-full flex-col rounded-lg bg-card p-3 text-left shadow-card transition duration-200 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:shadow-card-hover ${
+                  style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }}
+                  className={`group relative block aspect-[4/5] w-full overflow-hidden rounded-lg text-left shadow-card transition duration-200 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:shadow-card-hover ${
                     active === i ? 'ring-2 ring-purple-600' : ''
                   }`}
                 >
-                  <h3 className="line-clamp-2 min-h-[2.5rem] text-body font-bold leading-tight text-ink">{c.name}</h3>
-                  <div style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }} className="mt-2 aspect-square overflow-hidden rounded-md">
-                    <img src={`/categories/${c.slug}.webp`} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-                  </div>
-                  <span className={`mt-2 text-small font-semibold ${c.text}`}>Shop now</span>
+                  <img src={`/categories/${c.slug}.webp`} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                  <span aria-hidden className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                  <span className="absolute inset-x-3 bottom-3 flex flex-col items-start gap-1.5">
+                    <h3 className="line-clamp-2 text-body font-bold leading-tight text-white">{c.name}</h3>
+                    <span className="rounded-full bg-white px-2.5 py-0.5 text-small font-semibold text-ink">Shop now</span>
+                  </span>
                 </button>
               </Reveal>
             ))}
