@@ -24,7 +24,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - name: Cache MongoDB test binary
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: node_modules/.cache/mongodb-memory-server
           key: mongo-binaries-${{ runner.os }}-v1
