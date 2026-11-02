@@ -61,7 +61,7 @@ export function PromoCard({
   cutout?: boolean;
 }) {
   const body = (
-    <div className={`relative h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br shadow-card sm:h-[400px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
+    <div className={`relative h-[340px] overflow-hidden rounded-md bg-gradient-to-br shadow-card sm:h-[420px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-25"

@@ -116,7 +116,7 @@ export function HeroRail({
       <div
         ref={rail}
         onScroll={onScroll}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-2overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((c, i) => {
           const copy = i >= count;
@@ -129,7 +129,7 @@ export function HeroRail({
               aria-hidden={copy || undefined}
               // the second copy only exists for the loop: keep keyboard users out of it
               {...(copy ? { inert: true } : {})}
-              className="w-[72%] shrink-0 snap-start sm:w-[44%] md:w-[31%] lg:w-[23.5%]"
+              className="w-[62%] shrink-0 snap-start sm:w-[38%] md:w-[26%] lg:w-[20%]"
             >
               {c}
             </div>

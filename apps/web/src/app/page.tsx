@@ -222,7 +222,7 @@ export default function Home() {
         <Reveal>
           <HeroRail label="Featured offers" onIndexChange={setHeroIdx}>
             {/* intro card */}
-            <div className="h-[300px] overflow-hidden rounded-2xl shadow-card sm:h-[400px]">
+            <div className="h-[340px] overflow-hidden rounded-md shadow-card sm:h-[420px]">
               <div className="relative flex h-full items-center overflow-hidden bg-hero px-4 py-4 text-white sm:px-5 sm:py-6">
                 {/* soft glows and a faint dot grid */}
                 <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-purple-400/25 blur-3xl" />

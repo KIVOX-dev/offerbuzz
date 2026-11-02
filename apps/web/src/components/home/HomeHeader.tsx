@@ -96,8 +96,8 @@ export function HomeHeader({
   const desktopSearch = <SearchBox value={query} onChange={onQuery} onScan={onScan} variant="desktop" />;
 
   return (
-    <header className="relative z-30 rounded-b-[28px] bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b md:border-purple-100 md:bg-card md:bg-none md:text-ink md:shadow-none">
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-b-[28px] md:hidden">
+    <header className="relative z-30 bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b md:border-purple-100 md:bg-card md:bg-none md:text-ink md:shadow-none">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden md:hidden">
         {/* one colour layer per category: the active one fades in over the purple, so the header changes colour smoothly */}
         {HERO_HEADERS.map((bg, i) =>
           bg ? (
