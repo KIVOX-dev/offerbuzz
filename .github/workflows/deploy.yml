@@ -34,6 +34,9 @@ jobs:
       CATALYST_ORG_ID: ${{ vars.CATALYST_ORG_ID || '60092523722' }}
       # The CLI also reads these names directly; keeping both paths means a changed flag parser cannot break the deploy.
       CATALYST_ORG: ${{ vars.CATALYST_ORG_ID || '60092523722' }}
+      # Data centre of the Catalyst account: the API URL ends in .catalystappsail.in, so it is India (in).
+      # Without --dc the CLI checks the token against the US data centre and answers "401 invalid oauth token".
+      CATALYST_DC: ${{ vars.CATALYST_DC || 'in' }}
     steps:
       - name: Check required secret and variables
         run: |
@@ -70,6 +73,7 @@ jobs:
           --source docker://offerbuzz-api:latest
           --port 3001
           --token "$CATALYST_TOKEN"
+          --dc "$CATALYST_DC"
           --org "$CATALYST_ORG_ID"
           --project "$CATALYST_PROJECT_ID"
           --non-interactive

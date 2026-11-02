@@ -34,8 +34,11 @@ One time setup:
 3. Optional: Settings -> Environments -> `catalyst-dev` -> add required reviewers for a manual approval gate.
 4. Revoke a leaked or old token with `catalyst token:list` then `catalyst token:revoke <id>`.
 
-Not yet verified end to end: that the CLI can read the local Docker image on a GitHub runner, and the `--dc` flag
-(not passed; the token carries the account). If the first run fails, the log will say which.
+The workflow passes `--dc in` (India data centre, matching the `.catalystappsail.in` URL). Without it the CLI checks the token
+against the US data centre and the deploy fails with `401, invalid oauth token`. Set the repository or environment variable
+`CATALYST_DC` (`us`, `eu`, `in` or `au`) if your account is in another data centre.
+
+Not yet verified end to end: that the CLI can read the local Docker image on a GitHub runner. If a run fails, the log says why.
 
 ## Environment variables (Catalyst console -> AppSail -> offerbuzz-api)
 `NODE_ENV=production`, `MONGODB_URI`, `CORS_ORIGINS` (comma separated web origins), `JWT_ACCESS_SECRET`,
