@@ -77,7 +77,7 @@ export function PromoCard({
       <div className="relative z-10 flex flex-col items-start gap-1.5 p-3 sm:gap-2 sm:p-4">{children}</div>
 
       {/* photo panel below, like a poster */}
-      <div className="absolute inset-x-2.5 bottom-2.5 h-[48%] sm:inset-x-3 sm:bottom-3 sm:h-[50%]">
+      <div className="absolute inset-x-2.5 bottom-2.5 h-[54%] sm:inset-x-3 sm:bottom-3 sm:h-[60%]">
         {burst && <span className="absolute -top-9 right-1 z-20">{burst}</span>}
         {cutout ? (
           <img
