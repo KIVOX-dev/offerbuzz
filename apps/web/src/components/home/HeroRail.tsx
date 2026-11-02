@@ -116,7 +116,7 @@ export function HeroRail({
       <div
         ref={rail}
         onScroll={onScroll}
-        className="flex snap-x snap-mandatory gap-2overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((c, i) => {
           const copy = i >= count;
