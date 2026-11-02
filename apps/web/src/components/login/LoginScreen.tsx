@@ -100,8 +100,9 @@ export function LoginScreen({ forcedRole, forcedMode }: { forcedRole?: Role; for
 
           {role ? (
             <OtpLogin
-              key={`${role}-${initialMode}`}
+              key={role}
               role={role}
+              onModeChange={(m) => router.replace(loginPath(role, m))}
               onBack={() => router.push('/login')}
               initialReferral={ref}
               initialMode={initialMode}

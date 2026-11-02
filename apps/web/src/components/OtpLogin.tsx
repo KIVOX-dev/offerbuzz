@@ -26,6 +26,7 @@ export function OtpLogin({
   initialReferral = '',
   initialMode = 'signup',
   bare = false,
+  onModeChange,
 }: {
   role: 'merchant' | 'intermediary';
   onBack: () => void;
@@ -33,6 +34,7 @@ export function OtpLogin({
   initialMode?: AuthMode;
   /** no card around the form, for the split layout login page */
   bare?: boolean;
+  onModeChange?: (mode: AuthMode) => void;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -82,8 +84,14 @@ export function OtpLogin({
     };
   }, [cleanReferral]);
 
+  // the page address changed (a footer link, back button): follow it
+  useEffect(() => setMode(initialMode), [initialMode]);
+
   function reset(next: { mode?: AuthMode; useCode?: boolean } = {}) {
-    if (next.mode) setMode(next.mode);
+    if (next.mode) {
+      setMode(next.mode);
+      onModeChange?.(next.mode); // keep the address in step: /login/vendor/sign-in or /sign-up
+    }
     setUseCode(next.useCode ?? false);
     setStep('details');
     setCode('');
