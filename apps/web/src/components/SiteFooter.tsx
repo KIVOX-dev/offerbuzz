@@ -9,15 +9,15 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: 'Vendors',
     links: [
-      { label: 'Vendor sign up', href: '/login?role=merchant&mode=signup' },
-      { label: 'Vendor login', href: '/login?role=merchant&mode=signin' },
+      { label: 'Vendor sign up', href: '/login/vendor/sign-up' },
+      { label: 'Vendor login', href: '/login/vendor/sign-in' },
     ],
   },
   {
     title: 'Intermediaries',
     links: [
-      { label: 'Intermediary sign up', href: '/login?role=intermediary&mode=signup' },
-      { label: 'Intermediary login', href: '/login?role=intermediary&mode=signin' },
+      { label: 'Intermediary sign up', href: '/login/intermediary/sign-up' },
+      { label: 'Intermediary login', href: '/login/intermediary/sign-in' },
     ],
   },
   {
