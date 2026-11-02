@@ -80,8 +80,8 @@ export const verifyOtp = (body: {
 }) =>
   api<AuthResponse>('/auth/verify-otp', { method: 'POST', json: body });
 
-export const passwordLogin = (email: string, password: string) =>
-  api<AuthResponse>('/auth/login', { method: 'POST', json: { email, password } });
+export const passwordLogin = (email: string, password: string, role?: LoginRole) =>
+  api<AuthResponse>('/auth/login', { method: 'POST', json: { email, password, role } });
 
 export const setPassword = (token: string, password: string) =>
   api<void>('/auth/set-password', { method: 'POST', json: { password }, token });

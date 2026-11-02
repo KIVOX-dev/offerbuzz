@@ -160,7 +160,7 @@ export function OtpLogin({
 
   const signInWithPassword = () =>
     run(async () => {
-      finish(await passwordLogin(cleanEmail, password));
+      finish(await passwordLogin(cleanEmail, password, role));
     });
 
   const signInWithGoogle = (idToken: string) =>

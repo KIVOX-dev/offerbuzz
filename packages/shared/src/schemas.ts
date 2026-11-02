@@ -54,7 +54,7 @@ export const passwordSchema = z
   .regex(/[A-Za-z]/, 'Password needs at least one letter')
   .regex(/\d/, 'Password needs at least one number');
 export const setPasswordSchema = z.object({ password: passwordSchema });
-export const passwordLoginSchema = z.object({ email, password: z.string().min(1).max(128) });
+export const passwordLoginSchema = z.object({ email, password: z.string().min(1).max(128), role: role.optional() });
 
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
