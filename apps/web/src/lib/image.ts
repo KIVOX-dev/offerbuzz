@@ -4,11 +4,14 @@ const MAX_BYTES = 380 * 1024; // the API accepts up to 400 KB
  * Shrinks a photo in the browser before upload: scales it down and re-encodes (WebP where supported, else JPEG),
  * trying smaller sizes and lower quality until it fits. Phone photos of several MB become well under 400 KB.
  */
-export async function shrinkImage(file: File): Promise<Blob> {
+export async function shrinkImage(
+  file: File,
+  { edges = [1200, 1000, 800, 640], maxBytes = MAX_BYTES }: { edges?: number[]; maxBytes?: number } = {},
+): Promise<Blob> {
   if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Choose a JPEG, PNG or WebP photo');
   const bitmap = await createImageBitmap(file);
   try {
-    for (const edge of [1200, 1000, 800, 640]) {
+    for (const edge of edges) {
       const scale = Math.min(1, edge / Math.max(bitmap.width, bitmap.height));
       const canvas = document.createElement('canvas');
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
@@ -22,7 +25,7 @@ export async function shrinkImage(file: File): Promise<Blob> {
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
         // a browser without WebP encoding hands back a PNG, which is too big: use JPEG instead
         const out = blob && blob.type === 'image/webp' ? blob : await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', quality));
-        if (out && out.size <= MAX_BYTES) return out;
+        if (out && out.size <= maxBytes) return out;
       }
     }
   } finally {

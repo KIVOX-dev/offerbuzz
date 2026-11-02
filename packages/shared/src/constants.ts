@@ -61,3 +61,32 @@ export const OTP = {
   maxAttempts: 5,
   resendSeconds: 30,
 } as const;
+
+// ---- Home page promo cards (editable by the admin) ------------------------------------------------------
+export const PROMO_THEMES = ['blue', 'indigo', 'teal', 'orange', 'gold'] as const;
+export type PromoThemeName = (typeof PROMO_THEMES)[number];
+
+/** Photos that ship with the website; the admin can also upload one. */
+export const PROMO_PRESET_IMAGES = [
+  '/banners/electronics.webp',
+  '/banners/fashion.webp',
+  '/banners/grocery.webp',
+  '/banners/travel.webp',
+  '/categories/home.webp',
+  '/categories/beauty.webp',
+  '/categories/food.webp',
+  '/categories/fitness.webp',
+  '/categories/health.webp',
+  '/categories/baby.webp',
+  '/categories/pets.webp',
+  '/categories/automotive.webp',
+] as const;
+
+/** What the home page shows until the admin has saved any cards of their own. */
+export const DEFAULT_PROMO_CARDS = [
+  { title: 'Sale is live', offer: '50 - 80% Off', tagline: 'Up to Rs 100 off on your first order', burst: ['BIG', 'SAVE', 'DAYS'], theme: 'blue', image: '/banners/electronics.webp', category: 'Mobile and Electronics' },
+  { title: 'Festivals', subtitle: 'of India', offer: 'From Rs 99', tagline: 'Festive styles for everyone', burst: ['BIG', 'SAVE', 'DAYS'], theme: 'indigo', image: '/banners/fashion.webp', category: 'Fashion' },
+  { title: 'Fresh groceries', offer: 'Min. 15% Off', tagline: 'Stock up at your local store', burst: ['FRESH', 'EVERY', 'DAY'], theme: 'teal', image: '/banners/grocery.webp', category: 'Grocery' },
+  { title: 'Weekend getaways', offer: 'Up to 30% Off', tagline: 'Short trips, great deals', burst: ['WEEK', 'END', 'SALE'], theme: 'orange', image: '/banners/travel.webp', category: 'Travels' },
+  { title: 'Rs 50 off', offer: 'First order', tagline: 'Claim it on your first order', burst: ['NEW', 'USER', 'DEAL'], theme: 'gold', image: '/categories/home.webp' },
+] as const;

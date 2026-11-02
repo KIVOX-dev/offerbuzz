@@ -13,6 +13,7 @@ import { aiRouter } from './modules/ai/ai.routes';
 import { walletRouter } from './modules/wallet/wallet.routes';
 import { adminRouter } from './modules/admin/admin.routes';
 import { analyticsRouter } from './modules/analytics/analytics.routes';
+import { bannersRouter } from './modules/banners/banners.routes';
 import { wrap } from './utils/async';
 
 export function createApp() {
@@ -47,6 +48,7 @@ export function createApp() {
   app.use('/api/v1', walletRouter);
   app.use('/api/v1', adminRouter);
   app.use('/api/v1', analyticsRouter);
+  app.use('/api/v1', bannersRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

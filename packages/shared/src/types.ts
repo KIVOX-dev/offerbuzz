@@ -237,3 +237,18 @@ export interface AdminAnalytics {
   series: { day: string; visitors: number; views: number; newUsers: number }[];
   topPages: { path: string; views: number }[];
 }
+
+export interface PromoCardDTO {
+  id: string;
+  title: string;
+  subtitle?: string;
+  offer?: string;
+  tagline?: string;
+  burst: string[];
+  theme: 'blue' | 'indigo' | 'teal' | 'orange' | 'gold';
+  /** a photo path, or the API address of an uploaded photo */
+  image: string;
+  category?: string;
+  active: boolean;
+  order: number;
+}

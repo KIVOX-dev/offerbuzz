@@ -54,7 +54,7 @@ export function PromoCard({
       className="promo rounded-md shadow-card"
       style={{ '--acc': t.acc, '--pill': t.pill, '--ink': t.ink } as CSSProperties}
     >
-      <div className="promo-bg" style={{ backgroundImage: `url(${image})`, backgroundPosition: imagePosition }} />
+      <div className="promo-bg" style={{ backgroundImage: `url(${JSON.stringify(image)})`, backgroundPosition: imagePosition }} />
 
       <div className="promo-text">
         <h2 className="promo-title">{title}</h2>
@@ -78,5 +78,34 @@ export function PromoCard({
     </Link>
   ) : (
     <div aria-label={label}>{body}</div>
+  );
+}
+
+/** The fields a card is drawn from (the admin edits these; the home page gets them from the API). */
+export interface PromoCardData {
+  title: string;
+  subtitle?: string;
+  offer?: string;
+  tagline?: string;
+  burst: string[];
+  theme: PromoTheme;
+  image: string;
+  category?: string;
+}
+
+/** A card drawn from its data. With a category it links to that category's search. */
+export function PromoCardView({ card, linked = true }: { card: PromoCardData; linked?: boolean }) {
+  const lines = card.burst.filter(Boolean).slice(0, 3);
+  return (
+    <PromoCard
+      theme={card.theme}
+      image={card.image}
+      label={card.title}
+      title={card.subtitle ? <>{card.title}<small>{card.subtitle}</small></> : card.title}
+      offer={card.offer}
+      tagline={card.tagline}
+      burst={lines.length ? ([lines[0]!, lines[1] ?? '', lines[2]] as [string, string, string?]) : undefined}
+      href={linked && card.category ? `/search?category=${encodeURIComponent(card.category)}` : undefined}
+    />
   );
 }

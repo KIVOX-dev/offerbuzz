@@ -4,16 +4,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { PublicOfferDTO } from '@offerbuzz/shared';
+import { DEFAULT_PROMO_CARDS, type PromoCardDTO, type PublicOfferDTO } from '@offerbuzz/shared';
 import { BottomNav, type NavKey } from '@/components/home/BottomNav';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { LocationPrompt } from '@/components/maps/LocationPrompt';
 import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
-import { getNearbyOffers } from '@/lib/api';
+import { getNearbyOffers, getPromoCards } from '@/lib/api';
 import { useVisitorLocation } from '@/lib/location';
 import { HeroRail } from '@/components/home/HeroRail';
-import { PromoCard } from '@/components/home/PromoCard';
+import { PromoCardView, type PromoCardData, type PromoTheme } from '@/components/home/PromoCard';
 import { SiteFooter } from '@/components/SiteFooter';
 import { ChevronRightIcon, DuoHeartIcon, DuoPinIcon, DuoStoreIcon, DuoTagIcon, HeartIcon, TagIcon } from '@/components/Icons';
 
@@ -44,7 +44,8 @@ const categories: Category[] = [
 
 // Where each home page category opens in search: the matching real vendor category (pets has none, so it searches).
 /** The colour behind the page top for each hero card, in card order. */
-const HERO_TINTS = ['#6d28d9', '#3b82f6', '#4f46e5', '#14b8a6', '#f97316', '#fbbf24'];
+// the colour wash behind the page top follows the card in view: purple for the intro card, then the card's own theme
+const THEME_TINT: Record<PromoTheme, string> = { blue: '#3b82f6', indigo: '#4f46e5', teal: '#14b8a6', orange: '#f97316', gold: '#fbbf24' };
 
 const SEARCH_BY_SLUG: Record<string, string> = {
   grocery: 'category=Grocery',
@@ -126,6 +127,13 @@ export default function Home() {
   const [active, setActive] = useState(-1);
   // which hero card is showing: the page colour behind it follows
   const [heroIdx, setHeroIdx] = useState(0);
+  // cards the admin saved; until there are some (or while loading) the standard ones show
+  const [saved, setSaved] = useState<PromoCardDTO[]>([]);
+  useEffect(() => {
+    getPromoCards().then((r) => setSaved(r.cards)).catch(() => undefined);
+  }, []);
+  const promos: PromoCardData[] = saved.length ? saved : DEFAULT_PROMO_CARDS.map((c) => ({ ...c, burst: [...c.burst] }) as PromoCardData);
+  const heroTints = ['#6d28d9', ...promos.map((c) => THEME_TINT[c.theme])];
   const theme = active >= 0 ? categories[active] : null;
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -208,7 +216,7 @@ export default function Home() {
       <div className="relative">
       {/* colour wash behind the page top: one layer per hero card, the one in view fades in */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden md:h-[460px] md:opacity-60">
-        {HERO_TINTS.map((c, i) => (
+        {heroTints.map((c, i) => (
           <span
             key={c}
             className="absolute inset-0 transition-opacity duration-700 ease-out"
@@ -256,20 +264,9 @@ export default function Home() {
               </div>
             </div>
 
-            <PromoCard theme="blue" image="/banners/electronics.webp" label="Sale is live" href={`/search?category=${encodeURIComponent('Mobile and Electronics')}`}
-              title="Sale is live" offer="50 - 80% Off" tagline="Up to Rs 100 off on your first order" burst={['BIG', 'SAVE', 'DAYS']} />
-
-            <PromoCard theme="indigo" image="/banners/fashion.webp" label="Festivals of India" href={`/search?category=${encodeURIComponent('Fashion')}`}
-              title={<>Festivals<small>of India</small></>} offer="From Rs 99" tagline="Festive styles for everyone" burst={['BIG', 'SAVE', 'DAYS']} />
-
-            <PromoCard theme="teal" image="/banners/grocery.webp" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
-              title="Fresh groceries" offer="Min. 15% Off" tagline="Stock up at your local store" burst={['FRESH', 'EVERY', 'DAY']} />
-
-            <PromoCard theme="orange" image="/banners/travel.webp" label="Weekend getaways" href={`/search?category=${encodeURIComponent('Travels')}`}
-              title="Weekend getaways" offer="Up to 30% Off" tagline="Short trips, great deals" burst={['WEEK', 'END', 'SALE']} />
-
-            <PromoCard theme="gold" image="/categories/home.webp" label="First order offer"
-              title="Rs 50 off" offer="First order" tagline="Claim it on your first order" burst={['NEW', 'USER', 'DEAL']} />
+            {promos.map((c, i) => (
+              <PromoCardView key={i} card={c} />
+            ))}
           </HeroRail>
         </Reveal>
 

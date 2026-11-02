@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CATEGORIES, DISCOUNT_TYPES, OTP, ROLES, SELF_SERVE_ROLES, USER_STATUSES } from './constants';
+import { CATEGORIES, DISCOUNT_TYPES, OTP, PROMO_THEMES, ROLES, SELF_SERVE_ROLES, USER_STATUSES } from './constants';
 
 /** Accepts 10 digits, 91XXXXXXXXXX or +91XXXXXXXXXX (Indian mobiles) and returns +91XXXXXXXXXX, or null. */
 export function normalizePhone(input: string): string | null {
@@ -206,3 +206,22 @@ export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
 export type SetUserStatusInput = z.infer<typeof setUserStatusSchema>;
 export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
 export type RejectPayoutInput = z.infer<typeof rejectPayoutSchema>;
+
+// ---- Home page promo cards ---------------------------------------------------------------------------------
+const promoText = (max: number) => z.string().trim().max(max).optional().or(z.literal('').transform(() => undefined));
+export const promoCardSchema = z.object({
+  title: z.string().trim().min(1, 'Enter a headline').max(40),
+  /** the small line under the headline, e.g. "of India" */
+  subtitle: promoText(24),
+  offer: promoText(24),
+  tagline: promoText(60),
+  /** the sticker: up to three short lines */
+  burst: z.array(z.string().trim().max(8)).max(3).default([]),
+  theme: z.enum(PROMO_THEMES),
+  /** a photo that ships with the site (starts with /) or an https address */
+  image: z.string().trim().max(300).regex(/^(\/[A-Za-z0-9_\-./]+|https:\/\/\S+)$/, 'Pick a photo'),
+  /** tapping the card opens the search for this category */
+  category: z.enum(CATEGORIES).optional().or(z.literal('').transform(() => undefined)),
+  active: z.boolean().default(true),
+});
+export type PromoCardInput = z.infer<typeof promoCardSchema>;

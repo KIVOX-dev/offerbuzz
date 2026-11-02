@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { AccountShell, type NavItem } from '@/components/account/AccountShell';
 import { APPROVALS_EVENT } from '@/components/admin/approvals';
-import { CheckBadgeIcon, DashboardIcon, OffersIcon, UsersIcon, WalletIcon } from '@/components/Icons';
+import { CheckBadgeIcon, DashboardIcon, OffersIcon, TagIcon, UsersIcon, WalletIcon } from '@/components/Icons';
 import { getAdminOverview } from '@/lib/api';
 
 // Route group: keeps /admin/login outside this signed in shell while pages here still live at /admin/...
@@ -32,6 +32,7 @@ export default function AdminPortalLayout({ children }: { children: ReactNode })
     { href: '/admin/approvals', label: 'Approvals', icon: CheckBadgeIcon, badge: waiting },
     { href: '/admin/users', label: 'Users', icon: UsersIcon },
     { href: '/admin/offers', label: 'Offers', icon: OffersIcon },
+    { href: '/admin/banners', label: 'Home cards', icon: TagIcon },
     { href: '/admin/wallets', label: 'Wallets & payouts', icon: WalletIcon },
   ];
 

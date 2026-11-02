@@ -15,6 +15,8 @@ import type {
   NearbyOffersResponse,
   PublicOfferDTO,
   PayoutRequestInput,
+  PromoCardDTO,
+  PromoCardInput,
   SuggestResponse,
   ReferralLookup,
   WalletResponse,
@@ -190,3 +192,15 @@ export const getAdminAnalytics = () => authApi<AdminAnalytics>('/admin/analytics
 /** Sends the (already shrunk) photo as the raw request body. */
 export const uploadOfferImage = (id: string, image: Blob) =>
   authApi<{ offer: OfferDTO }>(`/offers/${id}/image`, { method: 'PUT', body: image, headers: { 'content-type': image.type } });
+
+// ---- Home page promo cards ----------------------------------------------------------------------------
+export const getPromoCards = () => api<{ cards: PromoCardDTO[] }>('/banners');
+export const getAdminPromoCards = () => authApi<{ cards: PromoCardDTO[] }>('/admin/banners');
+export const createPromoCard = (body: PromoCardInput) => authApi<{ card: PromoCardDTO }>('/admin/banners', { method: 'POST', json: body });
+export const updatePromoCard = (id: string, body: PromoCardInput) => authApi<{ card: PromoCardDTO }>(`/admin/banners/${id}`, { method: 'PUT', json: body });
+export const deletePromoCard = (id: string) => authApi<void>(`/admin/banners/${id}`, { method: 'DELETE' });
+export const movePromoCard = (id: string, direction: 'up' | 'down') =>
+  authApi<{ cards: PromoCardDTO[] }>(`/admin/banners/${id}/move`, { method: 'POST', json: { direction } });
+export const seedPromoCards = () => authApi<{ cards: PromoCardDTO[] }>('/admin/banners/seed-defaults', { method: 'POST', json: {} });
+export const uploadPromoImage = (id: string, image: Blob) =>
+  authApi<{ card: PromoCardDTO }>(`/admin/banners/${id}/image`, { method: 'PUT', body: image, headers: { 'content-type': image.type } });
