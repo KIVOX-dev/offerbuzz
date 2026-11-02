@@ -15,14 +15,14 @@ function toDTO(b: BannerDoc): PromoCardDTO {
   return {
     id: String(b._id),
     title: b.title,
-    subtitle: b.subtitle ?? undefined,
-    offer: b.offer ?? undefined,
-    tagline: b.tagline ?? undefined,
+    subtitle: b.subtitle || undefined,
+    offer: b.offer || undefined,
+    tagline: b.tagline || undefined,
     burst: b.burst ?? [],
     theme: b.theme as PromoCardDTO['theme'],
     // the date in the address makes browsers fetch a replaced photo instead of the cached one
     image: b.hasUpload ? `/api/v1/banners/${b._id}/image?v=${b.updatedAt.getTime()}` : b.image,
-    category: b.category ?? undefined,
+    category: b.category || undefined,
     active: b.active,
     order: b.order,
   };
@@ -121,7 +121,7 @@ bannersRouter.put(
     const body = req.body as PromoCardInput;
     const current = await Banner.findById(idOf(req.params.id));
     if (!current) throw notFound('Card not found');
-    current.set({ ...body, subtitle: body.subtitle ?? null, offer: body.offer ?? null, tagline: body.tagline ?? null, category: body.category ?? null });
+    current.set({ ...body, subtitle: body.subtitle || null, offer: body.offer || null, tagline: body.tagline || null, category: body.category || null });
     // choosing a ready photo replaces any uploaded one
     if (current.hasUpload && !body.image.startsWith('/api/')) {
       current.hasUpload = false;
