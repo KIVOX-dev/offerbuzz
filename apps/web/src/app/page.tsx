@@ -13,7 +13,7 @@ import { Reveal } from '@/components/Reveal';
 import { getNearbyOffers } from '@/lib/api';
 import { useVisitorLocation } from '@/lib/location';
 import { HeroRail } from '@/components/home/HeroRail';
-import { Burst, InfoStrip, OffPill, PromoCard } from '@/components/home/PromoCard';
+import { PromoCard } from '@/components/home/PromoCard';
 import { SiteFooter } from '@/components/SiteFooter';
 import { ChevronRightIcon, DuoHeartIcon, DuoPinIcon, DuoStoreIcon, DuoTagIcon, HeartIcon, TagIcon } from '@/components/Icons';
 
@@ -222,7 +222,7 @@ export default function Home() {
         <Reveal>
           <HeroRail label="Featured offers" onIndexChange={setHeroIdx}>
             {/* intro card */}
-            <div className="h-[340px] overflow-hidden rounded-md shadow-card sm:h-[420px]">
+            <div className="aspect-[5/8] overflow-hidden rounded-md shadow-card">
               <div className="relative flex h-full items-center overflow-hidden bg-hero px-4 py-4 text-white sm:px-5 sm:py-6">
                 {/* soft glows and a faint dot grid */}
                 <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-purple-400/25 blur-3xl" />
@@ -243,7 +243,7 @@ export default function Home() {
                   <p className="mt-2 max-w-md text-small text-purple-100 sm:mt-4 sm:text-body">
                     Don&apos;t miss the best offers from your favourite local stores.
                   </p>
-                  <ul className="mt-4 hidden flex-wrap gap-2 text-small font-medium sm:flex">
+                  <ul className="mt-4 hidden flex-wrap gap-2 text-small font-medium">
                     {['Free for customers', 'Verified local shops', 'New offers daily'].map((t) => (
                       <li key={t} className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-ink">✓</span>
@@ -257,39 +257,19 @@ export default function Home() {
             </div>
 
             <PromoCard theme="blue" image="/banners/electronics.webp" label="Sale is live" href={`/search?category=${encodeURIComponent('Mobile and Electronics')}`}
-              burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} />}>
-              <span className="text-[27px] font-black uppercase leading-[0.95] tracking-tight [text-shadow:0_2px_14px_rgba(255,255,255,0.55)] ">Sale is live</span>
-              <OffPill>50 - 80% Off</OffPill>
-              <InfoStrip>Up to Rs 100 instant off on your first order</InfoStrip>
-            </PromoCard>
+              title="Sale is live" offer="50 - 80% Off" tagline="Up to Rs 100 off on your first order" burst={['BIG', 'SAVE', 'DAYS']} />
 
             <PromoCard theme="indigo" image="/banners/fashion.webp" label="Festivals of India" href={`/search?category=${encodeURIComponent('Fashion')}`}
-              burst={<Burst lines={['BIG', 'SAVE', 'DAYS']} size={60} />}>
-              <span className="font-serif text-[26px] font-bold uppercase leading-[0.95] tracking-wide ">Festivals</span>
-              <span className="-mt-1 font-serif text-[14px] uppercase tracking-[0.2em] text-white/90 sm:-mt-2 ">of India</span>
-              <span aria-hidden className="hidden h-px w-28 bg-gradient-to-r from-amber-300 to-transparent sm:block" />
-              <span className="text-[18px] font-bold text-amber-200 ">From Rs 99</span>
-            </PromoCard>
+              title={<>Festivals<small>of India</small></>} offer="From Rs 99" tagline="Festive styles for everyone" burst={['BIG', 'SAVE', 'DAYS']} />
 
             <PromoCard theme="teal" image="/banners/grocery.webp" label="Fresh groceries" href={`/search?category=${encodeURIComponent('Grocery')}`}
-              burst={<Burst lines={['FRESH', 'EVERY', 'DAY']} size={62} />}>
-              <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight ">Fresh groceries</span>
-              <span className="hidden text-[15px] font-medium text-white/90 sm:block">Stock up at your neighbourhood store</span>
-              <OffPill>Min. 15% Off</OffPill>
-            </PromoCard>
+              title="Fresh groceries" offer="Min. 15% Off" tagline="Stock up at your local store" burst={['FRESH', 'EVERY', 'DAY']} />
 
             <PromoCard theme="orange" image="/banners/travel.webp" label="Weekend getaways" href={`/search?category=${encodeURIComponent('Travels')}`}
-              burst={<Burst lines={['WEEK', 'END', 'SALE']} size={62} />}>
-              <span className="text-[24px] font-black uppercase leading-[0.98] tracking-tight ">Weekend getaways</span>
-              <span className="hidden text-[15px] font-medium text-white/95 sm:block">Short trips, great deals</span>
-              <OffPill>Up to 30% Off</OffPill>
-            </PromoCard>
+              title="Weekend getaways" offer="Up to 30% Off" tagline="Short trips, great deals" burst={['WEEK', 'END', 'SALE']} />
 
-            <PromoCard theme="gold" dark image="/categories/home.webp" label="First order offer">
-              <span className="text-small font-extrabold uppercase tracking-wider text-purple-800">First order</span>
-              <span className="text-[34px] font-black leading-none ">Rs 50 off</span>
-              <InfoStrip>Claim it on your first order</InfoStrip>
-            </PromoCard>
+            <PromoCard theme="gold" image="/categories/home.webp" label="First order offer"
+              title="Rs 50 off" offer="First order" tagline="Claim it on your first order" burst={['NEW', 'USER', 'DEAL']} />
           </HeroRail>
         </Reveal>
 

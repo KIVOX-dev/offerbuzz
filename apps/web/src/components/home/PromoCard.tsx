@@ -1,97 +1,75 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
-/** A 16 point starburst, used as the yellow sticker on the cards. */
+/** A 16 point starburst, used as the sticker on the cards. */
 const BURST = Array.from({ length: 32 }, (_, i) => {
   const a = (Math.PI * 2 * i) / 32;
   const r = i % 2 === 0 ? 48 : 40;
   return `${(50 + r * Math.sin(a)).toFixed(1)},${(50 - r * Math.cos(a)).toFixed(1)}`;
 }).join(' ');
 
-export function Burst({ lines, size = 72 }: { lines: [string, string, string?]; size?: number }) {
-  return (
-    <span className="relative inline-flex origin-bottom-right -rotate-6 items-center justify-center drop-shadow-lg max-sm:scale-[0.62] sm:origin-top-left" style={{ width: size, height: size }} aria-hidden>
-      <svg viewBox="0 0 100 100" width={size} height={size} className="absolute inset-0">
-        <polygon points={BURST} fill="#ffd60a" stroke="#f59e0b" strokeWidth="2" />
-      </svg>
-      <span className="relative text-center text-[11px] font-black uppercase leading-[1.05] text-[#7f1d1d]">
-        {lines.map((l) => l && <span key={l} className="block">{l}</span>)}
-      </span>
-    </span>
-  );
-}
-
 export type PromoTheme = 'blue' | 'indigo' | 'teal' | 'orange' | 'gold';
 
-const THEMES: Record<PromoTheme, string> = {
-  blue: 'from-[#2563eb] via-[#3b82f6] to-[#7dd3fc]',
-  indigo: 'from-[#4338ca] via-[#4f46e5] to-[#3b82f6]',
-  teal: 'from-[#0d9488] via-[#14b8a6] to-[#4ade80]',
-  orange: 'from-[#ea580c] via-[#f97316] to-[#fbbf24]',
-  gold: 'from-[#f59e0b] via-[#fbbf24] to-[#fde68a]',
+/** Each card has its own accent: the headline shine, the pill glow, the tagline and the sticker all use it. */
+const THEMES: Record<PromoTheme, { acc: string; pill: string; ink: string }> = {
+  blue: { acc: '#22d3ee', pill: '#083344', ink: '#083344' },
+  indigo: { acc: '#f9a8d4', pill: '#500724', ink: '#500724' },
+  teal: { acc: '#bef264', pill: '#14532d', ink: '#1a2e05' },
+  orange: { acc: '#fde047', pill: '#7c2d12', ink: '#431407' },
+  gold: { acc: '#fdba74', pill: '#78350f', ink: '#431407' },
 };
 
 /**
- * One grand banner card: saturated gradient with a graph-paper texture, big headline, sticker, a pill, and a photo
- * panel on the right. Pass `href` to make the whole card a link.
+ * One banner card: a full 5:8 photo with a live headline, an offer pill, a tagline and a sticker on top. The text is
+ * animated (slide in, shine, glow, wiggle) and everything scales with the card width. Pass `href` to make the whole
+ * card a link.
  */
 export function PromoCard({
   theme,
   image,
+  title,
+  offer,
+  tagline,
   burst,
-  children,
   href,
   label,
-  dark,
   imagePosition = 'center',
-  cutout,
 }: {
   theme: PromoTheme;
   image: string;
-  burst?: ReactNode;
-  children: ReactNode;
+  /** the headline; may hold a <small> line such as "of India" */
+  title: ReactNode;
+  offer?: string;
+  tagline?: string;
+  /** the sticker text, up to three short lines */
+  burst?: [string, string, string?];
   href?: string;
   label: string;
-  /** dark text for light gradients (gold) */
-  dark?: boolean;
-  /** CSS object-position for the photo panel, to keep the subject in view */
+  /** CSS background-position for the photo, to keep the subject in view */
   imagePosition?: string;
-  /** a transparent cut-out (a person or product): stands on the card instead of filling a photo panel */
-  cutout?: boolean;
 }) {
+  const t = THEMES[theme];
   const body = (
-    <div className={`relative h-[340px] overflow-hidden rounded-md bg-gradient-to-br shadow-card sm:h-[420px] ${THEMES[theme]} ${dark ? 'text-ink' : 'text-white'}`}>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-25"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.35) 1px, transparent 1px)',
-          backgroundSize: '34px 34px',
-        }}
-      />
-      <span aria-hidden className="pointer-events-none absolute -left-10 -top-10 h-44 w-44 rounded-full bg-white/25 blur-2xl" />
+    <div
+      className="promo rounded-md shadow-card"
+      style={{ '--acc': t.acc, '--pill': t.pill, '--ink': t.ink } as CSSProperties}
+    >
+      <div className="promo-bg" style={{ backgroundImage: `url(${image})`, backgroundPosition: imagePosition }} />
 
-      {/* headline on top */}
-      <div className="relative z-10 flex flex-col items-start gap-1.5 p-3 sm:gap-2 sm:p-4">{children}</div>
-
-      {/* photo panel below, like a poster */}
-      <div className="absolute inset-x-2.5 bottom-2.5 h-[64%] sm:inset-x-3 sm:bottom-3 sm:h-[60%]">
-        {burst && <span className="absolute -top-9 right-1 z-20">{burst}</span>}
-        {cutout ? (
-          <img
-            src={image}
-            alt=""
-            loading="lazy"
-            className="pointer-events-none h-full w-full object-contain object-bottom drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
-          />
-        ) : (
-          <div className="h-full w-full overflow-hidden rounded-xl border-2 border-white/60 shadow-card">
-            <img src={image} alt="" loading="lazy" style={{ objectPosition: imagePosition }} className="h-full w-full object-cover" />
-          </div>
-        )}
+      <div className="promo-text">
+        <h2 className="promo-title">{title}</h2>
+        {offer && <span className="promo-pill">{offer}</span>}
+        {tagline && <p className="promo-tag">{tagline}</p>}
       </div>
+
+      {burst && (
+        <span className="promo-badge" aria-hidden>
+          <svg viewBox="0 0 100 100">
+            <polygon points={BURST} fill={t.acc} stroke={t.ink} strokeOpacity={0.35} strokeWidth="2" />
+          </svg>
+          <span>{burst.map((l) => l && <span key={l}>{l}</span>)}</span>
+        </span>
+      )}
     </div>
   );
   return href ? (
@@ -101,14 +79,4 @@ export function PromoCard({
   ) : (
     <div aria-label={label}>{body}</div>
   );
-}
-
-/** The dark navy "50 - 80% Off" style pill. */
-export function OffPill({ children }: { children: ReactNode }) {
-  return <span className="whitespace-nowrap rounded-lg border border-white/25 bg-[#1e1b6b] px-2.5 py-1 text-[13px] font-extrabold text-white shadow-lg sm:rounded-xl sm:px-4 sm:py-2 sm:text-[17px]">{children}</span>;
-}
-
-/** The small white strip along the bottom of a card ("Up to Rs 100 off on your first order"). */
-export function InfoStrip({ children }: { children: ReactNode }) {
-  return <span className="hidden rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold leading-tight text-ink shadow-card sm:inline-block">{children}</span>;
 }

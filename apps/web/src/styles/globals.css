@@ -140,3 +140,176 @@
     animation: none;
   }
 }
+
+/* ---- promo banner cards (5:8 photo posters with live text) ----
+   Sizes are in cqw (a share of the card width) so the text scales with the card on every screen. */
+.promo {
+  container-type: inline-size;
+  position: relative;
+  aspect-ratio: 5 / 8;
+  overflow: hidden;
+  color: #fff;
+}
+.promo-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: promo-zoom 12s ease-in-out infinite alternate;
+}
+.promo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.3) 32%, rgba(0, 0, 0, 0) 55%);
+}
+.promo-text {
+  position: absolute;
+  z-index: 2;
+  left: 5cqw;
+  right: 5cqw;
+  top: 5cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2.5cqw;
+}
+/* headline: slides up, then a bright shine in the card's accent colour sweeps across it again and again */
+.promo-title {
+  margin: 0;
+  font-size: 10cqw;
+  line-height: 0.97;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  background: linear-gradient(100deg, #fff 0 40%, var(--acc) 50%, #fff 60% 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0.6cqw 1.8cqw rgba(0, 0, 0, 0.45));
+  animation: promo-up 0.8s cubic-bezier(0.2, 0.9, 0.3, 1) both, promo-shine 3.2s linear 1s infinite;
+}
+.promo-title small {
+  display: block;
+  font-size: 5cqw;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+/* offer pill: pops in, then glows and breathes */
+.promo-pill {
+  white-space: nowrap;
+  background: var(--pill);
+  border: 0.4cqw solid var(--acc);
+  border-radius: 3cqw;
+  padding: 1.9cqw 5cqw;
+  font-size: 5.75cqw;
+  font-weight: 800;
+  animation: promo-pop 0.6s 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) both, promo-glow 1.8s 1s ease-in-out infinite;
+}
+/* tagline: fades up in the accent colour */
+.promo-tag {
+  font-size: 4.75cqw;
+  font-weight: 800;
+  color: var(--acc);
+  text-shadow: 0 0.5cqw 1.8cqw rgba(0, 0, 0, 0.55);
+  animation: promo-up 0.6s 0.6s both;
+}
+/* badge: bounces in, then wiggles and pulses */
+.promo-badge {
+  position: absolute;
+  z-index: 3;
+  right: 5cqw;
+  bottom: 6cqw;
+  width: 23.75cqw;
+  height: 23.75cqw;
+  transform: rotate(-6deg);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  animation: promo-badge-in 0.7s 0.9s cubic-bezier(0.2, 1.6, 0.4, 1) both, promo-wiggle 2.4s 1.8s ease-in-out infinite;
+}
+.promo-badge svg {
+  position: absolute;
+  inset: 0;
+}
+.promo-badge > span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 3.75cqw;
+  font-weight: 900;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+@keyframes promo-zoom {
+  to {
+    transform: scale(1.1);
+  }
+}
+@keyframes promo-up {
+  from {
+    opacity: 0;
+    transform: translateY(6cqw);
+  }
+}
+@keyframes promo-shine {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -130% 0;
+  }
+}
+@keyframes promo-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes promo-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 5cqw 1.2cqw var(--acc);
+    transform: scale(1.05);
+  }
+}
+@keyframes promo-badge-in {
+  from {
+    opacity: 0;
+    transform: rotate(-30deg) scale(0.2);
+  }
+}
+@keyframes promo-wiggle {
+  0%,
+  100% {
+    transform: rotate(-6deg) scale(1);
+  }
+  25% {
+    transform: rotate(4deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(-8deg) scale(1);
+  }
+  75% {
+    transform: rotate(3deg) scale(1.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .promo-bg,
+  .promo-title,
+  .promo-pill,
+  .promo-tag,
+  .promo-badge {
+    animation: none;
+  }
+}
