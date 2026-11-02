@@ -78,21 +78,6 @@ async function createUser(fields: Partial<UserDoc> & { role: SelfServeRole }) {
   throw new Error('Could not generate a unique referral code');
 }
 
-const ROLE_LABEL: Record<string, string> = { merchant: 'a vendor', intermediary: 'an intermediary', customer: 'a customer' };
-
-/**
- * One email, one role: a vendor email cannot open the intermediary side and the other way round. A plain customer
- * account may still be upgraded, and callers that do not say which side is being opened are not restricted.
- */
-function assertRoleMatches(accountRole: UserDoc['role'], chosen?: SelfServeRole) {
-  if (!chosen || accountRole === 'admin' || accountRole === 'customer' || accountRole === chosen) return;
-  throw new HttpError(
-    409,
-    'ROLE_MISMATCH',
-    `This email is already registered as ${ROLE_LABEL[accountRole] ?? accountRole}. Use a different email for ${ROLE_LABEL[chosen]} account.`,
-  );
-}
-
 /**
  * Finds the user or registers one. A plain customer may upgrade to merchant or intermediary by
  * choosing that role on the login screen; any other existing role is never changed from here.
@@ -106,7 +91,6 @@ async function findOrCreate(match: { email: string }, role: SelfServeRole, extra
   } else {
     if (user.status === 'blocked') throw forbidden('This account has been blocked', 'ACCOUNT_BLOCKED');
     if (user.role === 'admin') throw forbidden('Admins sign in from the admin login page', 'ADMIN_LOGIN_ONLY');
-    assertRoleMatches(user.role, role);
     if (user.role === 'customer' && role !== 'customer') {
       user.role = role;
       if (role === 'intermediary') user.status = 'pending';
@@ -135,7 +119,6 @@ export async function sendOtp(identifier: string, mode: 'signin' | 'signup' = 's
   if (mode === 'signin' && !account) {
     throw new HttpError(404, 'ACCOUNT_NOT_FOUND', 'No account found with this email. Please sign up first.');
   }
-  if (account) assertRoleMatches(account.role, role);
   const upgrading = account?.role === 'customer' && role !== undefined && role !== 'customer';
   if (mode === 'signup' && account && !upgrading) {
     throw new HttpError(409, 'ACCOUNT_EXISTS', 'This email is already registered. Please sign in.');
@@ -191,7 +174,6 @@ export async function verifyOtp(input: {
     if (!user) throw new HttpError(404, 'ACCOUNT_NOT_FOUND', 'No account found with this email. Please sign up first.');
     if (user.status === 'blocked') throw forbidden('This account has been blocked', 'ACCOUNT_BLOCKED');
     if (user.role === 'admin') throw forbidden('Admins sign in from the admin login page', 'ADMIN_LOGIN_ONLY');
-    assertRoleMatches(user.role, input.role);
     return respond(user, false);
   }
   const role = input.role ?? 'customer';
@@ -307,7 +289,7 @@ export async function adminGoogleLogin(idToken: string) {
 // ---- Password (vendors and intermediaries) -------------------------------------------------------
 
 /** Email + password sign in for self-serve accounts. Admins keep their own login page. */
-export async function passwordLogin(email: string, password: string, role?: SelfServeRole) {
+export async function passwordLogin(email: string, password: string) {
   const user = await User.findOne({ email }).select('+passwordHash');
   // same wording as the code sign in: no account means the person should sign up (accepted: reveals registration)
   if (!user) throw new HttpError(404, 'ACCOUNT_NOT_FOUND', 'No account found with this email. Please sign up first.');
@@ -319,7 +301,6 @@ export async function passwordLogin(email: string, password: string, role?: Self
   }
   if (user.status === 'blocked') throw forbidden('This account has been blocked', 'ACCOUNT_BLOCKED');
   if (user.role === 'admin') throw forbidden('Admins sign in from the admin login page', 'ADMIN_LOGIN_ONLY');
-  assertRoleMatches(user.role, role);
   return respond(user, false);
 }
 

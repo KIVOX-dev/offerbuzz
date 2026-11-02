@@ -86,7 +86,7 @@ authRouter.post(
   validate(passwordLoginSchema),
   wrap(async (req, res) => {
     const b = req.body as PasswordLoginInput;
-    res.json(await svc.passwordLogin(b.email, b.password, b.role));
+    res.json(await svc.passwordLogin(b.email, b.password));
   }),
 );
 

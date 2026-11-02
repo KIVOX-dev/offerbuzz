@@ -272,10 +272,10 @@ export function OtpLogin({
         </form>
       )}
 
-      {step === 'details' && mode === 'signin' && (
+      {step === 'details' && (
         <div className="mt-4">
           <div className="mb-3 flex items-center gap-3 text-small text-muted">
-            <span className="h-px flex-1 bg-purple-100" /> or log in with <span className="h-px flex-1 bg-purple-100" />
+            <span className="h-px flex-1 bg-purple-100" /> {mode === 'signin' ? 'or log in with' : 'or sign up with'} <span className="h-px flex-1 bg-purple-100" />
           </div>
           <GoogleButton onCredential={signInWithGoogle} onError={googleError} />
         </div>
