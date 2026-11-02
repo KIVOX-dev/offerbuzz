@@ -11,7 +11,7 @@ const BURST = Array.from({ length: 32 }, (_, i) => {
 
 export function Burst({ lines, size = 72 }: { lines: [string, string, string?]; size?: number }) {
   return (
-    <span className="relative inline-flex origin-top-left -rotate-6 items-center justify-center drop-shadow-lg max-sm:-mb-4 max-sm:scale-[0.62]" style={{ width: size, height: size }} aria-hidden>
+    <span className="relative inline-flex origin-bottom-right -rotate-6 items-center justify-center drop-shadow-lg max-sm:scale-[0.62] sm:origin-top-left" style={{ width: size, height: size }} aria-hidden>
       <svg viewBox="0 0 100 100" width={size} height={size} className="absolute inset-0">
         <polygon points={BURST} fill="#ffd60a" stroke="#f59e0b" strokeWidth="2" />
       </svg>
