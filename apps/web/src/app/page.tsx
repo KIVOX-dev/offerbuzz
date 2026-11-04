@@ -40,6 +40,13 @@ const categories: Category[] = [
   { name: 'Automotive', slug: 'automotive', offers: '60+', from: '#dbf7f7', to: '#d7f5f4', text: 'text-teal-700', btn: 'bg-teal-600' },
   { name: 'Pets', slug: 'pets', offers: '50+', from: '#fee8d9', to: '#fde7d7', text: 'text-orange-600', btn: 'bg-orange-500' },
   { name: 'Travel & Lifestyle', slug: 'travel', offers: '70+', from: '#fee6f1', to: '#fee4f0', text: 'text-pink-600', btn: 'bg-pink-500' },
+  { name: 'Gifts & Toys', slug: 'gifts', offers: '60+', from: '#e1f6eb', to: '#dcf3e5', text: 'text-emerald-700', btn: 'bg-emerald-600' },
+  { name: 'Education', slug: 'education', offers: '40+', from: '#fef1d0', to: '#fef0ce', text: 'text-amber-600', btn: 'bg-amber-500' },
+  { name: 'Cafe & Bakeries', slug: 'cafe', offers: '70+', from: '#fee8d9', to: '#fde7d7', text: 'text-orange-600', btn: 'bg-orange-500' },
+  { name: 'Real Estate', slug: 'realestate', offers: '30+', from: '#eaeafe', to: '#eaeafe', text: 'text-indigo-700', btn: 'bg-indigo-600' },
+  { name: 'Jewellery', slug: 'jewellery', offers: '50+', from: '#fee6f1', to: '#fee4f0', text: 'text-pink-600', btn: 'bg-pink-500' },
+  { name: 'Home Made Products', slug: 'homemade', offers: '45+', from: '#feeeeb', to: '#feedea', text: 'text-red-600', btn: 'bg-red-500' },
+  { name: 'Organic', slug: 'organic', offers: '55+', from: '#e8fae0', to: '#e6f9dd', text: 'text-green-700', btn: 'bg-green-600' },
 ];
 
 // Where each home page category opens in search: the matching real vendor category (pets has none, so it searches).
@@ -60,6 +67,13 @@ const SEARCH_BY_SLUG: Record<string, string> = {
   automotive: 'category=Automobiles',
   pets: 'q=pet',
   travel: 'category=Travels',
+  gifts: 'category=Gifts%20and%20Toys',
+  education: 'category=Education',
+  cafe: 'category=Cafe%20and%20Bakeries',
+  realestate: 'category=Real%20Estate',
+  jewellery: 'category=Jewellery',
+  homemade: 'category=Home%20Made%20Products',
+  organic: 'category=Organic',
 };
 
 // Sample deal cards until the Phase 2 API feeds real offers.

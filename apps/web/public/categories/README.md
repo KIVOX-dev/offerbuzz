@@ -17,5 +17,12 @@ name to change it. All are from Pexels (Pexels License: free for commercial use,
 | `automotive.webp` | 13065697 (top) + 6789020 (bottom), combined |
 | `pets.webp` | 8434670 |
 | `travel.webp` | 7662165 |
+| `gifts.webp` | 2337851 |
+| `education.webp` | 7054755 |
+| `cafe.webp` | 30095179 |
+| `realestate.webp` | 34135038 |
+| `jewellery.webp` | 20858959 |
+| `organic.webp` | 11284797 |
+| `homemade.webp` | 28645472 |
 
 Look a photo up at `https://www.pexels.com/photo/<id>/`.
