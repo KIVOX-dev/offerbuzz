@@ -144,14 +144,15 @@ export function HomeHeader({
       </div>
 
       {/* category tabs */}
-      <nav aria-label="Categories" className="relative mt-2 border-y border-white/20 bg-white/10 pb-3 pt-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_24px_rgba(27,14,56,0.25)] backdrop-blur-xl backdrop-saturate-150 md:mt-0 md:pb-1">
-        <ul className="container-page flex gap-1 overflow-x-auto [scrollbar-width:none]">
+      <nav aria-label="Categories" className="relative mt-2 pb-3 md:mt-0 md:pb-3 md:pt-2">
+        <div className="container-page">
+        <ul className="flex gap-1 overflow-x-auto rounded-2xl border border-white/25 bg-white/15 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_8px_32px_rgba(27,14,56,0.30)] backdrop-blur-xl backdrop-saturate-150 [scrollbar-width:none]">
           {[{ name: 'All', slug: 'all', from: '#e9e4fb', to: '#ffffff' }, ...categories].map((c, i) => {
             const on = active === i - 1;
             return (
               <li key={c.name} className="w-[84px] shrink-0">
                 <button type="button" aria-pressed={on} onClick={() => onPick(i - 1)} className="flex w-full flex-col items-center gap-1 text-small">
-                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl transition duration-300 ${on ? 'scale-110 bg-white/20 md:scale-100' : ''}`}>
+                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl transition duration-300 ${on ? 'scale-110 bg-white/25 ring-1 ring-white/40 md:scale-100' : ''}`}>
                     <DuoCategoryIcon slug={c.slug} plain size={32} style={{ color: '#ffd60a' }} />
                   </span>
                   <span className={`w-full truncate px-1 text-center ${on ? 'font-bold text-white' : 'font-medium text-purple-100'}`}>{c.name}</span>
@@ -161,6 +162,7 @@ export function HomeHeader({
             );
           })}
         </ul>
+        </div>
       </nav>
 
     </header>

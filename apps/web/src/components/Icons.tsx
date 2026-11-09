@@ -418,6 +418,51 @@ const duoCategoryPaths: Record<string, React.ReactNode> = {
     </>
   ),
   travel: <path d="M40 8 4 20l12 5 5 12 5-11 14-18Z M16 25 40 8" fill={BLUE} />,
+  gifts: (
+    <>
+      <rect x="6" y="19" width="28" height="19" rx="2" fill={BLUE} />
+      <rect x="4" y="13" width="32" height="6" rx="2" fill={BLUE} />
+      <path d="M20 13v25M20 13c-4-7-11-6-9-2 1 2 5 2 9 2Zm0 0c4-7 11-6 9-2-1 2-5 2-9 2Z" />
+    </>
+  ),
+  education: (
+    <>
+      <path d="M20 8 3 16l17 8 17-8-17-8Z" fill={BLUE} />
+      <path d="M10 20v8c0 3 5 6 10 6s10-3 10-6v-8M37 16v10" />
+    </>
+  ),
+  cafe: (
+    <>
+      <path d="M7 17h23v9a10 10 0 0 1-10 10h-3A10 10 0 0 1 7 26v-9Z" fill={BLUE} />
+      <path d="M30 20h3a4 4 0 0 1 0 8h-3M13 5v7M19 5v7M25 5v7M5 41h28" />
+    </>
+  ),
+  realestate: (
+    <>
+      <rect x="10" y="6" width="20" height="34" rx="2" fill={BLUE} />
+      <path d="M16 14h2M22 14h2M16 21h2M22 21h2M16 28h2M22 28h2" />
+      <path d="M17 40v-6h6v6" fill="#fff" />
+    </>
+  ),
+  jewellery: (
+    <>
+      <path d="M12 8h16l8 10-16 22L4 18l8-10Z" fill={BLUE} />
+      <path d="M4 18h32M15 8l-3 10 8 22M25 8l3 10-8 22" />
+    </>
+  ),
+  homemade: (
+    <>
+      <rect x="12" y="5" width="16" height="7" rx="2" />
+      <path d="M12 12h16v26a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V12Z" fill={BLUE} />
+      <rect x="15" y="20" width="10" height="10" rx="2" fill="#fff" />
+    </>
+  ),
+  organic: (
+    <>
+      <path d="M8 36C6 18 16 8 36 6c2 20-8 30-24 30Z" fill={BLUE} />
+      <path d="M8 36 28 16" />
+    </>
+  ),
 };
 
 /** Duotone icon for a category slug (or "all"). */
