@@ -22,7 +22,7 @@ import { wrap } from '../../utils/async';
 import { HttpError, notFound } from '../../utils/errors';
 import { User, type UserDoc } from '../../models/User';
 import { toLocationDTO } from '../auth/auth.service';
-import { reverseGeocode } from '../../services/geocode';
+import { forwardGeocode, reverseGeocode } from '../../services/geocode';
 import { ensureGeoIndexes } from '../../services/backfill';
 import { Offer, type OfferDoc } from '../../models/Offer';
 import { OfferImage } from '../../models/OfferImage';
@@ -47,7 +47,6 @@ export function toOfferDTO(o: OfferDoc): OfferDTO {
     terms: o.terms ?? undefined,
     // an approved offer past its end date reads as expired without needing a background job
     status: o.status === 'active' && dateOnly(o.endsAt) < today ? 'expired' : o.status,
-    views: o.views,
     claims: o.claims,
     createdAt: o.createdAt.toISOString(),
     ...(o.hasImage ? { imageUrl: `/api/v1/offers/${o._id}/image` } : {}),
@@ -70,10 +69,13 @@ offersRouter.post(
     if (b.category !== vendor.category) {
       throw new HttpError(400, 'CATEGORY_MISMATCH', `Your shop posts offers in ${vendor.category} only`);
     }
-    // the exact spot for directions: the one given with the offer, else the shop's saved pin
-    let spot = b.location ? { lat: b.location.lat, lng: b.location.lng, address: b.location.address || undefined, placeId: b.location.placeId || undefined } : toLocationDTO(vendor);
+    // the exact spot for directions: the one given with the offer (auto-detected or picked from suggestions); else the
+    // area the merchant typed by hand, looked up once now; else the shop's saved pin
+    let spot = b.location
+      ? { lat: b.location.lat, lng: b.location.lng, address: b.location.address || undefined, placeId: b.location.placeId || undefined }
+      : ((await forwardGeocode(b.area)) ?? toLocationDTO(vendor));
     if (!spot) {
-      throw new HttpError(409, 'LOCATION_REQUIRED', 'Share the exact location of this offer, or save your shop location in your profile, before posting');
+      throw new HttpError(409, 'LOCATION_REQUIRED', 'We could not find that location. Pick a suggestion, tap "Auto-detect my location", or save your shop location in your profile');
     }
     if (b.location && !spot.address) {
       // a pin without an address (GPS or a dragged pin): look the address up once now and store it
@@ -112,7 +114,6 @@ offersRouter.get(
         offers: offers.length,
         pending: offers.filter((o) => o.status === 'pending').length,
         active: offers.filter((o) => o.status === 'active').length,
-        views: offers.reduce((n, o) => n + o.views, 0),
         claims: offers.reduce((n, o) => n + o.claims, 0),
       },
     };
@@ -125,14 +126,14 @@ offersRouter.get(
 const startOfToday = () => new Date(`${dateOnly(new Date())}T00:00:00.000Z`);
 
 /** Offers that are approved and inside their dates, with the shop that posted them. */
-export function toPublicOffer(o: OfferDoc, vendor: Pick<UserDoc, 'name' | 'shopName' | 'location' | 'locationAddress' | 'placeId'>, distanceM?: number): PublicOfferDTO | undefined {
+export function toPublicOffer(o: OfferDoc, vendor: Pick<UserDoc, 'name' | 'shopName' | 'website' | 'location' | 'locationAddress' | 'placeId'>, distanceM?: number): PublicOfferDTO | undefined {
   const c = o.location?.coordinates;
   const own = c && c.length === 2 ? { lat: c[1], lng: c[0], address: o.address ?? undefined, placeId: o.placeId ?? undefined } : undefined;
   const location = own ?? toLocationDTO(vendor);
   if (!location) return undefined;
   return {
     ...toOfferDTO(o),
-    shop: { name: vendor.shopName || vendor.name || 'Shop', location },
+    shop: { name: vendor.shopName || vendor.name || 'Shop', ownerName: vendor.name || undefined, website: vendor.website || undefined, location },
     ...(distanceM === undefined ? {} : { distanceKm: Math.round(distanceM / 10) / 100 }),
   };
 }
@@ -187,7 +188,7 @@ async function nearbyQuery(lat: number, lng: number, radiusKm: number, limit: nu
 /** The newest live offers anywhere, for visitors whose location is unknown. */
 export async function findLatestOffers(limit: number): Promise<PublicOfferDTO[]> {
   const docs = await Offer.find(liveWindow()).sort({ createdAt: -1 }).limit(limit);
-  const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName location locationAddress placeId');
+  const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName website location locationAddress placeId');
   const byId = new Map(vendors.map((v) => [String(v._id), v]));
   return docs.flatMap((o) => {
     const v = byId.get(String(o.merchantId));
@@ -245,7 +246,7 @@ offersRouter.get(
       filter.$or = [{ title: rx }, { description: rx }, { category: rx }, { area: rx }, { merchantId: { $in: shopIds.map((u) => u._id) } }];
     }
     const docs = await Offer.find(filter).sort({ createdAt: -1 }).limit(200);
-    const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName location locationAddress placeId');
+    const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName website location locationAddress placeId');
     const byId = new Map(vendors.map((v) => [String(v._id), v]));
     const here = q.lat !== undefined && q.lng !== undefined ? { lat: q.lat, lng: q.lng } : undefined;
     const offers = docs
@@ -264,7 +265,7 @@ offersRouter.get(
   }),
 );
 
-// The customer's saved offers: live ones only, in the order requested. Not counted as views.
+// The customer's saved offers: live ones only, in the order requested. 
 offersRouter.get(
   '/offers/by-ids',
   wrap(async (req, res) => {
@@ -274,7 +275,7 @@ offersRouter.get(
       .filter((s, i, all) => mongoose.isValidObjectId(s) && all.indexOf(s) === i)
       .slice(0, 50);
     const docs = ids.length ? await Offer.find({ _id: { $in: ids }, ...liveWindow() }) : [];
-    const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName location locationAddress placeId');
+    const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName website location locationAddress placeId');
     const byId = new Map(vendors.map((v) => [String(v._id), v]));
     const byOffer = new Map(docs.map((o) => [String(o._id), o]));
     const offers = ids.flatMap((id) => {
@@ -294,13 +295,9 @@ offersRouter.get(
     const id = String(req.params.id);
     if (!mongoose.isValidObjectId(id)) throw notFound('Offer not found');
     const today = startOfToday();
-    const offer = await Offer.findOneAndUpdate(
-      { _id: id, status: 'active', startsAt: { $lte: today }, endsAt: { $gte: today } },
-      { $inc: { views: 1 } },
-      { new: true },
-    );
+    const offer = await Offer.findOne({ _id: id, status: 'active', startsAt: { $lte: today }, endsAt: { $gte: today } });
     if (!offer) throw notFound('Offer not found');
-    const vendor = await User.findById(offer.merchantId).select('name shopName location locationAddress placeId');
+    const vendor = await User.findById(offer.merchantId).select('name shopName website location locationAddress placeId');
     const dto = vendor && toPublicOffer(offer, vendor);
     if (!dto) throw notFound('Offer not found');
     res.json({ offer: dto });

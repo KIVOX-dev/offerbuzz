@@ -58,10 +58,10 @@ export function OtpLogin({
 
   const cleanEmail = email.trim().toLowerCase();
   const cleanName = name.trim();
-  const roleLabel = role === 'merchant' ? 'Vendor' : 'Intermediary';
+  const roleLabel = role === 'merchant' ? 'Merchant' : 'Refer & Earn';
   const passwordSignin = mode === 'signin' && !useCode;
   const showReferral = mode === 'signup' && role === 'merchant';
-  const needsCategory = showReferral; // vendors pick their shop category when they sign up
+  const needsCategory = showReferral; // merchants pick their shop category when they sign up
   const cleanReferral = referral.trim().toUpperCase();
   const referralOk = !showReferral || cleanReferral === '' || referrer?.valid === true;
   const detailsValid =
@@ -243,7 +243,7 @@ export function OtpLogin({
                 Referral code <span className="font-normal text-muted">(optional)</span>
               </label>
               <input id="referral" className="input uppercase tracking-widest" value={referral} maxLength={8}
-                onChange={(e) => setReferral(e.target.value.replace(/[^A-Za-z0-9]/g, ''))} placeholder="From your intermediary" />
+                onChange={(e) => setReferral(e.target.value.replace(/[^A-Za-z0-9]/g, ''))} placeholder="From your Refer & Earn partner" />
               {referrer?.valid && (
                 <p className="mt-1 text-small text-green-700">
                   Code accepted{referrer.name ? `: you were referred by ${referrer.name}` : ''}.

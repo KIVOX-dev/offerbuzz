@@ -460,12 +460,12 @@ describe('vendor offers and profile', () => {
     const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
     const created = await post(v.body.accessToken, OFFER);
     expect(created.status).toBe(201);
-    expect(created.body.offer).toMatchObject({ title: 'Flat 30% off', status: 'pending', views: 0, claims: 0, endsAt: '2026-11-30' });
+    expect(created.body.offer).toMatchObject({ title: 'Flat 30% off', status: 'pending', claims: 0, endsAt: '2026-11-30' });
 
     const mine = await authed(request(app).get('/api/v1/offers/mine'), v.body.accessToken);
     expect(mine.status).toBe(200);
     expect(mine.body.offers).toHaveLength(1);
-    expect(mine.body.totals).toEqual({ offers: 1, pending: 1, active: 0, views: 0, claims: 0 });
+    expect(mine.body.totals).toEqual({ offers: 1, pending: 1, active: 0, claims: 0 });
   });
 
   it('only lets a vendor post in the category chosen at sign up', async () => {
@@ -474,6 +474,17 @@ describe('vendor offers and profile', () => {
     const wrong = await post(v.body.accessToken, { ...OFFER, category: 'Fashion' });
     expect(wrong.status).toBe(400);
     expect(wrong.body.error?.code ?? wrong.body.code).toBe('CATEGORY_MISMATCH');
+  });
+
+  it('saves a merchant website (https added) and shows it on the offer', async () => {
+    const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
+    const t = v.body.accessToken as string;
+    const bad = await authed(request(app).put('/api/v1/me'), t).send({ website: 'not a site' });
+    expect(bad.status).toBe(400);
+    const ok = await authed(request(app).put('/api/v1/me'), t).send({ website: 'www.myshop.com', shopName: 'My Shop' });
+    expect(ok.body.user.website).toBe('https://www.myshop.com/');
+    const cleared = await authed(request(app).put('/api/v1/me'), t).send({ website: '' });
+    expect(cleared.body.user.website).toBeUndefined();
   });
 
   it('asks a vendor with no category to choose one, then locks it', async () => {
@@ -1009,6 +1020,14 @@ describe('site analytics', () => {
     expect(a.series).toHaveLength(14);
     expect(a.series[13]).toMatchObject({ visitors: 2, views: 3 });
     expect(a.topPages[0]).toEqual({ path: '/', views: 2 });
+  });
+
+  it('shows the total website hits to everyone', async () => {
+    expect((await request(app).get('/api/v1/stats/hits')).body).toEqual({ hits: 0 });
+    await track({ visitorId: VID, path: '/' });
+    await track({ visitorId: VID, path: '/login' });
+    await track({ visitorId: 'zzzzzzzz-1111-2222-3333-444444444444', path: '/' });
+    expect((await request(app).get('/api/v1/stats/hits')).body).toEqual({ hits: 3 });
   });
 
   it('ignores bots, bad ids, private paths and Do Not Track, and always answers 204', async () => {

@@ -10,7 +10,7 @@ export default function IntermediaryQr() {
       </div>
       <QrCard
         title="Your referral QR code"
-        blurb="A shop that scans this opens the vendor sign up with your code already filled in."
+        blurb="A shop that scans this opens the merchant sign up with your code already filled in."
         target="vendor-signup"
       />
       <ModuleTerms id="qr" />

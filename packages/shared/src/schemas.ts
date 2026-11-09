@@ -111,11 +111,31 @@ export const aiRewriteSchema = z.object({
   description: z.string().trim().min(10, 'Write a few words first').max(600),
 });
 
+/** A website link: https:// is added when missing, and it must be a real web address. Empty clears it. */
+export const websiteSchema = z
+  .string()
+  .trim()
+  .max(200, 'Website link is too long')
+  .transform((v, ctx) => {
+    if (!v) return '';
+    const url = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+    try {
+      const u = new URL(url);
+      if (!/^https?:$/.test(u.protocol) || !u.hostname.includes('.')) throw new Error('bad');
+      return u.toString();
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid website link, like www.myshop.com' });
+      return '';
+    }
+  });
+
 /** Every field optional: send only what changed. Empty strings clear optional fields. */
 export const updateProfileSchema = z.object({
   name: name.optional(),
   phone: z.union([phoneSchema, z.literal('')]).optional(),
   shopName: z.string().trim().max(80).optional(),
+  /** merchants only: the shop's website; empty clears it. A missing http(s):// is added. */
+  website: websiteSchema.optional(),
   city: z.string().trim().max(60).optional(),
   /** vendors only: can be set once (for accounts that signed up without one) and is then locked */
   category: z.enum(CATEGORIES).optional(),

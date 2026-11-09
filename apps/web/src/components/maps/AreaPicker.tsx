@@ -18,7 +18,7 @@ const shorten = (s: string) => s.replace(/,\s*India$/i, '');
  * Area and city for a point, looked up once when the vendor taps "Use my current location". Google when the Maps key is
  * set; otherwise (or if Google fails) a free key-less lookup, so the button always works.
  */
-async function areaFromCoords(lat: number, lng: number): Promise<string | undefined> {
+export async function areaFromCoords(lat: number, lng: number): Promise<string | undefined> {
   if (mapsConfigured) {
     try {
       const area = await googleArea(lat, lng);
@@ -195,7 +195,7 @@ export function AreaPicker({
             disabled={locating}
             className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-small font-bold text-purple-800 transition hover:bg-purple-100 active:scale-95 disabled:opacity-50"
           >
-            <PinIcon size={16} /> {locating ? 'Finding your area...' : 'Use my current location'}
+            <PinIcon size={16} /> {locating ? 'Finding your area...' : 'Auto-detect my location'}
           </button>
           {shopAddress && (
             <button

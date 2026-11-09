@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CATEGORIES, type LocationInput } from '@offerbuzz/shared';
 import { ApiRequestError, updateProfile } from '@/lib/api';
 import { LocationPicker } from '../maps/LocationPicker';
@@ -8,8 +9,12 @@ import { Select } from '../Select';
 import { useAccount } from './AccountShell';
 
 /** Edit your own details. Email is shown but cannot be changed here. */
-export function ProfileForm({ showShop }: { showShop?: boolean }) {
+export function ProfileForm({ showShop, doneHref }: { showShop?: boolean; /** where to go after the first save completes the profile */ doneHref?: string }) {
+  const router = useRouter();
   const { user, setUser } = useAccount();
+  // true while the account is new and still needs its details: the first complete save then goes on to the dashboard
+  const [wasIncomplete] = useState(() => (showShop ? !user.shopName || !user.location || !user.category : !user.phone || !user.city));
+  const [website, setWebsite] = useState(user.website ?? '');
   const [name, setName] = useState(user.name ?? '');
   const [phone, setPhone] = useState(user.phone ? user.phone.replace(/^\+91/, '') : '');
   const [shopName, setShopName] = useState(user.shopName ?? '');
@@ -29,7 +34,7 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
         name: name.trim(),
         phone: phone.trim(),
         city: city.trim(),
-        ...(showShop ? { shopName: shopName.trim() } : {}),
+        ...(showShop ? { shopName: shopName.trim(), website: website.trim() } : {}),
         ...(showShop && locationChanged && location ? { location } : {}),
         ...(showShop && !user.category && category ? { category: category as (typeof CATEGORIES)[number] } : {}),
       });
@@ -37,6 +42,9 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
       setLocationChanged(false);
       if (res.user.location) setLocation(res.user.location);
       setMsg({ ok: true, text: 'Profile saved' });
+      const u = res.user;
+      const complete = showShop ? Boolean(u.shopName && u.location && u.category) : Boolean(u.phone && u.city);
+      if (wasIncomplete && complete && doneHref) router.push(doneHref);
     } catch (err) {
       setMsg({ ok: false, text: err instanceof ApiRequestError ? err.message : 'Could not save, please try again' });
     } finally {
@@ -52,7 +60,7 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
         <p id="p-email-note" className="mt-1 text-small text-muted">Your email is your login and cannot be changed.</p>
       </div>
       <div>
-        <label className="mb-1 block text-small font-semibold" htmlFor="p-name">Your name</label>
+        <label className="mb-1 block text-small font-semibold" htmlFor="p-name">{showShop ? 'Shop owner name' : 'Your name'}</label>
         <input id="p-name" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" />
       </div>
       {showShop && (
@@ -60,6 +68,14 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
           <label className="mb-1 block text-small font-semibold" htmlFor="p-shop">Shop name</label>
           <input id="p-shop" className="input" value={shopName} onChange={(e) => setShopName(e.target.value)} maxLength={80}
             placeholder="Shown on your offers" />
+        </div>
+      )}
+      {showShop && (
+        <div>
+          <label className="mb-1 block text-small font-semibold" htmlFor="p-web">Website link <span className="font-normal text-muted">(optional)</span></label>
+          <input id="p-web" type="url" inputMode="url" className="input" value={website} onChange={(e) => setWebsite(e.target.value)}
+            maxLength={200} placeholder="www.myshop.com" />
+          <p className="mt-1 text-small text-muted">Shown next to your store location on your offers.</p>
         </div>
       )}
       {showShop && (
@@ -81,7 +97,7 @@ export function ProfileForm({ showShop }: { showShop?: boolean }) {
       {showShop && (
         <div>
           <p className="mb-1 text-small font-semibold">Shop location</p>
-          <p className="mb-2 text-small text-muted">Customers see this pin on your offers and use it to get directions. Required before you can post offers.</p>
+          <p className="mb-2 text-small text-muted">Save it once here and every offer uses it automatically. You can still pick another place when you post an offer, for example if you are travelling.</p>
           <LocationPicker
             value={location}
             onChange={(loc) => {

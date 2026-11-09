@@ -17,6 +17,7 @@ import type {
   PayoutRequestInput,
   PromoCardDTO,
   PromoCardInput,
+  SiteHitsResponse,
   SuggestResponse,
   ReferralLookup,
   WalletResponse,
@@ -140,6 +141,7 @@ export const getPublicOffer = (id: string) => api<{ offer: PublicOfferDTO }>(`/o
 export const getNearbyOffers = (lat: number, lng: number, radiusKm = 10) =>
   api<NearbyOffersResponse>(`/offers/nearby?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`);
 
+export const getSiteHits = () => api<SiteHitsResponse>('/stats/hits');
 export const suggestSearch = (q: string) => api<SuggestResponse>(`/search/suggest?q=${encodeURIComponent(q)}`);
 export const searchOffers = (p: { q?: string; category?: string; lat?: number; lng?: number }) => {
   const params = new URLSearchParams();

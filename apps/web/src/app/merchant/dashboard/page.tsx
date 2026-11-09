@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'r
 import type { MyOffersResponse, OfferDTO } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
 import { ModuleTerms } from '@/components/ModuleTerms';
-import { DuoClockIcon, DuoOffersIcon, DuoTagIcon, EyeIcon, PlusIcon, TagIcon, TrashIcon } from '@/components/Icons';
+import { DuoClockIcon, DuoOffersIcon, DuoTagIcon, PlusIcon, TagIcon, TrashIcon } from '@/components/Icons';
 import { ApiRequestError, deleteOffer, getMyOffers } from '@/lib/api';
 
 const STATUS_STYLE: Record<OfferDTO['status'], string> = {
@@ -73,6 +73,11 @@ export default function MerchantDashboard() {
   const [removing, setRemoving] = useState<string>();
   const [filter, setFilter] = useState<FilterKey>('all');
 
+  // a new account builds its profile first: shop name, category and shop location
+  useEffect(() => {
+    if (!user.shopName || !user.location || !user.category) router.replace('/merchant/profile');
+  }, [user.shopName, user.location, user.category, router]);
+
   const load = useCallback(async () => {
     try {
       setData(await getMyOffers());
@@ -110,7 +115,7 @@ export default function MerchantDashboard() {
     <div className="mx-auto max-w-6xl space-y-6">
       <section className="flex flex-wrap items-center justify-between gap-4 rounded-md bg-hero p-5 text-white shadow-glow md:p-6">
         <div className="min-w-0">
-          <h1 className="text-title font-bold">Welcome, {user.name || 'vendor'}!</h1>
+          <h1 className="text-title font-bold">Welcome, {user.name || 'merchant'}!</h1>
           <p className="mt-1 text-purple-100">{user.shopName ? `${user.shopName} · ` : ''}Here is how your offers are doing.</p>
         </div>
         <Link href="/merchant/offers/new" className="btn-accent gap-2">
@@ -132,11 +137,10 @@ export default function MerchantDashboard() {
         </p>
       )}
 
-      <section aria-label="Overview" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section aria-label="Overview" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Stat label="Live now" value={totals?.active ?? 0} hint="Customers can see these" icon={DuoTagIcon} tone="bg-green-100 text-green-700" />
         <Stat label="Waiting for approval" value={totals?.pending ?? 0} hint="Reviewed by our team" icon={DuoClockIcon} tone="bg-amber-100 text-amber-700" />
         <Stat label="Total offers" value={totals?.offers ?? 0} hint="Everything you posted" icon={DuoOffersIcon} tone="bg-purple-100 text-purple-700" />
-        <Stat label="Views" value={totals?.views ?? 0} hint="Times your offers were opened" icon={EyeIcon} tone="bg-sky-100 text-sky-700" />
       </section>
 
       <section aria-labelledby="my-offers">
@@ -180,7 +184,7 @@ export default function MerchantDashboard() {
                 )}
                 <div className="flex min-w-0 flex-1 flex-col">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="line-clamp-2 font-bold leading-snug">{o.title}</h3>
+                    <h3 className="line-clamp-2 font-bold uppercase leading-snug">{o.title}</h3>
                     <button type="button" onClick={() => remove(o)} disabled={removing === o.id} aria-label={`Delete ${o.title}`}
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-danger hover:bg-red-50 disabled:opacity-50">
                       <TrashIcon size={18} />
@@ -194,7 +198,6 @@ export default function MerchantDashboard() {
                   <p className="mt-auto pt-2 text-small text-muted">
                     {fmt(o.startsAt)} to {fmt(o.endsAt)}
                     {o.status === 'active' ? ` · ${endsIn(o.endsAt)}` : ''}
-                    {` · ${o.views} view${o.views === 1 ? '' : 's'}`}
                   </p>
                 </div>
               </li>

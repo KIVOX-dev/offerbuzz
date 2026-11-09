@@ -3,21 +3,19 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { GridIcon, HeartIcon, HomeIcon, PinIcon, QrIcon, UserIcon } from '../Icons';
-import { useSaved } from '@/lib/saved';
+import { GridIcon, HomeIcon, PinIcon, QrIcon, UserIcon } from '../Icons';
 import { homeFor, loadSession } from '@/lib/session';
 import { ScanButton } from '../Scanner';
 
 export type NavKey = 'home' | 'categories' | 'near';
 
-const SLOTS = 6; // home, categories, scan, near, saved, account
+const SLOTS = 5; // home, categories, scan, near, account
 
 /**
  * Mobile bottom bar. The purple line above the active item slides between items. The scan button in the middle opens
  * the camera scanner.
  */
 export function BottomNav({ active, onSelect, onScan }: { active: NavKey; onSelect: (k: NavKey) => void; onScan: (text: string) => void }) {
-  const { count: savedCount } = useSaved();
   // signed in people go to their own area, everyone else to sign in (read after mount: no SSR mismatch)
   const [accountHref, setAccountHref] = useState('/login');
   const [signedIn, setSignedIn] = useState(false);
@@ -46,7 +44,7 @@ export function BottomNav({ active, onSelect, onScan }: { active: NavKey; onSele
         className="absolute top-0 h-[3px] rounded-b-full bg-purple-600 transition-transform duration-300 ease-out"
         style={{ width: `${100 / SLOTS}%`, transform: `translateX(${slot * 100}%)` }}
       />
-      <div className="grid grid-cols-6 items-end">
+      <div className="grid grid-cols-5 items-end">
         {item('home', 'Home', <HomeIcon size={22} />)}
         {item('categories', 'Categories', <GridIcon size={22} />)}
         <div className="flex justify-center">
@@ -58,15 +56,6 @@ export function BottomNav({ active, onSelect, onScan }: { active: NavKey; onSele
           </ScanButton>
         </div>
         {item('near', 'Near you', <PinIcon size={22} />)}
-        <Link href="/saved" className="relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-muted">
-          <span className="relative">
-            <HeartIcon size={22} />
-            {savedCount > 0 && (
-              <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">{savedCount}</span>
-            )}
-          </span>
-          Saved
-        </Link>
         <Link href={accountHref} className="relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold text-muted">
           <span className="relative">
             <UserIcon size={22} />

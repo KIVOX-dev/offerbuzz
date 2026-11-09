@@ -74,7 +74,7 @@ export async function listUsers(q: AdminUsersQuery): Promise<AdminUsersResponse>
     User.find({ _id: { $in: referrerIds } }).select('name email'),
   ]);
   const paidUntil = new Map(subs.map((s) => [String(s.merchantId), s.paidUntil]));
-  const refName = new Map(referrers.map((r) => [String(r._id), r.name || r.email || 'Intermediary']));
+  const refName = new Map(referrers.map((r) => [String(r._id), r.name || r.email || 'Refer & Earn']));
   const now = Date.now();
   const users: AdminUserDTO[] = docs.map((u: UserDoc & { createdAt?: Date }) => {
     const until = paidUntil.get(String(u._id));
@@ -115,10 +115,10 @@ export async function setUserStatus(adminId: string, userId: string, status: 'ac
  * period and credits the vendor's referrer once per month.
  */
 export async function recordSubscriptionPayment(merchantId: string, months: number) {
-  if (!mongoose.isValidObjectId(merchantId)) throw notFound('Vendor not found');
+  if (!mongoose.isValidObjectId(merchantId)) throw notFound('Merchant not found');
   const vendor = await User.findById(merchantId).select('role');
-  if (!vendor) throw notFound('Vendor not found');
-  if (vendor.role !== 'merchant') throw badRequest('Only vendors have a subscription', 'NOT_A_VENDOR');
+  if (!vendor) throw notFound('Merchant not found');
+  if (vendor.role !== 'merchant') throw badRequest('Only merchants have a subscription', 'NOT_A_VENDOR');
   const now = new Date();
   const existing = await Subscription.findOne({ merchantId });
   const start = existing && existing.paidUntil > now ? existing.paidUntil : now;
@@ -155,8 +155,8 @@ export async function walletsOverview(): Promise<AdminWalletsResponse> {
   const requested = new Map<string, number>();
   for (const p of allPayouts) if (p.status === 'pending') requested.set(String(p.intermediaryId), (requested.get(String(p.intermediaryId)) ?? 0) + p.credits);
 
-  const names = new Map(intermediaries.map((u) => [String(u._id), u.name || u.email || 'Intermediary']));
-  const payouts: PayoutRequestDTO[] = allPayouts.map((p) => toPayoutDTO(p, names.get(String(p.intermediaryId)) ?? 'Intermediary'));
+  const names = new Map(intermediaries.map((u) => [String(u._id), u.name || u.email || 'Refer & Earn']));
+  const payouts: PayoutRequestDTO[] = allPayouts.map((p) => toPayoutDTO(p, names.get(String(p.intermediaryId)) ?? 'Refer & Earn'));
 
   return {
     payoutThreshold: settings.payoutThreshold,
@@ -165,7 +165,7 @@ export async function walletsOverview(): Promise<AdminWalletsResponse> {
         const b = calcBalances(byInter.get(String(u._id)) ?? []);
         return {
           id: String(u._id),
-          name: u.name || u.email || 'Intermediary',
+          name: u.name || u.email || 'Refer & Earn',
           email: u.email ?? undefined,
           status: u.status,
           balance: b.balance,
@@ -214,7 +214,7 @@ export async function offersOverview(q: AdminOffersQuery): Promise<AdminOffersRe
     const v = vendorOf.get(String(o.merchantId));
     const c = o.location?.coordinates;
     const mapUrl = c && c.length === 2 ? `https://www.google.com/maps/search/?api=1&query=${c[1]},${c[0]}` : undefined;
-    return { ...toOfferDTO(o), vendor: v?.shopName || v?.name || v?.email || 'Vendor', vendorEmail: v?.email ?? undefined, mapUrl };
+    return { ...toOfferDTO(o), vendor: v?.shopName || v?.name || v?.email || 'Merchant', vendorEmail: v?.email ?? undefined, mapUrl };
   });
   return { categories, offers };
 }

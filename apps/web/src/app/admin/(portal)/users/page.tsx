@@ -8,11 +8,11 @@ import { Select } from '@/components/Select';
 
 const ROLE_TABS = [
   { value: '', label: 'All' },
-  { value: 'merchant', label: 'Vendors' },
-  { value: 'intermediary', label: 'Intermediaries' },
+  { value: 'merchant', label: 'Merchants' },
+  { value: 'intermediary', label: 'Refer & Earn' },
   { value: 'customer', label: 'Customers' },
 ];
-const ROLE_LABEL: Record<string, string> = { merchant: 'Vendor', intermediary: 'Intermediary', customer: 'Customer', admin: 'Admin' };
+const ROLE_LABEL: Record<string, string> = { merchant: 'Merchant', intermediary: 'Refer & Earn', customer: 'Customer', admin: 'Admin' };
 const STATUS_STYLE: Record<string, string> = {
   active: 'bg-green-100 text-green-800',
   pending: 'bg-amber-100 text-amber-800',
@@ -137,7 +137,7 @@ export default function AdminUsers() {
     <div className="mx-auto max-w-7xl space-y-4">
       <div>
         <h1 className="text-title font-bold">Users</h1>
-        <p className="mt-1 text-muted">Approve intermediaries, block accounts, and record vendor subscription payments.</p>
+        <p className="mt-1 text-muted">Approve Refer & Earn accounts, block accounts, and record merchant subscription payments.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

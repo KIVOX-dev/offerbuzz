@@ -2,22 +2,23 @@ import Link from 'next/link';
 import { Logo } from './Logo';
 import { ClockIcon, PhoneIcon, PinIcon } from './Icons';
 import { CookieSettingsButton } from './CookieBanner';
+import { SiteHits } from './SiteHits';
 
 type FooterLink = { label: string; href: string };
 
 const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
-    title: 'Vendors',
+    title: 'Merchants',
     links: [
-      { label: 'Vendor sign up', href: '/login/vendor/sign-up' },
-      { label: 'Vendor login', href: '/login/vendor/sign-in' },
+      { label: 'Merchant sign up', href: '/login/vendor/sign-up' },
+      { label: 'Merchant login', href: '/login/vendor/sign-in' },
     ],
   },
   {
-    title: 'Intermediaries',
+    title: 'Refer & Earn',
     links: [
-      { label: 'Intermediary sign up', href: '/login/intermediary/sign-up' },
-      { label: 'Intermediary login', href: '/login/intermediary/sign-in' },
+      { label: 'Refer & Earn sign up', href: '/login/intermediary/sign-up' },
+      { label: 'Refer & Earn login', href: '/login/intermediary/sign-in' },
     ],
   },
   {
@@ -159,7 +160,10 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <p className="mt-12 border-t border-purple-900/20 pt-6 text-small font-medium text-ink/70">© 2026 OfferBuzz</p>
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-2 border-t border-purple-900/20 pt-6 text-small font-medium text-ink/70">
+          <p>© 2026 OfferBuzz</p>
+          <SiteHits />
+        </div>
       </div>
     </footer>
   );

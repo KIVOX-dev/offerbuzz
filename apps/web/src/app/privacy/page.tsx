@@ -8,7 +8,7 @@ const sections: LegalSection[] = [
     heading: 'Who we are and what this covers',
     body: [
       'OfferBuzz, #3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045, runs the OfferBuzz website. For the personal data described here we act as the data fiduciary (controller) under the Digital Personal Data Protection Act, 2023 and the Information Technology Act, 2000.',
-      'This policy explains what we collect, why, who sees it, how long we keep it and what choices you have, whether you are a Customer, a Vendor or an Intermediary. By using OfferBuzz you agree to this policy.',
+      'This policy explains what we collect, why, who sees it, how long we keep it and what choices you have, whether you are a Customer, a Merchant or a Refer & Earn partner. By using OfferBuzz you agree to this policy.',
     ],
   },
   {
@@ -16,9 +16,9 @@ const sections: LegalSection[] = [
     body: ['The information depends on how you use OfferBuzz.'],
     bullets: [
       'Everyone: if you only browse, we may collect a random visitor id and the pages you open (only if you accept analytics cookies), plus basic technical data such as browser type and approximate time of visit, which our servers record automatically.',
-      'Account details (Vendors, Intermediaries and anyone who signs up): your name, email address, role, a password (stored only as a one-way hash), and optionally your mobile number and city.',
-      'Vendors: shop name, shop category, city or area, the offers you post (title, description, dates, discount, area, terms) and the photos you upload.',
-      'Intermediaries: your personal referral code, which shops joined using it, and wallet entries (credits earned, on hold, available and paid out).',
+      'Account details (Merchants, Refer & Earn partners and anyone who signs up): your name, email address, role, a password (stored only as a one-way hash), and optionally your mobile number and city.',
+      'Merchants: shop name, shop category, city or area, the offers you post (title, description, dates, discount, area, terms) and the photos you upload.',
+      'Refer & Earn partners: your personal referral code, which shops joined using it, and wallet entries (credits earned, on hold, available and paid out).',
       'Payout details: if you request a payout, the information needed to pay you, such as UPI id or bank account details, which you give us or confirm to our team.',
       'Sign-in data: one-time codes we email you (stored only as a hash and deleted after use or expiry), sign-in session tokens, and, if you choose Google sign-in, the name and verified email Google shares with us.',
       'Communications: messages you send us and records of service emails we send you.',
@@ -30,8 +30,8 @@ const sections: LegalSection[] = [
     body: ['We use personal data only for these purposes:'],
     bullets: [
       'to create and secure your account, sign you in and keep your session safe;',
-      'to show offers and vendor shop names to the public, and let Vendors post and manage offers;',
-      'to review offers and accounts, and run the vendor plan and its renewals;',
+      'to show offers and merchant shop names to the public, and let Merchants post and manage offers;',
+      'to review offers and accounts, and run the merchant plan and its renewals;',
       'to run referrals, calculate rewards, maintain your wallet and process payouts;',
       'to send service emails, such as login codes, offer approval or rejection, plan and renewal notices, payout confirmations and reminders that an offer is about to end;',
       'to prevent fraud, abuse and misuse, and to enforce our Terms;',
@@ -62,8 +62,8 @@ const sections: LegalSection[] = [
     heading: 'Who we share information with',
     body: ['We do not sell your personal data. We share it only as follows:'],
     bullets: [
-      "Publicly: a Vendor's offers, photos, shop name and area are visible to everyone who uses OfferBuzz.",
-      'Intermediaries: an Intermediary can see the names of shops that joined with their referral code and the status of the related rewards.',
+      "Publicly: a Merchant's offers, photos, shop name and area are visible to everyone who uses OfferBuzz.",
+      'Refer & Earn partners: a Refer & Earn partner can see the names of shops that joined with their referral code and the status of the related rewards.',
       'A place-name lookup: if you allow location, your approximate coordinates (rounded to about 100 m) are sent once from your browser to a reverse-geocoding service (BigDataCloud, or Google Maps if configured) to show your area name. They are not tied to your account and are not stored on our servers.',
       'Service providers who work for us under confidentiality: email delivery (we use Brevo to send emails), hosting and database providers, and Google if you choose Google sign-in. They may process data only to provide their service to us.',
       'Authorities and advisers: courts, regulators, law enforcement, auditors and professional advisers where the law requires it or to protect our rights, users or the public.',

@@ -32,6 +32,12 @@ export async function recordView(input: { visitorId?: unknown; path?: unknown },
   ]);
 }
 
+/** Every page view counted since tracking began (visitors who accepted analytics), for the public counter. */
+export async function totalHits(): Promise<number> {
+  const [row] = await Visit.aggregate<{ hits: number }>([{ $group: { _id: null, hits: { $sum: '$views' } } }]);
+  return row?.hits ?? 0;
+}
+
 export async function analytics(days = 14): Promise<AdminAnalytics> {
   const list = Array.from({ length: days }, (_, i) => istDay(days - 1 - i)); // oldest first
   const [visits, hits, users] = await Promise.all([

@@ -11,6 +11,7 @@ const userSchema = new Schema(
     role: { type: String, enum: ROLES, required: true, index: true },
     referralCode: { type: String, required: true, unique: true },
     shopName: { type: String, trim: true },
+    website: { type: String, trim: true },
     city: { type: String, trim: true },
     // vendors: every offer they post is in this category
     category: { type: String, enum: CATEGORIES },

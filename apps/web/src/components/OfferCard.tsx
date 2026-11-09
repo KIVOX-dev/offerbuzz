@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import type { PublicOfferDTO } from '@offerbuzz/shared';
-import { HeartIcon, PinIcon } from './Icons';
+import { GlobeIcon, HeartIcon, PinIcon } from './Icons';
 import { discountLabel } from './OfferPreview';
 import { directionsUrl } from '@/lib/maps';
 import { useSaved } from '@/lib/saved';
@@ -39,13 +39,28 @@ export function OfferCard({ o }: { o: PublicOfferDTO }) {
         {o.imageUrl && <img src={o.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold">{o.title}</p>
+        <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold uppercase">{o.title}</p>
         <p className="truncate text-small text-muted">{o.shop.name}</p>
         {/* the exact spot this offer is redeemed at, with one tap to directions */}
         <p className="flex items-start gap-1 text-[12px] leading-snug text-ink/80">
           <PinIcon size={14} className="mt-0.5 shrink-0 text-purple-700" />
           <span className="line-clamp-2">{(o.shop.location.address ?? o.area).replace(/,\s*India$/i, '')}</span>
         </p>
+        {/* the supplier's website, next to the store location */}
+        {o.shop.website && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.open(o.shop.website, '_blank', 'noopener,noreferrer');
+            }}
+            className="flex items-start gap-1 text-left text-[12px] font-semibold leading-snug text-purple-700 underline-offset-2 hover:underline"
+          >
+            <GlobeIcon size={14} className="mt-0.5 shrink-0" />
+            <span className="truncate">{o.shop.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={(e) => {

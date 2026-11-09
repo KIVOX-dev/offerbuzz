@@ -38,6 +38,7 @@ export function toUserDTO(u: UserDoc): UserDTO {
     referralCode: u.referralCode,
     qrUrl: u.qrUrl ?? undefined,
     shopName: u.shopName ?? undefined,
+    website: u.website ?? undefined,
     city: u.city ?? undefined,
     category: u.category ?? undefined,
     location: toLocationDTO(u),

@@ -78,15 +78,15 @@ export function HomeHeader({
 
   const location = (
     <button type="button" onClick={onLocation} aria-label="Change location" className="flex min-w-0 items-center gap-2.5 text-left">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 md:h-auto md:w-auto md:bg-transparent">
-        <PinIcon size={22} className="text-accent md:text-purple-700" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15">
+        <PinIcon size={22} className="text-accent" />
       </span>
       <span className="min-w-0">
         <span className="flex items-center gap-1 text-[17px] font-extrabold leading-tight">
           <span key={locationLabel} className="ob-fade-up truncate">{locationLabel}</span>
           <ChevronDownIcon size={16} className="shrink-0" />
         </span>
-        <span className="block truncate text-small text-purple-200 md:text-muted">{locationHint}</span>
+        <span className="block truncate text-small text-purple-200">{locationHint}</span>
       </span>
     </button>
   );
@@ -96,14 +96,14 @@ export function HomeHeader({
   const desktopSearch = <SearchBox value={query} onChange={onQuery} onScan={onScan} variant="desktop" />;
 
   return (
-    <header className="relative z-30 bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b md:border-purple-100 md:bg-card md:bg-none md:text-ink md:shadow-none">
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden md:hidden">
+    <header className="relative z-30 bg-hero text-white shadow-glow md:sticky md:top-0 md:overflow-visible md:rounded-none md:border-b-4 md:border-accent">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* one colour layer per category: the active one fades in over the purple, so the header changes colour smoothly */}
         {HERO_HEADERS.map((bg, i) =>
           bg ? (
             <span
               key={i}
-              className="absolute inset-0 transition-opacity duration-700 ease-out"
+              className="absolute inset-0 transition-opacity duration-700 ease-out md:hidden"
               style={{ background: bg, opacity: active === -1 && heroIndex === i ? 1 : 0 }}
             />
           ) : null,
@@ -111,7 +111,7 @@ export function HomeHeader({
         {categories.map((c, i) => (
           <span
             key={c.slug}
-            className="absolute inset-0 transition-opacity duration-500 ease-out"
+            className="absolute inset-0 transition-opacity duration-500 ease-out md:hidden"
             style={{ background: themeFor(c, i), opacity: active === i ? 1 : 0 }}
           />
         ))}
@@ -134,28 +134,28 @@ export function HomeHeader({
 
         {/* desktop: logo | location | search | account */}
         <div className="hidden h-header items-center gap-3 md:flex">
-          <Logo height={48} />
+          <Logo height={48} variant="light" />
           {location}
           {desktopSearch}
-          <Link href={accountHref} className="btn-ghost gap-2">
+          <Link href={accountHref} className="btn gap-2 bg-accent text-ink shadow-card hover:brightness-105">
             <UserIcon /> {signedIn ? 'Account' : 'Sign in'}
           </Link>
         </div>
       </div>
 
       {/* category tabs */}
-      <nav aria-label="Categories" className="relative mt-2 pb-4 md:mt-0 md:border-t md:border-purple-100 md:pb-0 md:pt-2">
+      <nav aria-label="Categories" className="relative mt-2 pb-4 md:mt-0 md:border-t md:border-white/15 md:pb-1 md:pt-2">
         <ul className="container-page flex gap-1 overflow-x-auto [scrollbar-width:none]">
           {[{ name: 'All', slug: 'all', from: '#e9e4fb', to: '#ffffff' }, ...categories].map((c, i) => {
             const on = active === i - 1;
             return (
               <li key={c.name} className="w-[84px] shrink-0">
                 <button type="button" aria-pressed={on} onClick={() => onPick(i - 1)} className="flex w-full flex-col items-center gap-1 text-small">
-                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl transition duration-300 ${on ? 'scale-110 bg-white/20 md:scale-100 md:bg-purple-100' : ''}`}>
+                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl transition duration-300 ${on ? 'scale-110 bg-white/20 md:scale-100' : ''}`}>
                     <DuoCategoryIcon slug={c.slug} plain size={32} style={{ color: '#ffd60a' }} />
                   </span>
-                  <span className={`w-full truncate px-1 text-center ${on ? 'font-bold text-white md:text-ink' : 'font-medium text-purple-100 md:text-ink'}`}>{c.name}</span>
-                  <span className={`h-[3px] rounded-full bg-accent transition-all duration-300 md:bg-purple-600 ${on ? 'w-full' : 'w-0'}`} />
+                  <span className={`w-full truncate px-1 text-center ${on ? 'font-bold text-white' : 'font-medium text-purple-100'}`}>{c.name}</span>
+                  <span className={`h-[3px] rounded-full bg-accent transition-all duration-300 ${on ? 'w-full' : 'w-0'}`} />
                 </button>
               </li>
             );

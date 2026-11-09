@@ -6,7 +6,8 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { PublicOfferDTO } from '@offerbuzz/shared';
 import { Logo } from '@/components/Logo';
-import { HeartIcon, TagIcon } from '@/components/Icons';
+import { GlobeIcon, HeartIcon, TagIcon } from '@/components/Icons';
+import { SiteHits } from '@/components/SiteHits';
 import { ShopMap } from '@/components/maps/ShopMap';
 import { discountLabel } from '@/components/OfferPreview';
 import { ApiRequestError, getPublicOffer } from '@/lib/api';
@@ -29,10 +30,10 @@ export default function OfferPage() {
 
   return (
     <main className="min-h-screen">
-      <header className="border-b border-purple-100 bg-card">
+      <header className="border-b-4 border-accent bg-hero text-white">
         <div className="container-page flex items-center justify-between py-3">
-          <Logo height={42} />
-          <Link href="/" className="btn-ghost btn-sm">All offers</Link>
+          <Logo height={42} variant="light" />
+          <Link href="/" className="btn btn-sm bg-accent text-ink hover:brightness-105">All offers</Link>
         </div>
       </header>
 
@@ -56,8 +57,11 @@ export default function OfferPage() {
                 </span>
               </div>
               <div className="space-y-2 p-5">
-                <p className="text-small font-semibold text-purple-700">{offer.shop.name}</p>
-                <h1 className="text-title font-bold leading-snug">{offer.title}</h1>
+                <p className="text-small font-semibold text-purple-700">
+                  {offer.shop.name}
+                  {offer.shop.ownerName && offer.shop.ownerName !== offer.shop.name && <span className="font-normal text-muted"> · Owner: {offer.shop.ownerName}</span>}
+                </p>
+                <h1 className="text-title font-bold uppercase leading-snug">{offer.title}</h1>
                 <p className="text-small text-muted">{offer.category} · {offer.area}</p>
                 <p className="whitespace-pre-line text-body">{offer.description}</p>
                 <p className="text-small font-semibold">Valid {fmt(offer.startsAt)} to {fmt(offer.endsAt)}</p>
@@ -67,6 +71,14 @@ export default function OfferPage() {
                   </p>
                 )}
                 {offer.terms && <p className="text-small text-muted">Terms: {offer.terms}</p>}
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`${offer.title.toUpperCase()} at ${offer.shop.name}\n${typeof window === 'undefined' ? '' : window.location.href}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-outline mt-2 w-full gap-2"
+                >
+                  Share on WhatsApp
+                </a>
                 <button type="button" onClick={() => toggle(offer.id)} aria-pressed={has(offer.id)} className="btn-outline mt-2 w-full gap-2">
                   <HeartIcon size={18} fill={has(offer.id) ? 'currentColor' : 'none'} className={has(offer.id) ? 'text-danger' : ''} />
                   {has(offer.id) ? 'Saved' : 'Save offer'}
@@ -75,7 +87,12 @@ export default function OfferPage() {
             </article>
 
             <div className="space-y-3">
-              <h2 className="text-section font-bold">Find the shop</h2>
+              <h2 className="text-section font-bold">Store location</h2>
+              {offer.shop.website && (
+                <a href={offer.shop.website} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1.5 text-small font-bold text-purple-800 hover:bg-purple-100">
+                  <GlobeIcon size={16} className="shrink-0" /> <span className="truncate">{offer.shop.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+                </a>
+              )}
               <ShopMap
                 lat={offer.shop.location.lat}
                 lng={offer.shop.location.lng}
@@ -89,6 +106,7 @@ export default function OfferPage() {
         <div className="mt-6">
           <ModuleTerms id="customer" />
         </div>
+        <SiteHits className="mt-6 text-center text-muted" />
       </div>
     </main>
   );

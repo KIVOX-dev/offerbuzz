@@ -122,16 +122,16 @@ export const TEMPLATES: EmailTemplate[] = [
   }),
 
   // ---- Phases 5-6: intermediaries ----
-  t('intermediary-approved', 5, 'You are approved as an OfferBuzz intermediary', ['name', 'url'], {
+  t('intermediary-approved', 5, 'You are approved as an OfferBuzz Refer & Earn partner', ['name', 'url'], {
     preheader: 'Your QR code and wallet are active.',
     heading: 'You are approved',
     paragraphs: [
       'Hi {{ params.name }},',
-      'Your intermediary account is approved. Your personal QR code and wallet are now active. Share your QR with shops to earn credits on every paid month.',
+      'Your Refer & Earn account is approved. Your personal QR code and wallet are now active. Share your QR with shops to earn credits on every paid month.',
     ],
     cta: { label: 'Open my dashboard', url: '{{ params.url }}' },
   }),
-  t('intermediary-rejected', 5, 'Update on your OfferBuzz intermediary application', ['name', 'reason'], {
+  t('intermediary-rejected', 5, 'Update on your OfferBuzz Refer & Earn application', ['name', 'reason'], {
     preheader: 'We could not approve your application yet.',
     heading: 'We could not approve your application yet',
     paragraphs: ['Hi {{ params.name }},', 'We reviewed your application and could not approve it yet.', '<b>Reason:</b> {{ params.reason }}'],

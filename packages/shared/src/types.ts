@@ -20,6 +20,8 @@ export interface UserDTO {
   /** true once the user has chosen a password (the hash itself is never sent) */
   hasPassword?: boolean;
   shopName?: string;
+  /** merchants: the shop's website, shown next to the store location */
+  website?: string;
   city?: string;
   /** vendors: the category every offer they post belongs to */
   category?: string;
@@ -58,7 +60,6 @@ export interface OfferDTO {
   phone?: string;
   terms?: string;
   status: OfferStatus;
-  views: number;
   claims: number;
   createdAt: string;
   /** relative URL of the offer photo, present only when one was uploaded */
@@ -67,7 +68,7 @@ export interface OfferDTO {
 
 /** An offer as customers see it: with the shop that posted it. */
 export interface PublicOfferDTO extends OfferDTO {
-  shop: { name: string; location: LocationDTO };
+  shop: { name: string; ownerName?: string; website?: string; location: LocationDTO };
   /** only on nearby results: straight line distance from the customer, in km */
   distanceKm?: number;
 }
@@ -97,9 +98,14 @@ export interface NearbyOffersResponse {
   offers: PublicOfferDTO[];
 }
 
+/** Total website hits (page views counted so far), shown at the bottom of the site. */
+export interface SiteHitsResponse {
+  hits: number;
+}
+
 export interface MyOffersResponse {
   offers: OfferDTO[];
-  totals: { offers: number; pending: number; active: number; views: number; claims: number };
+  totals: { offers: number; pending: number; active: number; claims: number };
 }
 
 export interface WalletEntryDTO {

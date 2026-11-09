@@ -16,14 +16,14 @@ const PAGE_NAMES: Record<string, string> = {
   '/login': 'Sign in / Sign up',
   '/search': 'Search',
   '/saved': 'Saved offers',
-  '/merchant/dashboard': 'Vendor dashboard',
-  '/merchant/offers/new': 'Vendor: post an offer',
-  '/merchant/profile': 'Vendor profile',
-  '/intermediary/dashboard': 'Intermediary dashboard',
-  '/intermediary/shops': 'Intermediary: referred shops',
-  '/intermediary/wallet': 'Intermediary wallet',
-  '/intermediary/qr': 'Intermediary QR code',
-  '/intermediary/profile': 'Intermediary profile',
+  '/merchant/dashboard': 'Merchant dashboard',
+  '/merchant/offers/new': 'Merchant: post an offer',
+  '/merchant/profile': 'Merchant profile',
+  '/intermediary/dashboard': 'Refer & Earn dashboard',
+  '/intermediary/shops': 'Refer & Earn: referred shops',
+  '/intermediary/wallet': 'Refer & Earn wallet',
+  '/intermediary/qr': 'Refer & Earn QR code',
+  '/intermediary/profile': 'Refer & Earn profile',
   '/terms': 'Terms & Conditions',
   '/privacy': 'Privacy Policy',
   '/cookies': 'Cookie Policy',
@@ -170,18 +170,18 @@ export default function AdminDashboard() {
         <h2 id="people" className="mb-3 text-section font-bold">Users</h2>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Stat label="Total users" value={totalUsers} href="/admin/users" />
-          <Stat label="Vendors" value={o?.vendors.total ?? 0} href="/admin/users" />
-          <Stat label="Intermediaries" value={o?.intermediaries.total ?? 0} href="/admin/wallets" />
+          <Stat label="Merchants" value={o?.vendors.total ?? 0} href="/admin/users" />
+          <Stat label="Refer & Earn" value={o?.intermediaries.total ?? 0} href="/admin/wallets" />
           <Stat label="Customers" value={o?.customers ?? 0} href="/admin/users" />
         </div>
       </section>
 
       <section aria-labelledby="vendors">
-        <h2 id="vendors" className="mb-3 text-section font-bold">Vendor subscriptions</h2>
+        <h2 id="vendors" className="mb-3 text-section font-bold">Merchant subscriptions</h2>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
           <Stat label="Subscribed (paid)" value={o?.vendors.subscribed ?? 0} href="/admin/users" hint="Plan active today" />
           <Stat label="Not subscribed" value={o?.vendors.unsubscribed ?? 0} href="/admin/users" hint="Never paid or plan ended" />
-          <Stat label="Total vendors" value={o?.vendors.total ?? 0} href="/admin/users" />
+          <Stat label="Total merchants" value={o?.vendors.total ?? 0} href="/admin/users" />
         </div>
       </section>
 
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
         <h2 id="needs" className="mb-3 text-section font-bold">Needs your attention</h2>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
           <Stat label="Offers to approve" value={o?.pendingOffers ?? 0} href="/admin/offers" alert />
-          <Stat label="Intermediaries to approve" value={o?.intermediaries.pendingApproval ?? 0} href="/admin/users" alert />
+          <Stat label="Refer & Earn to approve" value={o?.intermediaries.pendingApproval ?? 0} href="/admin/users" alert />
           <Stat label="Payout requests" value={o?.payouts.pending ?? 0} href="/admin/wallets" alert
             hint={o?.payouts.pending ? `Rs ${n(o.payouts.pendingCredits)} waiting` : undefined} />
         </div>

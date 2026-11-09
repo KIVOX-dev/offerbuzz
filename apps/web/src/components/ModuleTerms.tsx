@@ -76,7 +76,7 @@ export const MODULE_TERMS = {
     ],
   },
   vendorPlan: {
-    title: 'Vendor Plan – Terms & Conditions',
+    title: 'Merchant Plan – Terms & Conditions',
     terms: [
       'Posting offers requires an active paid plan, billed monthly. The current price is shown in the app.',
       'Your offers stay visible until the plan’s paid-until date, plus a short grace period.',
@@ -85,7 +85,7 @@ export const MODULE_TERMS = {
       'Plan fees are generally non-refundable once the month has started, except where the law requires or OfferBuzz agrees in writing (for example, a duplicate payment).',
       'OfferBuzz may change the price or plans, and the change applies from the next billing period after notice.',
       'Accounts that are suspended or blocked for breaking OfferBuzz policies are not entitled to a refund.',
-      'By using the vendor plan, you agree to these Terms & Conditions.',
+      'By using the merchant plan, you agree to these Terms & Conditions.',
     ],
     note: [
       'Billing: Monthly',
@@ -96,7 +96,7 @@ export const MODULE_TERMS = {
   customer: {
     title: 'Offers – Terms & Conditions',
     terms: [
-      'Offers are created and run by the shops (vendors). OfferBuzz only lists them and does not sell, supply or deliver any goods or services.',
+      'Offers are created and run by the shops (merchants). OfferBuzz only lists them and does not sell, supply or deliver any goods or services.',
       'Prices, availability, quality and after-sales service are the shop’s responsibility. Please confirm details with the shop before you buy.',
       'An offer may end early or change if the shop withdraws it or runs out of stock.',
       'Offers are valid only for the dates, area and conditions shown on the offer.',

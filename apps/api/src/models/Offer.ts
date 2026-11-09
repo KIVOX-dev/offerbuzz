@@ -27,7 +27,6 @@ const offerSchema = new Schema(
     address: String,
     placeId: String,
     hasImage: { type: Boolean, default: false },
-    views: { type: Number, default: 0 },
     claims: { type: Number, default: 0 },
   },
   { timestamps: true },

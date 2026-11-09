@@ -4,8 +4,8 @@ export default function IntermediaryProfile() {
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="text-title font-bold">Profile</h1>
-      <p className="mb-4 mt-1 text-muted">Your contact details.</p>
-      <ProfileForm />
+      <p className="mb-4 mt-1 text-muted">Build your profile: your contact number and city. You only do this once.</p>
+      <ProfileForm doneHref="/intermediary/dashboard" />
     </div>
   );
 }

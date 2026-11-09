@@ -42,7 +42,7 @@ export function OfferPreview({ d }: { d: OfferPreviewData }) {
       </div>
       <div className="space-y-2 p-4">
         <p className="text-small font-semibold text-purple-700">{d.shop || 'Your shop'}</p>
-        <h3 className={`text-section font-bold leading-snug ${d.title ? '' : 'text-muted'}`}>{d.title || 'Your offer title'}</h3>
+        <h3 className={`text-section font-bold uppercase leading-snug ${d.title ? '' : 'text-muted'}`}>{d.title || 'Your offer title'}</h3>
         <p className="text-small text-muted">
           {d.category || 'Category'} · {d.area || 'Area'}
         </p>

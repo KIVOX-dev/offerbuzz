@@ -54,7 +54,7 @@ export default function AdminWallets() {
       <div>
         <h1 className="text-title font-bold">Wallets & payouts</h1>
         <p className="mt-1 text-muted">
-          Intermediaries can request a payout once {data ? rs(data.payoutThreshold) : 'the minimum'} is available. Pay them outside the
+          Refer & Earn can request a payout once {data ? rs(data.payoutThreshold) : 'the minimum'} is available. Pay them outside the
           app (bank or UPI), then click Mark as paid to record it. 1 credit = Rs 1.
         </p>
       </div>
@@ -105,15 +105,15 @@ export default function AdminWallets() {
       </section>
 
       <section aria-labelledby="wallets">
-        <h2 id="wallets" className="mb-3 text-section font-bold">All intermediary wallets</h2>
+        <h2 id="wallets" className="mb-3 text-section font-bold">All Refer & Earn wallets</h2>
         {!data ? null : data.wallets.length === 0 ? (
-          <p className="surface p-4 text-muted">No intermediaries yet.</p>
+          <p className="surface p-4 text-muted">No Refer & Earn accounts yet.</p>
         ) : (
           <div className="surface overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-small">
               <thead className="border-b border-purple-100 text-muted">
                 <tr>
-                  <th className="p-3 font-semibold">Intermediary</th>
+                  <th className="p-3 font-semibold">Refer & Earn</th>
                   <th className="p-3 text-right font-semibold">Shops</th>
                   <th className="p-3 text-right font-semibold">Earned</th>
                   <th className="p-3 text-right font-semibold">Balance</th>

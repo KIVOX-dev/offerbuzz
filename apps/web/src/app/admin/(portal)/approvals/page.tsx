@@ -47,7 +47,7 @@ export default function AdminApprovals() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="text-title font-bold">Approvals</h1>
-        <p className="mt-1 text-muted">New offers and intermediary accounts wait here until you approve them.</p>
+        <p className="mt-1 text-muted">New offers and Refer & Earn accounts wait here until you approve them.</p>
       </div>
 
       {error && <p role="alert" className="text-small text-danger">{error}</p>}
@@ -68,11 +68,11 @@ export default function AdminApprovals() {
       </section>
 
       <section aria-labelledby="ap-people">
-        <h2 id="ap-people" className="mb-3 text-section font-bold">Intermediaries ({people?.length ?? 0})</h2>
+        <h2 id="ap-people" className="mb-3 text-section font-bold">Refer & Earn ({people?.length ?? 0})</h2>
         {!people ? (
           <p className="text-muted">Loading...</p>
         ) : people.length === 0 ? (
-          <p className="surface p-4 text-muted">No intermediaries are waiting for approval.</p>
+          <p className="surface p-4 text-muted">No Refer & Earn accounts are waiting for approval.</p>
         ) : (
           <ul className="space-y-3">
             {people.map((u) => (

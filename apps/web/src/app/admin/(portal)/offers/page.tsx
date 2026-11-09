@@ -114,14 +114,14 @@ export default function AdminOffers() {
                 {o.imageUrl && <img src={o.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-md object-cover" />}
                 <div className="min-w-0 flex-1 basis-[calc(100%-6.5rem)] sm:basis-56">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-bold">{o.title}</h3>
+                    <h3 className="font-bold uppercase">{o.title}</h3>
                     <span className={`rounded-sm px-2 py-0.5 text-small font-semibold ${STATUS_STYLE[o.status]}`}>{STATUS_LABEL[o.status]}</span>
                   </div>
                   <p className="text-small text-muted">{o.category} · {o.area} · {discount(o)}</p>
                   <p className="text-small text-muted">{fmt(o.startsAt)} to {fmt(o.endsAt)} · by {o.vendor}</p>
                   <p className="mt-1 break-words text-small">{o.description}</p>
                   {o.terms && <p className="text-small text-muted">Terms: {o.terms}</p>}
-                  <p className="mt-1 text-small text-muted">{o.views} views · {o.claims} claims</p>
+                  <p className="mt-1 text-small text-muted">{o.claims} claims</p>
                 </div>
                 <div className="flex w-full flex-wrap gap-2 sm:w-auto">
                   {o.status === 'active' && <ShareOffer o={o} />}

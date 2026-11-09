@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
-import type { PublicOfferDTO } from '@offerbuzz/shared';
+import { CATEGORIES, type PublicOfferDTO } from '@offerbuzz/shared';
 import { SearchBox } from '@/components/home/SearchBox';
 import { Logo } from '@/components/Logo';
+import { SiteHits } from '@/components/SiteHits';
 import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
 import { DuoOffersIcon } from '@/components/Icons';
@@ -36,18 +37,39 @@ function Results() {
     };
   }, [q, category, coords?.lat, coords?.lng]);
 
+  // picking a category keeps the typed words; "All" clears it
+  const pick = (c: string) => {
+    const next = new URLSearchParams();
+    if (q) next.set('q', q);
+    if (c) next.set('category', c);
+    const qs = next.toString();
+    router.replace(qs ? `/search?${qs}` : '/search');
+  };
+
   const title = category ? category : q ? `Results for "${q}"` : 'All offers';
 
   return (
     <main className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-purple-100 bg-card">
+      <header className="sticky top-0 z-30 border-b-4 border-accent bg-hero text-white">
         <div className="container-page flex items-center gap-3 py-2">
-          <Logo height={40} />
+          <Logo height={40} variant="light" />
           <SearchBox value={text} onChange={setText} onScan={(t) => router.push(`/search?q=${encodeURIComponent(t)}`)} variant="desktop" />
         </div>
       </header>
 
       <div className="container-page space-y-4 py-5">
+        <nav aria-label="Filter by category" className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:px-0">
+          <ul className="flex gap-2 md:flex-wrap">
+            {['', ...CATEGORIES].map((c) => (
+              <li key={c || 'all'} className="shrink-0">
+                <button type="button" aria-pressed={category === c} onClick={() => pick(c)} className={`chip ${category === c ? 'chip-active' : ''}`}>
+                  {c || 'All'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="text-title font-bold">{title}</h1>
           {offers && offers.length > 0 && (
@@ -79,6 +101,7 @@ function Results() {
             <Link href="/" className="btn-primary px-6">Back to home</Link>
           </div>
         )}
+        <SiteHits className="pt-4 text-center text-muted" />
       </div>
     </main>
   );

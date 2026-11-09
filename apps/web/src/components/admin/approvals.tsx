@@ -26,7 +26,7 @@ export function PendingOfferCard({
       <div className="flex flex-wrap items-start gap-3">
         {o.imageUrl && <img src={o.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-md object-cover" />}
         <div className="min-w-0 flex-1 basis-[calc(100%-6.5rem)] sm:basis-56">
-          <h3 className="font-bold">{o.title}</h3>
+          <h3 className="font-bold uppercase">{o.title}</h3>
           <p className="text-small text-muted">{o.category} · {o.area} · {discount(o)}</p>
           <p className="text-small text-muted">{fmt(o.startsAt)} to {fmt(o.endsAt)} · by {o.vendor}</p>
           {o.phone && <p className="text-small text-muted">Phone: {o.phone}</p>}

@@ -15,6 +15,7 @@ import { useVisitorLocation } from '@/lib/location';
 import { HeroRail } from '@/components/home/HeroRail';
 import { PromoCardView, type PromoCardData, type PromoTheme } from '@/components/home/PromoCard';
 import { SiteFooter } from '@/components/SiteFooter';
+import { SiteHits } from '@/components/SiteHits';
 import { ChevronRightIcon, DuoHeartIcon, DuoPinIcon, DuoStoreIcon, DuoTagIcon, HeartIcon, TagIcon } from '@/components/Icons';
 
 type Category = {
@@ -366,6 +367,7 @@ export default function Home() {
       </div>
 
       <SiteFooter />
+      <SiteHits className="py-4 text-center text-muted md:hidden" />
       <BottomNav active={nav} onSelect={selectNav} onScan={onScan} />
     </main>
   );

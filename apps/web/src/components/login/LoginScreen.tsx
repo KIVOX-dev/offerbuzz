@@ -11,8 +11,8 @@ import { OtpLogin } from '@/components/OtpLogin';
 export type Role = 'merchant' | 'intermediary';
 
 const CARDS: { role: Role; title: string; tagline: string; icon: ComponentType<{ size?: number }> }[] = [
-  { role: 'merchant', title: 'Vendor', tagline: 'Post your offers and reach nearby customers', icon: DuoStoreIcon },
-  { role: 'intermediary', title: 'Intermediary', tagline: 'Refer shops and earn credits', icon: DuoUsersIcon },
+  { role: 'merchant', title: 'Merchant', tagline: 'Post your offers and reach nearby customers', icon: DuoStoreIcon },
+  { role: 'intermediary', title: 'Refer & Earn', tagline: 'Refer shops and earn credits', icon: DuoUsersIcon },
 ];
 
 // category art for the side panel
@@ -40,7 +40,7 @@ function SidePanel() {
           <h2 className="mt-5 text-[40px] font-extrabold leading-[1.1] tracking-tight">
             Grow with <span className="text-accent">local offers</span>
           </h2>
-          <p className="mt-3 text-[17px] text-purple-100">Post deals as a vendor, or earn credits by bringing shops to OfferBuzz.</p>
+          <p className="mt-3 text-[17px] text-purple-100">Post deals as a merchant, or earn credits by bringing shops to OfferBuzz.</p>
         </div>
 
         <div aria-hidden className="relative mx-auto h-[360px] w-full max-w-[520px]">
@@ -93,7 +93,7 @@ export function LoginScreen({ forcedRole, forcedMode }: { forcedRole?: Role; for
 
         <div className="mx-auto w-full max-w-md py-4 lg:my-auto lg:py-8">
           <h1 className="text-[24px] font-extrabold leading-tight tracking-tight sm:text-[28px] md:text-[32px]">
-            {role ? `${role === 'merchant' ? 'Vendor' : 'Intermediary'} account` : 'Welcome to OfferBuzz'}
+            {role ? `${role === 'merchant' ? 'Merchant' : 'Refer & Earn'} account` : 'Welcome to OfferBuzz'}
           </h1>
           {!role && <p className="mb-5 mt-2 text-muted">Choose how you want to continue</p>}
           {role && <div className="mb-1" />}

@@ -8,7 +8,8 @@ import { useAccount } from '@/components/account/AccountShell';
 import { Select } from '@/components/Select';
 import { OfferPreview } from '@/components/OfferPreview';
 import { OfferaMark } from '@/components/agent/OfferaMark';
-import { AreaPicker } from '@/components/maps/AreaPicker';
+import { AreaPicker, areaFromCoords } from '@/components/maps/AreaPicker';
+import { LocationPicker } from '@/components/maps/LocationPicker';
 import type { LocationInput } from '@offerbuzz/shared';
 import { ApiRequestError, createOffer, rewriteDescription, updateProfile, uploadOfferImage } from '@/lib/api';
 import { shrinkImage } from '@/lib/image';
@@ -20,6 +21,9 @@ export default function NewOfferPage() {
   const router = useRouter();
   const { user, setUser } = useAccount();
   const [form, setForm] = useState({
+    shopName: user.shopName ?? '',
+    ownerName: user.name ?? '',
+    website: user.website ?? '',
     title: '',
     description: '',
     category: user.category ?? '',
@@ -27,7 +31,7 @@ export default function NewOfferPage() {
     discountValue: '',
     startsAt: today(),
     endsAt: '',
-    area: user.city ?? '',
+    area: (user.location?.address ?? user.city ?? '').replace(/,\s*India$/i, ''),
     phone: user.phone?.replace(/^\+91/, '') ?? '',
     terms: '',
   });
@@ -69,9 +73,25 @@ export default function NewOfferPage() {
 
   // the category can be chosen right here the first time; the location still comes from the profile
   // exact spot for directions: chosen here, else the shop pin from the profile
+  // Where the offer is redeemed. Default: the shop location saved in the profile. Otherwise somewhere else (another
+  // branch, or a merchant who is out of town): typed by hand, auto-detected, or pinned on the map.
+  const [where, setWhere] = useState<'shop' | 'other'>(user.location ? 'shop' : 'other');
   const [spot, setSpot] = useState<LocationInput>();
-  // using the current location is compulsory: every offer needs its own pinned spot
-  const needsLocation = !spot;
+  const [showMap, setShowMap] = useState(false);
+  const shopArea = (user.location?.address ?? user.city ?? '').replace(/,\s*India$/i, '');
+  function chooseWhere(w: 'shop' | 'other') {
+    setWhere(w);
+    setSpot(undefined);
+    set('area', w === 'shop' ? shopArea : '');
+  }
+  // a pin placed on the map: remember the point and fill the area name from it
+  async function pinned(loc: LocationInput) {
+    setSpot(loc);
+    const name = await areaFromCoords(loc.lat, loc.lng).catch(() => undefined);
+    if (name) set('area', name);
+  }
+  // sent with the offer: the saved shop pin, or the exact point chosen (none = the server looks up the typed area)
+  const offerSpot: LocationInput | undefined = where === 'shop' ? user.location : spot;
 
   // AI rewrite of the description: shown as a suggestion the vendor accepts or ignores
   const [rewriting, setRewriting] = useState(false);
@@ -101,15 +121,22 @@ export default function NewOfferPage() {
       ...form,
       discountValue: form.discountType === 'deal' || form.discountValue === '' ? undefined : form.discountValue,
       terms: form.terms || undefined,
-      location: spot,
+      location: offerSpot,
     });
-    if (!spot) return setError('Tap "Use my current location" to pin this offer before posting');
+    if (form.shopName.trim().length < 2) return setError('Enter your shop name');
+    if (form.ownerName.trim().length < 2) return setError('Enter the shop owner name');
     if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? 'Check the form');
     setBusy(true);
     try {
-      if (!user.category) {
-        // first offer: save the chosen category to the shop first (it is locked afterwards)
-        const saved = await updateProfile({ category: parsed.data.category });
+      // shop details live on the profile: save them (and the category, locked after the first offer) when they changed
+      const changes = {
+        ...(form.shopName.trim() !== (user.shopName ?? '') ? { shopName: form.shopName.trim() } : {}),
+        ...(form.ownerName.trim() !== (user.name ?? '') ? { name: form.ownerName.trim() } : {}),
+        ...(form.website.trim() !== (user.website ?? '') ? { website: form.website.trim() } : {}),
+        ...(!user.category ? { category: parsed.data.category } : {}),
+      };
+      if (Object.keys(changes).length) {
+        const saved = await updateProfile(changes);
         setUser({ ...user, ...saved.user });
       }
       const { offer } = await createOffer(parsed.data);
@@ -150,14 +177,29 @@ export default function NewOfferPage() {
 
       <div className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <form onSubmit={submit} className="surface space-y-4 p-4 md:p-6" noValidate>
-          {needsLocation && (
-            <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">
-              Before you can post, tap &quot;Use my current location&quot; below while you are at the shop. It is required so customers can get directions.
-            </p>
-          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-small font-semibold" htmlFor="o-shop">Shop name</label>
+              <input id="o-shop" className="input" value={form.shopName} onChange={(e) => set('shopName', e.target.value)}
+                maxLength={80} autoComplete="organization" placeholder="e.g. Sri Murugan Stores" />
+            </div>
+            <div>
+              <label className="mb-1 block text-small font-semibold" htmlFor="o-owner">Shop owner name</label>
+              <input id="o-owner" className="input" value={form.ownerName} onChange={(e) => set('ownerName', e.target.value)}
+                maxLength={80} autoComplete="name" placeholder="Owner's full name" />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-small font-semibold" htmlFor="o-web">
+              Website link <span className="font-normal text-muted">(optional)</span>
+            </label>
+            <input id="o-web" type="url" inputMode="url" className="input" value={form.website} onChange={(e) => set('website', e.target.value)}
+              maxLength={200} placeholder="www.myshop.com" />
+            <p className="mt-1 text-small text-muted">Shown next to your store location on the offer.</p>
+          </div>
           <div>
             <label className="mb-1 block text-small font-semibold" htmlFor="o-title">Offer title</label>
-            <input id="o-title" className="input" value={form.title} onChange={(e) => set('title', e.target.value)}
+            <input id="o-title" className="input uppercase" value={form.title} onChange={(e) => set('title', e.target.value)}
               maxLength={100} placeholder="Flat 30% off on all haircuts" />
           </div>
 
@@ -271,20 +313,54 @@ export default function NewOfferPage() {
             </div>
           </div>
 
-          <div>
-            <label className="mb-1 block text-small font-semibold" htmlFor="o-area">Area or city</label>
-            <AreaPicker id="o-area" value={form.area} onChange={(v) => set('area', v)} shopAddress={user.location?.address} onPlace={setSpot} />
-            <p className="mt-2 flex items-start gap-1.5 text-small text-muted">
-              {spot ? (
-                <>
-                  <span className="font-semibold text-green-700">Exact location saved.</span> Customers will get directions to this spot
-                  ({spot.lat.toFixed(5)}, {spot.lng.toFixed(5)}).
-                </>
-              ) : (
-                <span className="font-semibold text-danger">Required: tap &quot;Use my current location&quot; so customers can get directions to this offer.</span>
+          <fieldset>
+            <legend className="mb-1 block text-small font-semibold">Where can customers redeem this offer?</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className={`flex cursor-pointer items-start gap-2 rounded-md border p-3 text-small ${where === 'shop' ? 'border-purple-600 bg-purple-50' : 'border-purple-200'} ${user.location ? '' : 'cursor-not-allowed opacity-50'}`}>
+                <input type="radio" name="where" className="mt-0.5" checked={where === 'shop'} disabled={!user.location} onChange={() => chooseWhere('shop')} />
+                <span>
+                  <span className="block font-semibold">My shop location</span>
+                  <span className="block text-muted">{user.location ? shopArea || 'Saved in your profile' : 'Not saved yet. Add it in your profile.'}</span>
+                </span>
+              </label>
+              <label className={`flex cursor-pointer items-start gap-2 rounded-md border p-3 text-small ${where === 'other' ? 'border-purple-600 bg-purple-50' : 'border-purple-200'}`}>
+                <input type="radio" name="where" className="mt-0.5" checked={where === 'other'} onChange={() => chooseWhere('other')} />
+                <span>
+                  <span className="block font-semibold">Another place</span>
+                  <span className="block text-muted">A branch, or you are away from the shop (for example posting for Coimbatore from another city).</span>
+                </span>
+              </label>
+            </div>
+            {!user.location && (
+              <p className="mt-2 text-small text-muted">
+                Tip: <Link href="/merchant/profile" className="font-semibold text-purple-700 underline">save your shop location in your profile</Link> once, and it is used automatically.
+              </p>
+            )}
+          </fieldset>
+
+          {where === 'other' && (
+            <div>
+              <label className="mb-1 block text-small font-semibold" htmlFor="o-area">Area or city</label>
+              <AreaPicker id="o-area" value={form.area} onChange={(v) => set('area', v)} shopAddress={user.location?.address} onPlace={setSpot} />
+              <button type="button" onClick={() => setShowMap((v) => !v)} className="mt-2 text-small font-semibold text-purple-700 underline">
+                {showMap ? 'Hide the map' : 'Or drop a pin on the map'}
+              </button>
+              {showMap && (
+                <div className="mt-2">
+                  <LocationPicker value={spot} onChange={(loc) => void pinned(loc)} />
+                </div>
               )}
-            </p>
-          </div>
+              <p className="mt-2 text-small text-muted">
+                {spot ? (
+                  <>
+                    <span className="font-semibold text-green-700">Exact location saved.</span> Customers will get directions to this spot ({spot.lat.toFixed(5)}, {spot.lng.toFixed(5)}).
+                  </>
+                ) : (
+                  'Type the area, pick a suggestion, auto-detect where you are, or drop a pin. If you only type it, we find the spot from the name.'
+                )}
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-small font-semibold" htmlFor="o-phone">
