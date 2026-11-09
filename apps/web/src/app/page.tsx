@@ -4,13 +4,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { DEFAULT_PROMO_CARDS, type PromoCardDTO, type PublicOfferDTO } from '@offerbuzz/shared';
+import { DEFAULT_CATEGORY_TILES, DEFAULT_PROMO_CARDS, type CategoryTileDTO, type PromoCardDTO, type PublicOfferDTO } from '@offerbuzz/shared';
 import { BottomNav, type NavKey } from '@/components/home/BottomNav';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { LocationPrompt } from '@/components/maps/LocationPrompt';
 import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
-import { getNearbyOffers, getPromoCards } from '@/lib/api';
+import { getHomeCategories, getNearbyOffers, getPromoCards } from '@/lib/api';
 import { useVisitorLocation } from '@/lib/location';
 import { HeroRail } from '@/components/home/HeroRail';
 import { PromoCardView, type PromoCardData, type PromoTheme } from '@/components/home/PromoCard';
@@ -147,6 +147,20 @@ export default function Home() {
   useEffect(() => {
     getPromoCards().then((r) => setSaved(r.cards)).catch(() => undefined);
   }, []);
+  // "Shop by Category" tiles the admin saved; until there are some (or while loading) the standard ones show
+  const [savedTiles, setSavedTiles] = useState<CategoryTileDTO[]>([]);
+  useEffect(() => {
+    getHomeCategories().then((r) => setSavedTiles(r.categories)).catch(() => undefined);
+  }, []);
+  const tiles: { key: string; name: string; image: string; href: string; headerIndex: number }[] = (
+    savedTiles.length ? savedTiles.map((t) => ({ key: t.id, name: t.name, image: t.image, category: t.category })) : DEFAULT_CATEGORY_TILES.map((t) => ({ key: t.name, name: t.name, image: t.image, category: 'category' in t ? t.category : undefined }))
+  ).map((t) => ({
+    key: t.key,
+    name: t.name,
+    image: t.image,
+    href: t.category ? `/search?category=${encodeURIComponent(t.category)}` : `/search?q=${encodeURIComponent(t.name)}`,
+    headerIndex: categories.findIndex((c) => c.name === t.name),
+  }));
   const promos: PromoCardData[] = saved.length ? saved : DEFAULT_PROMO_CARDS.map((c) => ({ ...c, burst: [...c.burst] }) as PromoCardData);
   const heroTints = ['#6d28d9', ...promos.map((c) => THEME_TINT[c.theme])];
   const theme = active >= 0 ? categories[active] : null;
@@ -328,20 +342,19 @@ export default function Home() {
         <section id="categories" className="scroll-mt-4">
           <SectionHead title="Shop by Category" />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {categories.map((c, i) => (
-              <Reveal key={c.slug} delay={(i % 4) * 70}>
+            {tiles.map((c, i) => (
+              <Reveal key={c.key} delay={(i % 4) * 70}>
                 <button
                   type="button"
                   onClick={() => {
-                    setActive(i);
-                    router.push(`/search?${SEARCH_BY_SLUG[c.slug] ?? `q=${encodeURIComponent(c.name)}`}`);
+                    if (c.headerIndex >= 0) setActive(c.headerIndex);
+                    router.push(c.href);
                   }}
-                  style={{ backgroundImage: `linear-gradient(120deg, ${c.from}, ${c.to})` }}
-                  className={`group relative block aspect-[4/5] w-full overflow-hidden rounded-lg text-left shadow-card transition duration-200 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:shadow-card-hover ${
-                    active === i ? 'ring-2 ring-purple-600' : ''
+                  className={`group relative block aspect-[4/5] w-full overflow-hidden rounded-lg bg-purple-50 text-left shadow-card transition duration-200 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:shadow-card-hover ${
+                    c.headerIndex >= 0 && active === c.headerIndex ? 'ring-2 ring-purple-600' : ''
                   }`}
                 >
-                  <img src={`/categories/${c.slug}.webp`} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                  <img src={c.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                   <span aria-hidden className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   <span className="absolute inset-x-3 bottom-3 flex flex-col items-start gap-1.5">
                     <h3 className="line-clamp-2 text-body font-bold leading-tight text-white">{c.name}</h3>

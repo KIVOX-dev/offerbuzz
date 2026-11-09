@@ -90,3 +90,32 @@ export const DEFAULT_PROMO_CARDS = [
   { title: 'Weekend getaways', offer: 'Up to 30% Off', tagline: 'Short trips, great deals', burst: ['WEEK', 'END', 'SALE'], theme: 'orange', image: '/banners/travel.webp', category: 'Travels' },
   { title: 'Rs 50 off', offer: 'First order', tagline: 'Claim it on your first order', burst: ['NEW', 'USER', 'DEAL'], theme: 'gold', image: '/categories/home.webp' },
 ] as const;
+
+/**
+ * The "Shop by Category" tiles on the home page until the admin saves tiles of their own. `category` is the shop category
+ * the tile opens in search; a tile without one searches for its name.
+ */
+export const DEFAULT_CATEGORY_TILES = [
+  { name: 'Grocery', image: '/categories/grocery.webp', category: 'Grocery' },
+  { name: 'Fashion & Clothing', image: '/categories/fashion.webp', category: 'Fashion' },
+  { name: 'Electronics', image: '/categories/electronics.webp', category: 'Mobile and Electronics' },
+  { name: 'Home & Living', image: '/categories/home.webp', category: 'Home Appliance' },
+  { name: 'Beauty & Personal Care', image: '/categories/beauty.webp', category: 'Salon and Spa' },
+  { name: 'Health & Pharmacy', image: '/categories/health.webp', category: 'Medical' },
+  { name: 'Fitness & Sports', image: '/categories/fitness.webp', category: 'Fitness and Sports' },
+  { name: 'Baby & Kids', image: '/categories/baby.webp', category: 'Baby Products' },
+  { name: 'Food & Beverages', image: '/categories/food.webp', category: 'Food and Restaurant' },
+  { name: 'Automotive', image: '/categories/automotive.webp', category: 'Automobiles' },
+  { name: 'Pets', image: '/categories/pets.webp' },
+  { name: 'Travel & Lifestyle', image: '/categories/travel.webp', category: 'Travels' },
+  { name: 'Gifts & Toys', image: '/categories/gifts.webp', category: 'Gifts and Toys' },
+  { name: 'Education', image: '/categories/education.webp', category: 'Education' },
+  { name: 'Cafe & Bakeries', image: '/categories/cafe.webp', category: 'Cafe and Bakeries' },
+  { name: 'Real Estate', image: '/categories/realestate.webp', category: 'Real Estate' },
+  { name: 'Jewellery', image: '/categories/jewellery.webp', category: 'Jewellery' },
+  { name: 'Home Made Products', image: '/categories/homemade.webp', category: 'Home Made Products' },
+  { name: 'Organic', image: '/categories/organic.webp', category: 'Organic' },
+] as const;
+
+/** Photos that ship with the website, offered when editing a category tile. */
+export const CATEGORY_PRESET_IMAGES = DEFAULT_CATEGORY_TILES.map((t) => t.image);

@@ -9,6 +9,8 @@ import type {
   AdminUsersResponse,
   AdminWalletsResponse,
   ApiError,
+  CategoryTileDTO,
+  CategoryTileInput,
   AuthResponse,
   AuthTokens,
   MyOffersResponse,
@@ -206,3 +208,15 @@ export const movePromoCard = (id: string, direction: 'up' | 'down') =>
 export const seedPromoCards = () => authApi<{ cards: PromoCardDTO[] }>('/admin/banners/seed-defaults', { method: 'POST', json: {} });
 export const uploadPromoImage = (id: string, image: Blob) =>
   authApi<{ card: PromoCardDTO }>(`/admin/banners/${id}/image`, { method: 'PUT', body: image, headers: { 'content-type': image.type } });
+
+// ---- Home page "Shop by Category" tiles -------------------------------------------------------------------
+export const getHomeCategories = () => api<{ categories: CategoryTileDTO[] }>('/home-categories');
+export const getAdminHomeCategories = () => authApi<{ categories: CategoryTileDTO[] }>('/admin/home-categories');
+export const createHomeCategory = (body: CategoryTileInput) => authApi<{ category: CategoryTileDTO }>('/admin/home-categories', { method: 'POST', json: body });
+export const updateHomeCategory = (id: string, body: CategoryTileInput) => authApi<{ category: CategoryTileDTO }>(`/admin/home-categories/${id}`, { method: 'PUT', json: body });
+export const deleteHomeCategory = (id: string) => authApi<void>(`/admin/home-categories/${id}`, { method: 'DELETE' });
+export const moveHomeCategory = (id: string, direction: 'up' | 'down') =>
+  authApi<{ categories: CategoryTileDTO[] }>(`/admin/home-categories/${id}/move`, { method: 'POST', json: { direction } });
+export const seedHomeCategories = () => authApi<{ categories: CategoryTileDTO[] }>('/admin/home-categories/seed-defaults', { method: 'POST', json: {} });
+export const uploadHomeCategoryImage = (id: string, image: Blob) =>
+  authApi<{ category: CategoryTileDTO }>(`/admin/home-categories/${id}/image`, { method: 'PUT', body: image, headers: { 'content-type': image.type } });

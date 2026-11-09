@@ -33,6 +33,7 @@ export default function AdminPortalLayout({ children }: { children: ReactNode })
     { href: '/admin/users', label: 'Users', icon: UsersIcon },
     { href: '/admin/offers', label: 'Offers', icon: OffersIcon },
     { href: '/admin/banners', label: 'Home cards', icon: TagIcon },
+    { href: '/admin/categories', label: 'Categories', icon: TagIcon },
     { href: '/admin/wallets', label: 'Wallets & payouts', icon: WalletIcon },
   ];
 

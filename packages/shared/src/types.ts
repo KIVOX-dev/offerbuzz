@@ -244,6 +244,17 @@ export interface AdminAnalytics {
   topPages: { path: string; views: number }[];
 }
 
+export interface CategoryTileDTO {
+  id: string;
+  name: string;
+  /** a photo path, or the API address of an uploaded photo */
+  image: string;
+  /** the shop category it opens in search; none = search for the name */
+  category?: string;
+  active: boolean;
+  order: number;
+}
+
 export interface PromoCardDTO {
   id: string;
   title: string;

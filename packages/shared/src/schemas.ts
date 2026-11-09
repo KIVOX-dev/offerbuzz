@@ -245,3 +245,14 @@ export const promoCardSchema = z.object({
   active: z.boolean().default(true),
 });
 export type PromoCardInput = z.infer<typeof promoCardSchema>;
+
+// ---- Home page "Shop by Category" tiles ----------------------------------------------------------------------
+export const categoryTileSchema = z.object({
+  name: z.string().trim().min(1, 'Enter a name').max(40),
+  /** a photo that ships with the site (starts with /) or an https address */
+  image: z.string().trim().max(300).regex(/^(\/[A-Za-z0-9_\-./]+|https:\/\/\S+)$/, 'Pick a photo'),
+  /** the shop category the tile opens in search; empty = search for the tile's name */
+  category: z.enum(CATEGORIES).optional().or(z.literal('').transform(() => undefined)),
+  active: z.boolean().default(true),
+});
+export type CategoryTileInput = z.infer<typeof categoryTileSchema>;
