@@ -1,8 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Spinner } from '@/components/PageLoader';
 import { useAccount } from '@/components/account/AccountShell';
 import { rs, useWallet } from '@/components/account/useWallet';
@@ -11,11 +9,6 @@ import { DuoClockIcon, DuoStoreIcon, DuoWalletIcon, QrIcon } from '@/components/
 
 export default function IntermediaryDashboard() {
   const { user } = useAccount();
-  const router = useRouter();
-  // a new account builds its profile first: contact number and city
-  useEffect(() => {
-    if (!user.phone || !user.city) router.replace('/intermediary/profile');
-  }, [user.phone, user.city, router]);
   const { wallet, error } = useWallet();
   const pending = user.status === 'pending';
 

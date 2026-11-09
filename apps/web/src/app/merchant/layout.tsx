@@ -12,7 +12,7 @@ const NAV: NavItem[] = [
 
 export default function MerchantLayout({ children }: { children: ReactNode }) {
   return (
-    <AccountShell role="merchant" title="Merchant" nav={NAV}>
+    <AccountShell role="merchant" title="Merchant" nav={NAV} profile={{ path: '/merchant/profile', complete: (u) => Boolean(u.shopName && u.location && u.category) }}>
       {children}
     </AccountShell>
   );

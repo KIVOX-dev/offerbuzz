@@ -73,11 +73,6 @@ export default function MerchantDashboard() {
   const [removing, setRemoving] = useState<string>();
   const [filter, setFilter] = useState<FilterKey>('all');
 
-  // a new account builds its profile first: shop name, category and shop location
-  useEffect(() => {
-    if (!user.shopName || !user.location || !user.category) router.replace('/merchant/profile');
-  }, [user.shopName, user.location, user.category, router]);
-
   const load = useCallback(async () => {
     try {
       setData(await getMyOffers());

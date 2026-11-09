@@ -30,6 +30,7 @@ export function AccountShell({
   title,
   nav,
   loginPath = '/login',
+  profile,
   children,
 }: {
   role: Role;
@@ -37,6 +38,8 @@ export function AccountShell({
   nav: NavItem[];
   /** where signed out people (and logout) go */
   loginPath?: string;
+  /** the profile page, and what counts as a finished profile: until it is, every other page is locked */
+  profile?: { path: string; complete: (u: UserDTO) => boolean };
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -76,7 +79,13 @@ export function AccountShell({
     router.replace(loginPath);
   };
 
+  const locked = Boolean(user && profile && !profile.complete(user));
+  useEffect(() => {
+    if (locked && profile && pathname !== profile.path) router.replace(profile.path);
+  }, [locked, profile, pathname, router]);
+
   if (!user) return <PageLoader label="Loading your dashboard" />;
+  if (locked && profile && pathname !== profile.path) return <PageLoader label="Opening your profile" />;
 
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -97,7 +106,11 @@ export function AccountShell({
             </div>
           </div>
           <nav aria-label={title} className="flex gap-1 overflow-x-auto border-t border-purple-100 px-3 py-1 [scrollbar-width:none] md:hidden">
-            {nav.map(({ href, label, icon: Icon, badge }) => (
+            {nav.map(({ href, label, icon: Icon, badge }) => locked && href !== profile?.path ? (
+              <span key={href} aria-disabled className="chip shrink-0 cursor-not-allowed gap-2 opacity-40">
+                <Icon size={16} /> {label}
+              </span>
+            ) : (
               <Link key={href} href={href} className={`chip shrink-0 gap-2 ${active(href) ? 'chip-active' : ''}`}>
                 <Icon size={16} /> {label}
                 {!!badge && <span className="rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{badge}</span>}
@@ -110,7 +123,11 @@ export function AccountShell({
           <aside className="sticky top-[calc(theme(height.header)+4px)] hidden h-[calc(100vh-theme(height.header)-4px)] w-60 shrink-0 border-r border-purple-100 bg-card p-3 md:block">
             <p className="px-3 pb-2 text-small font-semibold uppercase tracking-wide text-muted">{title}</p>
             <nav aria-label={title} className="space-y-1">
-              {nav.map(({ href, label, icon: Icon, badge }) => (
+              {nav.map(({ href, label, icon: Icon, badge }) => locked && href !== profile?.path ? (
+                <span key={href} aria-disabled className="flex min-h-touch cursor-not-allowed items-center gap-3 rounded-md px-3 text-body font-semibold text-ink opacity-40">
+                  <Icon size={20} /> {label}
+                </span>
+              ) : (
                 <Link
                   key={href}
                   href={href}
@@ -125,7 +142,14 @@ export function AccountShell({
               ))}
             </nav>
           </aside>
-          <main className="min-w-0 flex-1 px-3 py-4 md:px-6 md:py-6">{children}</main>
+          <main className="min-w-0 flex-1 px-3 py-4 md:px-6 md:py-6">
+            {locked && (
+              <p role="status" className="mx-auto mb-4 max-w-6xl rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">
+                Finish your profile to unlock the rest of OfferBuzz. It takes a minute and you only do it once.
+              </p>
+            )}
+            {children}
+          </main>
         </div>
       </div>
     </Ctx.Provider>

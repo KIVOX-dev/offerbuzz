@@ -14,7 +14,7 @@ const NAV: NavItem[] = [
 
 export default function IntermediaryLayout({ children }: { children: ReactNode }) {
   return (
-    <AccountShell role="intermediary" title="Refer & Earn" nav={NAV}>
+    <AccountShell role="intermediary" title="Refer & Earn" nav={NAV} profile={{ path: '/intermediary/profile', complete: (u) => Boolean(u.phone && u.city) }}>
       {children}
     </AccountShell>
   );
