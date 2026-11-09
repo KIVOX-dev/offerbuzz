@@ -12,6 +12,7 @@ import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
 import { getHomeCategories, getNearbyOffers, getPromoCards } from '@/lib/api';
 import { useVisitorLocation } from '@/lib/location';
+import { SEARCH_BY_SLUG } from '@/lib/categories';
 import { HeroRail } from '@/components/home/HeroRail';
 import { PromoCardView, type PromoCardData, type PromoTheme } from '@/components/home/PromoCard';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -55,27 +56,6 @@ const categories: Category[] = [
 // the colour wash behind the page top follows the card in view: purple for the intro card, then the card's own theme
 const THEME_TINT: Record<PromoTheme, string> = { blue: '#3b82f6', indigo: '#4f46e5', teal: '#14b8a6', orange: '#f97316', gold: '#fbbf24' };
 
-const SEARCH_BY_SLUG: Record<string, string> = {
-  grocery: 'category=Grocery',
-  fashion: 'category=Fashion',
-  electronics: 'category=Mobile%20and%20Electronics',
-  home: 'category=Home%20Appliance',
-  beauty: 'category=Salon%20and%20Spa',
-  health: 'category=Medical',
-  fitness: 'category=Fitness%20and%20Sports',
-  baby: 'category=Baby%20Products',
-  food: 'category=Food%20and%20Restaurant',
-  automotive: 'category=Automobiles',
-  pets: 'q=pet',
-  travel: 'category=Travels',
-  gifts: 'category=Gifts%20and%20Toys',
-  education: 'category=Education',
-  cafe: 'category=Cafe%20and%20Bakeries',
-  realestate: 'category=Real%20Estate',
-  jewellery: 'category=Jewellery',
-  homemade: 'category=Home%20Made%20Products',
-  organic: 'category=Organic',
-};
 
 // Sample deal cards until the Phase 2 API feeds real offers.
 const deals = [
@@ -232,7 +212,11 @@ export default function Home() {
         categories={categories}
         promos={banners}
         active={active}
-        onPick={setActive}
+        onPick={(i) => {
+          setActive(i);
+          // a category tab opens that category's offers; "All" stays on the home page
+          if (i >= 0) router.push(`/search?${SEARCH_BY_SLUG[categories[i]!.slug] ?? `q=${encodeURIComponent(categories[i]!.name)}`}`);
+        }}
         heroIndex={heroIdx}
         query={query}
         onQuery={setQuery}
@@ -309,7 +293,7 @@ export default function Home() {
                   <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 lg:grid-cols-6">
                     {nearby.map((o, i) => (
                       <Reveal key={o.id} delay={i * 60} className="h-full w-[200px] shrink-0 snap-start md:w-auto">
-                        <OfferCard o={o} />
+                        <OfferCard o={o} variant="home" />
                       </Reveal>
                     ))}
                   </div>

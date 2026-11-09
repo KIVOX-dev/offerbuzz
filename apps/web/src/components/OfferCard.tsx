@@ -14,7 +14,7 @@ export function endsLabel(endsAt: string): string {
 }
 
 /** An offer card for the home page and search results: photo, discount, shop, distance and when it ends. */
-export function OfferCard({ o }: { o: PublicOfferDTO }) {
+export function OfferCard({ o, variant = 'list' }: { o: PublicOfferDTO; /** home = 5:6 photo area, list = 7:9 (View all, search, saved) */ variant?: 'home' | 'list' }) {
   const { has, toggle } = useSaved();
   const saved = has(o.id);
   return (
@@ -35,8 +35,14 @@ export function OfferCard({ o }: { o: PublicOfferDTO }) {
       >
         <HeartIcon size={16} fill={saved ? 'currentColor' : 'none'} />
       </button>
-      <div className="aspect-[4/3] bg-purple-50">
-        {o.imageUrl && <img src={o.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />}
+      {/* fixed photo area: the whole photo is always shown, centred; any spare space is filled with a soft blur of the same photo */}
+      <div className={`relative overflow-hidden bg-purple-50 ${variant === 'home' ? 'aspect-[5/6]' : 'aspect-[7/9]'}`}>
+        {o.imageUrl && (
+          <>
+            <img src={o.imageUrl} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-70 blur-xl" />
+            <img src={o.imageUrl} alt="" loading="lazy" className="relative h-full w-full object-contain" />
+          </>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <p className="line-clamp-2 min-h-[2.5rem] text-small font-semibold uppercase">{o.title}</p>

@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { CATEGORIES, type PublicOfferDTO } from '@offerbuzz/shared';
-import { SearchBox } from '@/components/home/SearchBox';
-import { Logo } from '@/components/Logo';
+import { SiteHeader } from '@/components/SiteHeader';
 import { SiteHits } from '@/components/SiteHits';
 import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
@@ -50,12 +49,7 @@ function Results() {
 
   return (
     <main className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b-4 border-accent bg-hero text-white">
-        <div className="container-page flex items-center gap-3 py-2">
-          <Logo height={40} variant="light" />
-          <SearchBox value={text} onChange={setText} onScan={(t) => router.push(`/search?q=${encodeURIComponent(t)}`)} variant="desktop" />
-        </div>
-      </header>
+      <SiteHeader query={q} activeCategory={category} />
 
       <div className="container-page space-y-4 py-5">
         <nav aria-label="Filter by category" className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:px-0">

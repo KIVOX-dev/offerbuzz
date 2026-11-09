@@ -1,11 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { PublicOfferDTO } from '@offerbuzz/shared';
-import { Logo } from '@/components/Logo';
+import { SiteHeader } from '@/components/SiteHeader';
 import { GlobeIcon, HeartIcon, TagIcon } from '@/components/Icons';
 import { SiteHits } from '@/components/SiteHits';
 import { ShopMap } from '@/components/maps/ShopMap';
@@ -30,14 +29,9 @@ export default function OfferPage() {
 
   return (
     <main className="min-h-screen">
-      <header className="border-b-4 border-accent bg-hero text-white">
-        <div className="container-page flex items-center justify-between py-3">
-          <Logo height={42} variant="light" />
-          <Link href="/" className="btn btn-sm bg-accent text-ink hover:brightness-105">All offers</Link>
-        </div>
-      </header>
+      <SiteHeader activeCategory={offer?.category} />
 
-      <div className="container-page max-w-4xl py-6">
+      <div className="container-page py-6">
         {error && <p role="alert" className="surface p-6 text-center text-muted">{error}</p>}
         {!offer && !error && <p className="py-10 text-center text-muted">Loading...</p>}
 
