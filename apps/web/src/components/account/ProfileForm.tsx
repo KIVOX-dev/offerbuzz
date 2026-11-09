@@ -36,7 +36,7 @@ export function ProfileForm({ showShop, doneHref }: { showShop?: boolean; /** wh
         city: city.trim(),
         ...(showShop ? { shopName: shopName.trim(), website: website.trim() } : {}),
         ...(showShop && locationChanged && location ? { location } : {}),
-        ...(showShop && !user.category && category ? { category: category as (typeof CATEGORIES)[number] } : {}),
+        ...(showShop && category && category !== user.category ? { category: category as (typeof CATEGORIES)[number] } : {}),
       });
       setUser({ ...user, ...res.user });
       setLocationChanged(false);
@@ -53,71 +53,59 @@ export function ProfileForm({ showShop, doneHref }: { showShop?: boolean; /** wh
   }
 
   const field = 'mb-1 block text-small font-semibold';
+  const compact = '!h-10';
   return (
-    <form onSubmit={save} className={`surface p-4 md:p-6 ${showShop ? '' : 'max-w-xl'}`}>
-      <div className={showShop ? 'grid gap-5 lg:grid-cols-2 lg:gap-8' : ''}>
-        {/* left: who you are and the shop details */}
-        <div className="space-y-4">
+    <form onSubmit={save} className={`surface p-4 md:p-5 ${showShop ? '' : 'max-w-xl'}`}>
+      <div className={showShop ? 'grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-6' : ''}>
+        {/* left: who you are and the shop details, two fields per row so it fits one screen */}
+        <div className="grid content-start gap-x-3 gap-y-3 sm:grid-cols-2">
           <div>
             <label className={field} htmlFor="p-email">Email</label>
-            <input id="p-email" className="input bg-purple-50" value={user.email ?? ''} readOnly aria-describedby="p-email-note" />
-            <p id="p-email-note" className="mt-1 text-small text-muted">Your email is your login and cannot be changed.</p>
+            <input id="p-email" className={`input bg-purple-50 ${compact}`} value={user.email ?? ''} readOnly title="Your email is your login and cannot be changed" />
           </div>
           <div>
             <label className={field} htmlFor="p-name">{showShop ? 'Shop owner name' : 'Your name'}</label>
-            <input id="p-name" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" />
+            <input id="p-name" className={`input ${compact}`} value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" />
           </div>
           {showShop && (
             <div>
               <label className={field} htmlFor="p-shop">Shop name</label>
-              <input id="p-shop" className="input" value={shopName} onChange={(e) => setShopName(e.target.value)} maxLength={80} placeholder="Shown on your offers" />
+              <input id="p-shop" className={`input ${compact}`} value={shopName} onChange={(e) => setShopName(e.target.value)} maxLength={80} placeholder="Shown on your offers" />
             </div>
           )}
-          <div className="grid gap-4 sm:grid-cols-2">
+          {showShop && (
             <div>
-              <label className={field} htmlFor="p-phone">Mobile number</label>
-              <div className="flex">
-                <span className="flex items-center rounded-l-md border border-r-0 border-purple-200 bg-purple-50 px-3 text-small text-muted">+91</span>
-                <input id="p-phone" className="input rounded-l-none" inputMode="numeric" autoComplete="tel-national" value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/[^\d\s-]/g, ''))} placeholder="10 digit number" maxLength={14} />
-              </div>
+              <label className={field} htmlFor="p-category">Shop category</label>
+              <Select id="p-category" className={compact} value={category} onChange={setCategory} placeholder="Choose category" options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
             </div>
-            <div>
-              <label className={field} htmlFor="p-city">City</label>
-              <input id="p-city" className="input" value={city} onChange={(e) => setCity(e.target.value)} maxLength={60}
-                autoComplete="address-level2" placeholder="Coimbatore" />
+          )}
+          <div>
+            <label className={field} htmlFor="p-phone">Mobile number</label>
+            <div className="flex">
+              <span className="flex items-center rounded-l-md border border-r-0 border-purple-200 bg-purple-50 px-3 text-small text-muted">+91</span>
+              <input id="p-phone" className={`input rounded-l-none ${compact}`} inputMode="numeric" autoComplete="tel-national" value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/[^\d\s-]/g, ''))} placeholder="10 digit number" maxLength={14} />
             </div>
           </div>
+          <div>
+            <label className={field} htmlFor="p-city">City</label>
+            <input id="p-city" className={`input ${compact}`} value={city} onChange={(e) => setCity(e.target.value)} maxLength={60}
+              autoComplete="address-level2" placeholder="Coimbatore" />
+          </div>
           {showShop && (
-            <>
-              <div>
-                <label className={field} htmlFor="p-category">Shop category</label>
-                {user.category ? (
-                  <>
-                    <input id="p-category" className="input bg-purple-50" value={user.category} readOnly />
-                    <p className="mt-1 text-small text-muted">Your offers are listed in this category. Contact support to change it.</p>
-                  </>
-                ) : (
-                  <>
-                    <Select id="p-category" value={category} onChange={setCategory} placeholder="Choose your category" options={CATEGORIES.map((c) => ({ value: c, label: c }))} />
-                    <p className="mt-1 text-small text-muted">Required. It cannot be changed later.</p>
-                  </>
-                )}
-              </div>
-              <div>
-                <label className={field} htmlFor="p-web">Website link <span className="font-normal text-muted">(optional)</span></label>
-                <input id="p-web" type="url" inputMode="url" className="input" value={website} onChange={(e) => setWebsite(e.target.value)}
-                  maxLength={200} placeholder="www.myshop.com" />
-              </div>
-            </>
+            <div className="sm:col-span-2">
+              <label className={field} htmlFor="p-web">Website link <span className="font-normal text-muted">(optional)</span></label>
+              <input id="p-web" type="url" inputMode="url" className={`input ${compact}`} value={website} onChange={(e) => setWebsite(e.target.value)}
+                maxLength={200} placeholder="www.myshop.com" />
+            </div>
           )}
         </div>
 
         {/* right: the shop location */}
         {showShop && (
           <div>
-            <p className="mb-1 text-small font-semibold">Shop location</p>
-            <p className="mb-2 text-small text-muted">Save it once and every offer uses it automatically. You can still pick another place when you post an offer, for example if you are travelling.</p>
+            <p className="text-small font-semibold">Shop location</p>
+            <p className="mb-2 text-small text-muted">Saved once, used for every offer. You can pick another place when posting an offer.</p>
             <LocationPicker
               value={location}
               onChange={(loc) => {
@@ -129,7 +117,7 @@ export function ProfileForm({ showShop, doneHref }: { showShop?: boolean; /** wh
         )}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-purple-100 pt-4">
+      <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-purple-100 pt-3">
         <button className="btn-primary w-full sm:w-auto" disabled={busy || name.trim().length < 2}>
           {busy ? 'Saving...' : wasIncomplete ? 'Save and continue' : 'Save changes'}
         </button>

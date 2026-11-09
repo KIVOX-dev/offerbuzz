@@ -22,10 +22,12 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
   const token = useRef<google.maps.places.AutocompleteSessionToken | undefined>(undefined);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const skipQuery = useRef(''); // text we filled in ourselves: do not search for it again
+  const describeRef = useRef<(lat: number, lng: number) => Promise<void>>(async () => undefined);
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(value?.address?.replace(/,\s*India$/i, '') ?? '');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [searching, setSearching] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -52,11 +54,15 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
+          zoomControl: true,
+          gestureHandling: 'greedy', // scroll and drag move the map directly, no "use ctrl + scroll" message
+          clickableIcons: false,
         });
         marker.current = new google.maps.Marker({ map: map.current, position: start, draggable: true, visible: Boolean(value) });
         const moved = (lat: number, lng: number) => {
           marker.current?.setVisible(true);
           onChangeRef.current({ lat, lng });
+          void describeRef.current(lat, lng);
         };
         marker.current.addListener('dragend', () => {
           const p = marker.current?.getPosition();
@@ -77,11 +83,34 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is created once; later moves go through showPin()
   }, []);
 
+  // street address for a pin that was dragged, tapped or auto-detected: shown in the search box, saved with the pin
+  describeRef.current = async (lat, lng) => {
+    try {
+      const { Geocoder } = (await google.maps.importLibrary('geocoding')) as google.maps.GeocodingLibrary;
+      const { results } = await new Geocoder().geocode({ location: { lat, lng } });
+      const first = results[0];
+      if (!first) return;
+      skipQuery.current = first.formatted_address.replace(/,\s*India$/i, '');
+      setQuery(skipQuery.current);
+      onChangeRef.current({ lat, lng, address: first.formatted_address, placeId: first.place_id });
+    } catch {
+      /* the pin is still saved; the server looks the address up when the profile is saved */
+    }
+  };
+
+  // when a saved pin arrives (or changes from outside), the map moves to it
+  useEffect(() => {
+    if (!ready || !value) return;
+    const p = marker.current?.getPosition();
+    if (!p || Math.abs(p.lat() - value.lat) > 1e-7 || Math.abs(p.lng() - value.lng) > 1e-7) showPin(value.lat, value.lng);
+    else if (!marker.current?.getVisible()) marker.current?.setVisible(true);
+  }, [ready, value?.lat, value?.lng, showPin]);
+
   // autocomplete: wait for a pause in typing, at least 3 characters, one session token per search
   useEffect(() => {
     if (!ready) return;
     const q = query.trim();
-    if (q.length < MIN_CHARS) {
+    if (q.length < MIN_CHARS || q === skipQuery.current) {
       setSuggestions([]);
       return;
     }
@@ -93,11 +122,17 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
           sessionToken: token.current,
           includedRegionCodes: ['in'],
         });
-        setSuggestions(
-          found.flatMap((s) =>
-            s.placePrediction ? [{ id: s.placePrediction.placeId, text: s.placePrediction.text.text, place: s.placePrediction.toPlace() }] : [],
-          ),
+        const list = found.flatMap((s) =>
+          s.placePrediction ? [{ id: s.placePrediction.placeId, text: s.placePrediction.text.text, place: s.placePrediction.toPlace() }] : [],
         );
+        setSuggestions(list);
+        // show the best match on the map right away (the pin only moves when one is picked)
+        if (list[0]) {
+          await list[0].place.fetchFields({ fields: ['location', 'viewport'] });
+          const p = list[0].place;
+          if (p.viewport) map.current?.fitBounds(p.viewport);
+          else if (p.location) map.current?.panTo(p.location);
+        }
       } catch {
         setSuggestions([]);
       } finally {
@@ -109,12 +144,15 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
 
   async function choose(s: Suggestion) {
     setSuggestions([]);
+    skipQuery.current = s.text;
     setQuery(s.text);
     try {
-      await s.place.fetchFields({ fields: ['location', 'formattedAddress', 'id'] });
+      await s.place.fetchFields({ fields: ['location', 'formattedAddress', 'id', 'viewport'] });
       const loc = s.place.location;
       if (!loc) return;
       showPin(loc.lat(), loc.lng());
+      // a whole area (Coimbatore) fits the map to its boundary; a shop or street keeps the close-up
+      if (s.place.viewport && !/\d/.test(s.text.split(',')[0] ?? '')) map.current?.fitBounds(s.place.viewport);
       onChange({ lat: loc.lat(), lng: loc.lng(), address: s.place.formattedAddress ?? s.text, placeId: s.place.id });
     } catch {
       setError('Could not load that place. Try another search or drop the pin on the map.');
@@ -133,6 +171,7 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
         const { latitude: lat, longitude: lng } = pos.coords;
         showPin(lat, lng);
         onChange({ lat, lng });
+        void describeRef.current(lat, lng);
       },
       () => {
         setLocating(false);
@@ -158,16 +197,21 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
             <SearchIcon size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-purple-700" />
             <input
               className="input pl-10"
-              placeholder="Search for your shop or street"
+              placeholder="Search your shop, area or street"
               aria-label="Search for your shop"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                if (suggestions[0]) void choose(suggestions[0]);
+              }}
               disabled={!ready}
               autoComplete="off"
             />
           </div>
           <button type="button" className="btn-outline gap-1.5 whitespace-nowrap" onClick={useMyLocation} disabled={locating}>
-            <PinIcon size={18} /> {locating ? 'Locating...' : 'Use my current location'}
+            <PinIcon size={18} /> {locating ? 'Locating...' : 'My location'}
           </button>
         </div>
         {(suggestions.length > 0 || searching) && (
@@ -189,16 +233,9 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
         )}
       </div>
 
-      <div ref={box} className="h-72 w-full overflow-hidden rounded-md border border-purple-200 bg-purple-50" />
+      <div ref={box} className="h-64 w-full overflow-hidden lg:h-72 rounded-md border border-purple-200 bg-purple-50" />
       <p className="text-small text-muted">
-        {value ? (
-          <>
-            Pin at {value.lat.toFixed(5)}, {value.lng.toFixed(5)}
-            {value.address ? ` · ${value.address}` : ''}. Drag the pin or click the map to adjust.
-          </>
-        ) : (
-          'Search for your shop, use your current location, or click the map to drop the pin.'
-        )}
+        {value ? 'Pin saved. Drag it or tap the map to adjust.' : 'Search your shop, tap "My location", or tap the map to place the pin.'}
       </p>
       {error && (
         <p role="alert" className="text-small text-danger">

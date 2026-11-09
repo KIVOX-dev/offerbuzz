@@ -8,10 +8,10 @@ export default function MerchantProfile() {
   const { user } = useAccount();
   const complete = Boolean(user.shopName && user.location && user.category);
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="mx-auto max-w-6xl space-y-3">
       <div>
-        <h1 className="text-title font-bold">{complete ? 'Profile' : 'Build your profile'}</h1>
-        <p className="mt-1 text-muted">
+        <h1 className="text-section font-bold md:text-title">{complete ? 'Profile' : 'Build your profile'}</h1>
+        <p className="text-small text-muted md:text-body">
           {complete
             ? 'Your details and your shop information.'
             : 'Add your shop details and shop location. You only do this once, then everything else unlocks.'}

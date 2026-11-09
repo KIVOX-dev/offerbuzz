@@ -27,7 +27,6 @@ profileRouter.put(
     }
     if (b.category !== undefined && b.category !== user.category) {
       if (user.role !== 'merchant') throw new HttpError(400, 'NOT_A_VENDOR', 'Only merchants have a shop category');
-      if (user.category) throw new HttpError(409, 'CATEGORY_LOCKED', 'Your shop category is already set. Contact support to change it.');
       user.category = b.category;
     }
     if (b.location) {

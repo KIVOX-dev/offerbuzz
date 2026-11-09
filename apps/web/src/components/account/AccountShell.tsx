@@ -143,11 +143,6 @@ export function AccountShell({
             </nav>
           </aside>
           <main className="min-w-0 flex-1 px-3 py-4 md:px-6 md:py-6">
-            {locked && (
-              <p role="status" className="mx-auto mb-4 max-w-6xl rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">
-                Finish your profile to unlock the rest of OfferBuzz. It takes a minute and you only do it once.
-              </p>
-            )}
             {children}
           </main>
         </div>

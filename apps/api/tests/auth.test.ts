@@ -487,7 +487,7 @@ describe('vendor offers and profile', () => {
     expect(cleared.body.user.website).toBeUndefined();
   });
 
-  it('asks a vendor with no category to choose one, then locks it', async () => {
+  it('asks a vendor with no category to choose one, and lets them change it later', async () => {
     const v = await signUp({ role: 'merchant' });
     const t = v.body.accessToken;
     expect((await post(t, OFFER)).status).toBe(409);
@@ -496,7 +496,8 @@ describe('vendor offers and profile', () => {
     expect(set.body.user.category).toBe('Fashion');
     expect((await post(t, OFFER)).status).toBe(400); // OFFER is Salon and Spa
     const change = await authed(request(app).put('/api/v1/me'), t).send({ category: 'Travels' });
-    expect(change.status).toBe(409);
+    expect(change.status).toBe(200);
+    expect(change.body.user.category).toBe('Travels');
   });
 
   it('needs a shop location before a vendor can post, and checks the coordinates', async () => {

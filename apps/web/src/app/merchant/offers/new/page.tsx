@@ -128,7 +128,7 @@ export default function NewOfferPage() {
     if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? 'Check the form');
     setBusy(true);
     try {
-      // shop details live on the profile: save them (and the category, locked after the first offer) when they changed
+      // shop details live on the profile: save them (and the category) when they changed
       const changes = {
         ...(form.shopName.trim() !== (user.shopName ?? '') ? { shopName: form.shopName.trim() } : {}),
         ...(form.ownerName.trim() !== (user.name ?? '') ? { name: form.ownerName.trim() } : {}),
@@ -274,7 +274,7 @@ export default function NewOfferPage() {
                   placeholder="Choose your shop category"
                   options={CATEGORIES.map((c) => ({ value: c as string, label: c }))}
                 />
-                <p className="mt-1 text-small text-muted">All your offers go in this category. It is locked after your first offer, so choose carefully.</p>
+                <p className="mt-1 text-small text-muted">All your offers go in this category. You can change it later in your profile.</p>
               </>
             )}
           </div>
