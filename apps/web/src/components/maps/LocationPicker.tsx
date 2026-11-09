@@ -5,7 +5,8 @@ import type { LocationInput } from '@offerbuzz/shared';
 import { loadMaps, mapsConfigured } from '@/lib/maps';
 import { PinIcon, SearchIcon } from '../Icons';
 
-type Suggestion = { id: string; text: string; place: google.maps.places.Place };
+type Suggestion = { id: string; text: string; place?: google.maps.places.Place };
+type Found = { lat: number; lng: number; address?: string; placeId?: string; viewport?: google.maps.LatLngBounds | null };
 
 const INDIA = { lat: 20.5937, lng: 78.9629 };
 const MIN_CHARS = 3;
@@ -30,6 +31,7 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
   const [query, setQuery] = useState(value?.address?.replace(/,\s*India$/i, '') ?? '');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [searching, setSearching] = useState(false);
+  const [notice, setNotice] = useState('');
   const [locating, setLocating] = useState(false);
 
   const showPin = useCallback((lat: number, lng: number) => {
@@ -106,7 +108,69 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
     else if (!marker.current?.getVisible()) marker.current?.setVisible(true);
   }, [ready, value?.lat, value?.lng, showPin]);
 
-  // autocomplete: wait for a pause in typing, at least 3 characters, one session token per search
+  /** The point, address and boundary of a suggestion. Places first, the Geocoder when that is unavailable. */
+  async function resolve(s: Suggestion): Promise<Found> {
+    if (s.place) {
+      try {
+        await s.place.fetchFields({ fields: ['location', 'formattedAddress', 'id', 'viewport'] });
+        const loc = s.place.location;
+        if (loc) return { lat: loc.lat(), lng: loc.lng(), address: s.place.formattedAddress ?? s.text, placeId: s.place.id, viewport: s.place.viewport };
+      } catch {
+        /* fall through to the Geocoder */
+      }
+    }
+    const { Geocoder } = (await google.maps.importLibrary('geocoding')) as google.maps.GeocodingLibrary;
+    const { results } = await new Geocoder().geocode({ placeId: s.id });
+    const g = results[0];
+    if (!g) throw new Error('not found');
+    return { lat: g.geometry.location.lat(), lng: g.geometry.location.lng(), address: g.formatted_address, placeId: g.place_id, viewport: g.geometry.viewport };
+  }
+
+  /** Free text with no suggestion picked: the Geocoder finds it, like pressing Enter in Google Maps. */
+  async function findTyped(text: string): Promise<Found> {
+    const { Geocoder } = (await google.maps.importLibrary('geocoding')) as google.maps.GeocodingLibrary;
+    const { results } = await new Geocoder().geocode({ address: text, region: 'in', componentRestrictions: { country: 'IN' } });
+    const g = results[0];
+    if (!g) throw new Error('not found');
+    return { lat: g.geometry.location.lat(), lng: g.geometry.location.lng(), address: g.formatted_address, placeId: g.place_id, viewport: g.geometry.viewport };
+  }
+
+  /** Put the pin on a found place: a whole area (Coimbatore) fits its boundary, a shop or street zooms in close. */
+  function apply(f: Found, label: string) {
+    skipQuery.current = label;
+    setQuery(label);
+    setSuggestions([]);
+    setError('');
+    showPin(f.lat, f.lng);
+    if (f.viewport && !/\d/.test(label.split(',')[0] ?? '')) map.current?.fitBounds(f.viewport);
+    onChangeRef.current({ lat: f.lat, lng: f.lng, address: f.address ?? label, placeId: f.placeId });
+  }
+
+  async function choose(s: Suggestion) {
+    try {
+      apply(await resolve(s), s.text);
+    } catch {
+      setError('Could not load that place. Try another search or tap the map to place the pin.');
+    } finally {
+      token.current = new google.maps.places.AutocompleteSessionToken(); // the search session ends with a selection
+    }
+  }
+
+  async function searchTyped() {
+    const q = query.trim();
+    if (q.length < 2) return;
+    setSearching(true);
+    try {
+      apply(await findTyped(q), q);
+    } catch {
+      setError('We could not find that place. Check the spelling, or tap the map to place the pin.');
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  // suggestions while typing: wait for a pause, at least 3 characters. The newer Places API first, the classic one if
+  // that is not available for the key. The best match is shown on the map straight away; the pin moves when one is picked.
   useEffect(() => {
     if (!ready) return;
     const q = query.trim();
@@ -114,52 +178,49 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
       setSuggestions([]);
       return;
     }
+    let stale = false;
     const id = setTimeout(async () => {
       setSearching(true);
+      let list: Suggestion[] = [];
+      let failed = false;
       try {
         const { suggestions: found } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
           input: q,
           sessionToken: token.current,
           includedRegionCodes: ['in'],
         });
-        const list = found.flatMap((s) =>
-          s.placePrediction ? [{ id: s.placePrediction.placeId, text: s.placePrediction.text.text, place: s.placePrediction.toPlace() }] : [],
+        list = found.flatMap((x) =>
+          x.placePrediction ? [{ id: x.placePrediction.placeId, text: x.placePrediction.text.text, place: x.placePrediction.toPlace() }] : [],
         );
-        setSuggestions(list);
-        // show the best match on the map right away (the pin only moves when one is picked)
-        if (list[0]) {
-          await list[0].place.fetchFields({ fields: ['location', 'viewport'] });
-          const p = list[0].place;
-          if (p.viewport) map.current?.fitBounds(p.viewport);
-          else if (p.location) map.current?.panTo(p.location);
-        }
       } catch {
-        setSuggestions([]);
-      } finally {
-        setSearching(false);
+        try {
+          const res = await new google.maps.places.AutocompleteService().getPlacePredictions({ input: q, componentRestrictions: { country: 'in' } });
+          list = (res.predictions ?? []).map((p) => ({ id: p.place_id, text: p.description }));
+        } catch {
+          failed = true;
+        }
+      }
+      if (stale) return;
+      setSearching(false);
+      setSuggestions(list);
+      setNotice(failed ? 'Suggestions are not available right now. Press Enter to search.' : '');
+      if (list[0]) {
+        try {
+          const f = await resolve(list[0]);
+          if (stale) return;
+          if (f.viewport) map.current?.fitBounds(f.viewport);
+          else map.current?.panTo({ lat: f.lat, lng: f.lng });
+        } catch {
+          /* the preview is a bonus; the list is already showing */
+        }
       }
     }, DEBOUNCE_MS);
-    return () => clearTimeout(id);
+    return () => {
+      stale = true;
+      clearTimeout(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- resolve only uses refs and the Maps library
   }, [query, ready]);
-
-  async function choose(s: Suggestion) {
-    setSuggestions([]);
-    skipQuery.current = s.text;
-    setQuery(s.text);
-    try {
-      await s.place.fetchFields({ fields: ['location', 'formattedAddress', 'id', 'viewport'] });
-      const loc = s.place.location;
-      if (!loc) return;
-      showPin(loc.lat(), loc.lng());
-      // a whole area (Coimbatore) fits the map to its boundary; a shop or street keeps the close-up
-      if (s.place.viewport && !/\d/.test(s.text.split(',')[0] ?? '')) map.current?.fitBounds(s.place.viewport);
-      onChange({ lat: loc.lat(), lng: loc.lng(), address: s.place.formattedAddress ?? s.text, placeId: s.place.id });
-    } catch {
-      setError('Could not load that place. Try another search or drop the pin on the map.');
-    } finally {
-      token.current = new google.maps.places.AutocompleteSessionToken(); // the search session ends with a selection
-    }
-  }
 
   function useMyLocation() {
     setError('');
@@ -196,7 +257,7 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
           <div className="relative min-w-[220px] flex-1">
             <SearchIcon size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-purple-700" />
             <input
-              className="input pl-10"
+              className="input pl-10 pr-14"
               placeholder="Search your shop, area or street"
               aria-label="Search for your shop"
               value={query}
@@ -205,10 +266,16 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
                 if (e.key !== 'Enter') return;
                 e.preventDefault();
                 if (suggestions[0]) void choose(suggestions[0]);
+                else void searchTyped();
               }}
               disabled={!ready}
               autoComplete="off"
+              enterKeyHint="search"
             />
+            <button type="button" aria-label="Search this place" onClick={() => (suggestions[0] ? void choose(suggestions[0]) : void searchTyped())}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md bg-purple-700 px-3 py-1.5 text-small font-bold text-white hover:bg-purple-800 active:scale-95">
+              Go
+            </button>
           </div>
           <button type="button" className="btn-outline gap-1.5 whitespace-nowrap" onClick={useMyLocation} disabled={locating}>
             <PinIcon size={18} /> {locating ? 'Locating...' : 'My location'}
@@ -237,6 +304,7 @@ export function LocationPicker({ value, onChange }: { value?: LocationInput; onC
       <p className="text-small text-muted">
         {value ? 'Pin saved. Drag it or tap the map to adjust.' : 'Search your shop, tap "My location", or tap the map to place the pin.'}
       </p>
+      {notice && !error && <p className="text-small text-muted">{notice}</p>}
       {error && (
         <p role="alert" className="text-small text-danger">
           {error}
