@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { updateProfileSchema, type UpdateProfileInput } from '@offerbuzz/shared';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, requireRole } from '../../middleware/auth';
+import { Subscription } from '../../models/Subscription';
+import { getSettings } from '../../models/Setting';
 import { validate } from '../../middleware/validate';
 import { wrap } from '../../utils/async';
 import { HttpError, notFound } from '../../utils/errors';
@@ -9,6 +11,22 @@ import { User } from '../../models/User';
 import { toUserDTO } from '../auth/auth.service';
 
 export const profileRouter = Router();
+
+/** The signed in merchant's plan and paid-until date. */
+profileRouter.get(
+  '/subscription',
+  authenticate,
+  requireRole('merchant'),
+  wrap(async (req, res) => {
+    const [sub, settings] = await Promise.all([Subscription.findOne({ merchantId: req.auth!.id }), getSettings()]);
+    res.json({
+      plan: sub?.plan ?? undefined,
+      paidUntil: sub?.paidUntil.toISOString(),
+      active: Boolean(sub && sub.paidUntil.getTime() > Date.now()),
+      graceDays: settings.graceDays,
+    });
+  }),
+);
 
 /** Edit your own profile. Email and role are never changed from here. */
 profileRouter.put(

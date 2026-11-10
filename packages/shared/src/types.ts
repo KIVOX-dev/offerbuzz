@@ -104,6 +104,16 @@ export interface SiteHitsResponse {
   hits: number;
 }
 
+/** A merchant's own subscription: the plan they last paid for and until when. */
+export interface SubscriptionDTO {
+  plan?: 'basic' | 'premium' | 'featured';
+  /** ISO date the paid plan runs until */
+  paidUntil?: string;
+  /** paid up as of now */
+  active: boolean;
+  graceDays: number;
+}
+
 export interface MyOffersResponse {
   offers: OfferDTO[];
   totals: { offers: number; pending: number; active: number; claims: number };

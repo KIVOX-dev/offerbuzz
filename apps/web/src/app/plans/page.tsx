@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { MERCHANT_PLANS } from '@/lib/plans';
-import { Logo } from '@/components/Logo';
+import { SiteHeader } from '@/components/SiteHeader';
 
 export const metadata: Metadata = {
   title: 'Merchant plans - OfferBuzz',
@@ -51,12 +51,7 @@ const PLANS = [
 export default function Plans() {
   return (
     <main className="min-h-screen overflow-x-clip pb-10">
-      <header className="border-b-4 border-accent bg-hero text-white">
-        <div className="container-page flex items-center justify-between py-3">
-          <Logo height={42} variant="light" />
-          <Link href="/" className="btn btn-sm bg-accent text-ink hover:brightness-105">Back to home</Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <div className="container-page max-w-5xl space-y-8 py-8">
         <div className="text-center">
