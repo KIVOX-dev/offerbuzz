@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { CATEGORIES, SUBCATEGORIES, type PublicOfferDTO } from '@offerbuzz/shared';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteHits } from '@/components/SiteHits';
 import { OfferCard } from '@/components/OfferCard';
@@ -184,6 +185,16 @@ function Results() {
   return (
     <main className="min-h-screen overflow-x-clip pb-10">
       <SiteHeader query={q} activeCategory={category} />
+      <Breadcrumbs
+        items={
+          category
+            ? [
+                subcategory ? { label: category, href: `/search?category=${encodeURIComponent(category)}` } : { label: category },
+                ...(subcategory ? [{ label: subcategory }] : []),
+              ]
+            : [{ label: q ? `Results for "${q}"` : 'All offers' }]
+        }
+      />
 
       <div className="container-page py-5 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
         {/* desktop: the filter list down the left, like a shop */}

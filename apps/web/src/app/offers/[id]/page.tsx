@@ -4,6 +4,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { PublicOfferDTO } from '@offerbuzz/shared';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { SiteHeader } from '@/components/SiteHeader';
 import { GlobeIcon, HeartIcon, TagIcon } from '@/components/Icons';
 import { SiteHits } from '@/components/SiteHits';
@@ -30,6 +31,15 @@ export default function OfferPage() {
   return (
     <main className="min-h-screen overflow-x-clip pb-10">
       <SiteHeader activeCategory={offer?.category} />
+      {offer && (
+        <Breadcrumbs
+          items={[
+            { label: offer.category, href: `/search?category=${encodeURIComponent(offer.category)}` },
+            ...(offer.subcategory ? [{ label: offer.subcategory, href: `/search?category=${encodeURIComponent(offer.category)}&subcategory=${encodeURIComponent(offer.subcategory)}` }] : []),
+            { label: offer.title.toUpperCase() },
+          ]}
+        />
+      )}
 
       <div className="container-page py-6">
         {error && <p role="alert" className="surface p-6 text-center text-muted">{error}</p>}
