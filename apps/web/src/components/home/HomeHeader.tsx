@@ -167,8 +167,8 @@ export function HomeHeader({
             return (
               <li key={c.name} className="w-[84px] shrink-0">
                 <button type="button" aria-pressed={on} onClick={() => onPick(i - 1)} className="flex w-full flex-col items-center gap-1 text-small">
-                  <span className={`flex h-12 w-12 items-center justify-center transition duration-300 ${on ? 'scale-110 md:scale-100' : ''}`}>
-                    <DuoCategoryIcon slug={c.slug} plain size={30} style={{ color: 'rgba(255,255,255,0.7)' }} />
+                  <span className={`flex h-12 w-12 items-center justify-center rounded-xl border backdrop-blur-md transition duration-300 ${on ? 'scale-110 border-white/50 bg-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] md:scale-100' : 'border-white/20 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]'}`}>
+                    <DuoCategoryIcon slug={c.slug} plain size={30} style={{ color: 'rgba(255,255,255,0.38)', filter: 'drop-shadow(0 2px 4px rgba(27,14,56,0.35))' }} />
                   </span>
                   <span className={`w-full truncate px-1 text-center ${on ? 'font-bold text-white' : 'font-medium text-purple-100'}`}>{c.name}</span>
                   <span className={`h-[3px] rounded-full bg-accent transition-all duration-300 ${on ? 'w-full' : 'w-0'}`} />

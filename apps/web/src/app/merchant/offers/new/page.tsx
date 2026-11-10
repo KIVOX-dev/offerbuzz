@@ -15,6 +15,9 @@ import { ApiRequestError, createOffer, rewriteDescription, updateProfile, upload
 import { shrinkImage } from '@/lib/image';
 import { ModuleTerms } from '@/components/ModuleTerms';
 
+/** Offer photos may be up to 1 MB (the server limit); aim a little under it. */
+const MAX_PHOTO_BYTES = 1000 * 1024;
+
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function NewOfferPage() {
@@ -55,7 +58,7 @@ export default function NewOfferPage() {
     setPhotoError(undefined);
     setPhotoBusy(true);
     try {
-      const small = await shrinkImage(file);
+      const small = await shrinkImage(file, { edges: [1600, 1400, 1200, 1000, 800], maxBytes: MAX_PHOTO_BYTES });
       setPhoto(small);
       setPhotoUrl(URL.createObjectURL(small));
     } catch (e) {
@@ -242,7 +245,7 @@ export default function NewOfferPage() {
 
           <div>
             <span className="mb-1 block text-small font-semibold" id="o-photo-label">
-              Photo <span className="font-normal text-muted">(optional, JPEG, PNG or WebP)</span>
+              Photo <span className="font-normal text-muted">(optional, JPEG, PNG or WebP, under 1 MB)</span>
             </span>
             <div className="flex flex-wrap items-center gap-3">
               <input ref={fileRef} id="o-photo" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only"
@@ -252,12 +255,13 @@ export default function NewOfferPage() {
               </label>
               {photo && (
                 <>
-                  <span className="text-small text-muted">{Math.round(photo.size / 1024)} KB, ready</span>
+                  <span className="text-small text-muted">{photo.size >= 1024 * 1024 ? `${(photo.size / 1048576).toFixed(1)} MB` : `${Math.round(photo.size / 1024)} KB`}, ready</span>
                   <button type="button" className="text-small font-semibold text-danger underline" onClick={removePhoto}>Remove</button>
                 </>
               )}
             </div>
             {photoError && <p role="alert" className="mt-1 text-small text-danger">{photoError}</p>}
+            <p className="mt-1 text-small text-muted">Best size: <strong>840 × 1080 px</strong> (portrait, 7:9). Maximum file size: <strong>1 MB</strong>. Bigger photos are shrunk automatically.</p>
           </div>
 
           <div>

@@ -104,7 +104,48 @@ function Heading({ children }: { children: string }) {
   );
 }
 
+/** The phone footer: a compact version of the same links, the social icons and the hit counter. */
+function MobileFooter() {
+  const links = [...COLUMNS.flatMap((c) => c.links), ...REFER_LINKS];
+  return (
+    <footer className="mt-8 bg-accent pb-24 text-ink md:hidden">
+      <div aria-hidden className="h-2" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #4c1d95 0 4px, transparent 4px 8px)' }} />
+      <div className="container-page space-y-5 py-6">
+        <Logo height={52} variant="transparent" />
+        <p className="text-small font-medium text-ink/80">Your path to the best local offers: shops, deals and savings near you, all in one place.</p>
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-small font-semibold">
+          {links.map((l) => (
+            <li key={l.label}>
+              <Link href={l.href} className="block truncate hover:text-purple-800">{l.label}</Link>
+            </li>
+          ))}
+        </ul>
+        <div className="flex items-center gap-3">
+          {SOCIALS.map((s) => (
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="block h-9 w-9 overflow-hidden rounded-full [&_svg]:h-full [&_svg]:w-full first:rounded-[9px]">
+              {s.icon}
+            </a>
+          ))}
+        </div>
+        <div className="border-t border-purple-900/20 pt-3 text-small font-medium text-ink/70">
+          <p>© 2026 OfferBuzz</p>
+          <SiteHits className="mt-1" />
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 export function SiteFooter() {
+  return (
+    <>
+      <MobileFooter />
+      <DesktopFooter />
+    </>
+  );
+}
+
+function DesktopFooter() {
   return (
     <footer className="mt-10 hidden bg-accent text-ink md:block">
       {/* dotted top edge */}

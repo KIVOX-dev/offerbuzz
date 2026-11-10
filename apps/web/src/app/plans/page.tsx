@@ -13,18 +13,18 @@ const PLANS = [
     name: 'Basic',
     price: MERCHANT_PLANS.basic.price,
     tag: 'Start promoting your business online',
-    head: 'bg-green-600',
-    soft: 'bg-green-50 text-green-800',
-    ring: 'border-green-600',
+    head: 'bg-purple-100 text-purple-900',
+    soft: 'bg-purple-50 text-purple-800',
+    ring: 'border-purple-200',
     features: ['Offer published on the OfferBuzz.co website for 30 days'],
   },
   {
     name: 'Premium',
     price: MERCHANT_PLANS.premium.price,
     tag: 'Reach customers online and in print',
-    head: 'bg-blue-700',
-    soft: 'bg-blue-50 text-blue-800',
-    ring: 'border-blue-700',
+    head: 'bg-purple-700 text-white',
+    soft: 'bg-purple-50 text-purple-800',
+    ring: 'border-purple-700',
     popular: true,
     features: [
       'Offer published on the OfferBuzz.co website',
@@ -35,9 +35,9 @@ const PLANS = [
     name: 'Featured',
     price: MERCHANT_PLANS.featured.price,
     tag: 'Maximum visibility. Maximum reach. Maximum sales.',
-    head: 'bg-orange-500',
-    soft: 'bg-orange-50 text-orange-800',
-    ring: 'border-orange-500',
+    head: 'bg-hero text-accent',
+    soft: 'bg-amber-50 text-amber-900',
+    ring: 'border-accent',
     features: [
       'Offer published on the OfferBuzz.co website',
       'Ads on the Dina Idhigai print and digital newspaper (5,000 copies, for a single issue, minimum size)',
@@ -62,7 +62,7 @@ export default function Plans() {
         <div className="grid gap-5 md:grid-cols-3">
           {PLANS.map((p) => (
             <section key={p.name} aria-label={`${p.name} plan`} className={`flex flex-col overflow-hidden rounded-xl border-2 bg-card shadow-card ${p.ring}`}>
-              <h2 className={`py-3 text-center text-section font-extrabold uppercase tracking-wide text-white ${p.head}`}>
+              <h2 className={`py-3 text-center text-section font-extrabold uppercase tracking-wide ${p.head}`}>
                 {p.name}
                 {'popular' in p && p.popular && <span className="ml-2 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold">Popular</span>}
               </h2>
@@ -88,7 +88,7 @@ export default function Plans() {
         </div>
 
         <section aria-label="Long term packages" className="surface flex flex-wrap items-center justify-center gap-x-8 gap-y-3 p-4 text-center">
-          <p className="rounded-md bg-blue-800 px-4 py-2 text-body font-extrabold uppercase text-white">Save more</p>
+          <p className="rounded-md bg-purple-800 px-4 py-2 text-body font-extrabold uppercase text-white">Save more</p>
           <p className="text-body font-bold uppercase">Long term packages (discount)</p>
           <p className="text-body"><strong>6 months</strong> · 10% off</p>
           <p className="text-body"><strong>12 months</strong> · 10% off</p>

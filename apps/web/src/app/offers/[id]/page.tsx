@@ -7,7 +7,7 @@ import type { PublicOfferDTO } from '@offerbuzz/shared';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { SiteHeader } from '@/components/SiteHeader';
 import { GlobeIcon, HeartIcon, TagIcon } from '@/components/Icons';
-import { SiteHits } from '@/components/SiteHits';
+import { SiteFooter } from '@/components/SiteFooter';
 import { ShopMap } from '@/components/maps/ShopMap';
 import { discountLabel } from '@/components/OfferPreview';
 import { ApiRequestError, getPublicOffer } from '@/lib/api';
@@ -29,7 +29,7 @@ export default function OfferPage() {
   }, [id]);
 
   return (
-    <main className="min-h-screen overflow-x-clip pb-10">
+    <main className="min-h-screen overflow-x-clip">
       <SiteHeader activeCategory={offer?.category} />
       {offer && (
         <Breadcrumbs
@@ -110,8 +110,8 @@ export default function OfferPage() {
         <div className="mt-6">
           <ModuleTerms id="customer" />
         </div>
-        <SiteHits className="mt-6 text-center text-muted" />
       </div>
+      <SiteFooter />
     </main>
   );
 }

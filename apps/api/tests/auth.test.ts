@@ -1122,13 +1122,19 @@ describe('offer photo', () => {
     expect(mine.body.offers[0].imageUrl).toBeTruthy();
   });
 
+  it('accepts an offer photo of 900 KB (the limit is 1 MB)', async () => {
+    const { token, offer } = await vendorWithOffer();
+    const ok = Buffer.concat([PNG, Buffer.alloc(900 * 1024, 4)]);
+    expect((await put(token, offer.id, 'image/png', ok)).status).toBe(200);
+  });
+
   it('rejects files that are not the image they claim, other types, empty uploads and huge files', async () => {
     const { token, offer } = await vendorWithOffer();
     expect((await put(token, offer.id, 'image/png', JPG)).status).toBe(415); // a JPEG pretending to be a PNG
     expect((await put(token, offer.id, 'image/jpeg', Buffer.from('<script>alert(1)</script>'))).status).toBe(415);
     expect((await put(token, offer.id, 'image/png', Buffer.alloc(0))).status).toBe(415);
     expect((await put(token, offer.id, 'text/html', Buffer.from('<h1>x</h1>'))).status).toBe(415);
-    const big = Buffer.concat([PNG, Buffer.alloc(500 * 1024, 4)]);
+    const big = Buffer.concat([PNG, Buffer.alloc(1100 * 1024, 4)]); // over the 1 MB limit
     expect((await put(token, offer.id, 'image/png', big)).status).toBe(413);
     const mine = await authed(request(app).get('/api/v1/offers/mine'), token);
     expect(mine.body.offers[0].imageUrl).toBeUndefined();

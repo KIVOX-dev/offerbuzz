@@ -6,7 +6,7 @@ import { Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { CATEGORIES, SUBCATEGORIES, type PublicOfferDTO } from '@offerbuzz/shared';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { SiteHeader } from '@/components/SiteHeader';
-import { SiteHits } from '@/components/SiteHits';
+import { SiteFooter } from '@/components/SiteFooter';
 import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
 import { DuoOffersIcon, FilterIcon } from '@/components/Icons';
@@ -183,7 +183,7 @@ function Results() {
   const panel = <FilterPanel category={category} subcategory={subcategory} filters={filters} setFilters={setFilters} hasLocation={!!coords} go={go} />;
 
   return (
-    <main className="min-h-screen overflow-x-clip pb-10">
+    <main className="min-h-screen overflow-x-clip">
       <SiteHeader query={q} activeCategory={category} />
       <Breadcrumbs
         items={
@@ -252,9 +252,10 @@ function Results() {
               )}
             </div>
           )}
-          <SiteHits className="pt-4 text-center text-muted" />
         </div>
       </div>
+
+      <SiteFooter />
 
       {/* phone filter sheet */}
       {sheet && (

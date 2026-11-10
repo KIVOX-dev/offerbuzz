@@ -8,10 +8,11 @@ import { getMySubscription } from '@/lib/api';
 const fmt = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 const daysLeft = (d: string) => Math.ceil((new Date(d).getTime() - Date.now()) / 86_400_000);
 
-const LOOK: Record<MerchantPlan, { head: string; ring: string }> = {
-  basic: { head: 'bg-green-600', ring: 'border-green-600' },
-  premium: { head: 'bg-blue-700', ring: 'border-blue-700' },
-  featured: { head: 'bg-orange-500', ring: 'border-orange-500' },
+// brand colours only: soft purple, solid purple, and the dark hero purple with the yellow accent
+const LOOK: Record<MerchantPlan, { head: string; ring: string; button: string }> = {
+  basic: { head: 'bg-purple-100 text-purple-900', ring: 'border-purple-200', button: 'btn-outline' },
+  premium: { head: 'bg-purple-700 text-white', ring: 'border-purple-700', button: 'btn-primary' },
+  featured: { head: 'bg-hero text-accent', ring: 'border-accent', button: 'btn-accent' },
 };
 const INCLUDES: Record<MerchantPlan, string[]> = {
   basic: ['Offer published on OfferBuzz.co for 30 days'],
@@ -84,9 +85,9 @@ export default function MerchantSubscription() {
       <div className="grid gap-4 md:grid-cols-3">
         {MERCHANT_PLAN_KEYS.map((k) => (
           <section key={k} aria-label={`${MERCHANT_PLANS[k].name} plan`} className={`flex flex-col overflow-hidden rounded-xl border-2 bg-card shadow-card ${LOOK[k].ring}`}>
-            <h2 className={`py-2.5 text-center font-extrabold uppercase text-white ${LOOK[k].head}`}>
+            <h2 className={`py-2.5 text-center font-extrabold uppercase ${LOOK[k].head}`}>
               {MERCHANT_PLANS[k].name}
-              {sub.active && sub.plan === k && <span className="ml-2 rounded-full bg-white/25 px-2 py-0.5 text-[11px]">Your plan</span>}
+              {sub.active && sub.plan === k && <span className="ml-2 rounded-full bg-black/15 px-2 py-0.5 text-[11px]">Your plan</span>}
             </h2>
             <div className="px-4 pt-4 text-center">
               <p className="text-[34px] font-extrabold leading-none">
@@ -98,13 +99,13 @@ export default function MerchantSubscription() {
             <ul className="flex-1 space-y-2 px-4 py-4 text-small">
               {INCLUDES[k].map((f) => (
                 <li key={f} className="flex gap-2">
-                  <span aria-hidden className="font-bold text-green-700">✓</span>
+                  <span aria-hidden className="font-bold text-purple-700">✓</span>
                   {f}
                 </li>
               ))}
             </ul>
             <div className="p-4 pt-0">
-              <a href={payLink(k, months)} target="_blank" rel="noopener noreferrer" className="btn-primary w-full">
+              <a href={payLink(k, months)} target="_blank" rel="noopener noreferrer" className={`${LOOK[k].button} w-full`}>
                 {sub.active && sub.plan === k ? 'Renew' : 'Subscribe'} via WhatsApp
               </a>
             </div>

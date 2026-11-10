@@ -338,7 +338,8 @@ offersRouter.delete(
 
 // ---- Offer photo ---------------------------------------------------------------------------------
 
-const MAX_IMAGE_BYTES = 400 * 1024;
+/** Offer photos: under 1 MB. The merchant form shrinks bigger photos to fit before uploading. */
+const MAX_IMAGE_BYTES = 1024 * 1024;
 
 /** The first bytes of the file must really be the image type it claims, so nothing else is stored or served as an image. */
 function matchesType(buf: Buffer, type: string): boolean {
