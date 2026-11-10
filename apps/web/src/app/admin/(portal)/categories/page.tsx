@@ -171,18 +171,18 @@ export default function AdminCategories() {
         </section>
 
         {/* the editor, with a live preview */}
-        <section aria-label="Edit category">
+        <section aria-label="Edit category" className="min-w-0">
           {!draft ? (
             <p className="surface p-6 text-center text-muted">Pick a category to edit, or add a new one. The preview appears here.</p>
           ) : (
             <form
-              className="surface grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_180px]"
+              className="surface grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_180px]"
               onSubmit={(e) => {
                 e.preventDefault();
                 void save();
               }}
             >
-              <div className="order-2 space-y-3 sm:order-1">
+              <div className="order-2 min-w-0 space-y-3 xl:order-1">
                 <h2 className="text-section font-bold">{draft.id ? 'Edit category' : 'New category'}</h2>
 
                 <label className="block text-small font-semibold">
@@ -239,9 +239,9 @@ export default function AdminCategories() {
               </div>
 
               {/* live preview: the tile as the home page draws it */}
-              <div className="order-1 sm:order-2">
+              <div className="order-1 xl:order-2">
                 <p className="mb-2 text-small font-semibold text-muted">Live preview</p>
-                <div className="relative mx-auto aspect-[4/5] w-[180px] max-w-full overflow-hidden rounded-lg bg-purple-50 shadow-card sm:sticky sm:top-4">
+                <div className="relative mx-auto aspect-[4/5] w-[180px] max-w-full overflow-hidden rounded-lg bg-purple-50 shadow-card xl:sticky xl:top-4">
                   {shownImage && <img src={shownImage} alt="" className="absolute inset-0 h-full w-full object-cover" />}
                   <span aria-hidden className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   <span className="absolute inset-x-3 bottom-3 flex flex-col items-start gap-1.5">

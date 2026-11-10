@@ -38,6 +38,7 @@ export function toOfferDTO(o: OfferDoc): OfferDTO {
     title: o.title,
     description: o.description,
     category: o.category,
+    subcategory: o.subcategory ?? undefined,
     discountType: o.discountType,
     discountValue: o.discountValue ?? undefined,
     startsAt: dateOnly(o.startsAt),
@@ -87,6 +88,7 @@ offersRouter.post(
       title: b.title,
       description: b.description,
       category: b.category,
+      subcategory: b.subcategory || undefined,
       discountType: b.discountType,
       discountValue: b.discountType === 'deal' ? undefined : b.discountValue,
       startsAt: new Date(`${b.startsAt}T00:00:00.000Z`),
@@ -240,6 +242,7 @@ offersRouter.get(
     const q = req.query as unknown as SearchQuery;
     const filter: Record<string, unknown> = { ...liveWindow() };
     if (q.category) filter.category = q.category;
+    if (q.subcategory) filter.subcategory = q.subcategory;
     if (q.q) {
       const rx = new RegExp(escapeRegex(q.q), 'i');
       const shopIds = await User.find({ role: 'merchant', status: 'active', shopName: rx }).select('_id').limit(50);

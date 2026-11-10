@@ -28,7 +28,7 @@ export function SiteHeader({ query = '', activeCategory }: { query?: string; act
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 border-b-4 border-accent bg-hero text-white shadow-glow">
+    <header className="sticky top-0 z-30 w-full max-w-full overflow-x-clip border-b-4 border-accent bg-hero text-white">
       <div className="container-page flex items-center gap-3 py-2.5">
         <Logo height={40} variant="light" />
         <SearchBox value={text} onChange={setText} onScan={(t) => router.push(`/search?q=${encodeURIComponent(t)}`)} variant="desktop" />

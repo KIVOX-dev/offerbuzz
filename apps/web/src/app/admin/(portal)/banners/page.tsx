@@ -222,7 +222,7 @@ export default function AdminBanners() {
                   <img src={c.image} alt="" className="h-16 w-10 shrink-0 rounded-sm object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{c.imageOnly ? 'Image only' : `${c.title}${c.subtitle ? ` ${c.subtitle}` : ''}`}</p>
-                    <p className="truncate text-small text-muted">{c.offer ?? 'No offer line'} · {c.category ?? 'No link'}{c.active ? '' : ' · hidden'}</p>
+                    <p className="truncate text-small text-muted">{c.offer ?? 'No offer line'} · {c.category ?? 'No category'}{c.active ? '' : ' · hidden'}</p>
                   </div>
                   <div className="flex shrink-0 flex-wrap justify-end gap-1">
                     <button type="button" className="btn-outline btn-sm" aria-label="Move up" disabled={busy || i === 0} onClick={() => move(c, 'up')}>↑</button>
@@ -238,18 +238,18 @@ export default function AdminBanners() {
         </section>
 
         {/* the editor, with a live preview */}
-        <section aria-label="Edit card">
+        <section aria-label="Edit card" className="min-w-0">
           {!draft || !preview ? (
             <p className="surface p-6 text-center text-muted">Pick a card to edit, or add a new one. The preview appears here.</p>
           ) : (
             <form
-              className="surface grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_240px]"
+              className="surface grid min-w-0 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_240px]"
               onSubmit={(e) => {
                 e.preventDefault();
                 void save();
               }}
             >
-              <div className="order-2 space-y-3 sm:order-1">
+              <div className="order-2 min-w-0 space-y-3 xl:order-1">
                 <h2 className="text-section font-bold">{draft.id ? 'Edit card' : 'New card'}</h2>
 
                 <label className="flex items-start gap-2 rounded-md border border-purple-200 bg-purple-50 p-2.5 text-small font-semibold">
@@ -288,8 +288,8 @@ export default function AdminBanners() {
                 </fieldset>
                 </div>
 
-                <fieldset className={draft.imageOnly ? 'hidden' : ''}>
-                  <legend className="text-small font-semibold">Colour</legend>
+                <fieldset>
+                  <legend className="text-small font-semibold">Colour{draft.imageOnly && <span className="font-normal text-muted"> (tints the page behind the card)</span>}</legend>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {PROMO_THEMES.map((t) => (
                       <button
@@ -342,9 +342,9 @@ export default function AdminBanners() {
                 </fieldset>
 
                 <label className="block text-small font-semibold">
-                  Opens this category when tapped
-                  <select className="input mt-1" value={draft.category} onChange={(e) => set('category', e.target.value)}>
-                    <option value="">Nothing (not a link)</option>
+                  Opens this category when tapped <span className="text-danger">(required)</span>
+                  <select className="input mt-1" required value={draft.category} onChange={(e) => set('category', e.target.value)}>
+                    <option value="" disabled>Choose a category</option>
                     {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </label>
@@ -355,15 +355,15 @@ export default function AdminBanners() {
                 </label>
 
                 <div className="flex gap-2">
-                  <button type="submit" className="btn-primary" disabled={busy || (!draft.imageOnly && !draft.title.trim())}>{busy ? 'Saving...' : 'Save card'}</button>
+                  <button type="submit" className="btn-primary" disabled={busy || !draft.category || (!draft.imageOnly && !draft.title.trim())}>{busy ? 'Saving...' : 'Save card'}</button>
                   <button type="button" className="btn-outline" disabled={busy} onClick={() => setDraft(undefined)}>Cancel</button>
                 </div>
               </div>
 
               {/* live preview: the same component as the home page, at its real shape */}
-              <div className="order-1 sm:order-2">
+              <div className="order-1 xl:order-2">
                 <p className="mb-2 text-small font-semibold text-muted">Live preview</p>
-                <div className="mx-auto w-[240px] max-w-full sm:sticky sm:top-4">
+                <div className="mx-auto w-[240px] max-w-full xl:sticky xl:top-4">
                   <PromoCardView card={preview} linked={false} />
                 </div>
               </div>

@@ -145,10 +145,11 @@ export const getNearbyOffers = (lat: number, lng: number, radiusKm = 10) =>
 
 export const getSiteHits = () => api<SiteHitsResponse>('/stats/hits');
 export const suggestSearch = (q: string) => api<SuggestResponse>(`/search/suggest?q=${encodeURIComponent(q)}`);
-export const searchOffers = (p: { q?: string; category?: string; lat?: number; lng?: number }) => {
+export const searchOffers = (p: { q?: string; category?: string; subcategory?: string; lat?: number; lng?: number }) => {
   const params = new URLSearchParams();
   if (p.q) params.set('q', p.q);
   if (p.category) params.set('category', p.category);
+  if (p.subcategory) params.set('subcategory', p.subcategory);
   if (p.lat !== undefined && p.lng !== undefined) {
     params.set('lat', String(p.lat));
     params.set('lng', String(p.lng));

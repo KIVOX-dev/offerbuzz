@@ -28,7 +28,7 @@ export default function OfferPage() {
   }, [id]);
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen overflow-x-clip pb-10">
       <SiteHeader activeCategory={offer?.category} />
 
       <div className="container-page py-6">

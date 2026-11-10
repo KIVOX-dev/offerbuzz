@@ -88,7 +88,7 @@ export const DEFAULT_PROMO_CARDS = [
   { title: 'Festivals', subtitle: 'of India', offer: 'From Rs 99', tagline: 'Festive styles for everyone', burst: ['BIG', 'SAVE', 'DAYS'], theme: 'indigo', image: '/banners/fashion.webp', category: 'Fashion' },
   { title: 'Fresh groceries', offer: 'Min. 15% Off', tagline: 'Stock up at your local store', burst: ['FRESH', 'EVERY', 'DAY'], theme: 'teal', image: '/banners/grocery.webp', category: 'Grocery' },
   { title: 'Weekend getaways', offer: 'Up to 30% Off', tagline: 'Short trips, great deals', burst: ['WEEK', 'END', 'SALE'], theme: 'orange', image: '/banners/travel.webp', category: 'Travels' },
-  { title: 'Rs 50 off', offer: 'First order', tagline: 'Claim it on your first order', burst: ['NEW', 'USER', 'DEAL'], theme: 'gold', image: '/categories/home.webp' },
+  { title: 'Rs 50 off', offer: 'First order', tagline: 'Claim it on your first order', burst: ['NEW', 'USER', 'DEAL'], theme: 'gold', image: '/categories/home.webp', category: 'Home Appliance' },
 ] as const;
 
 /**
@@ -119,3 +119,25 @@ export const DEFAULT_CATEGORY_TILES = [
 
 /** Photos that ship with the website, offered when editing a category tile. */
 export const CATEGORY_PRESET_IMAGES = DEFAULT_CATEGORY_TILES.map((t) => t.image);
+
+/** Sub categories a merchant can pick when posting an offer, and shoppers can filter by. */
+export const SUBCATEGORIES: Record<(typeof CATEGORIES)[number], readonly string[]> = {
+  'Salon and Spa': ['Hair care', 'Skin care & facial', 'Bridal makeup', 'Spa & massage', 'Nails', "Men's grooming"],
+  Fashion: ["Men's wear", "Women's wear", 'Kids wear', 'Ethnic & sarees', 'Footwear', 'Bags & accessories'],
+  'Mobile and Electronics': ['Mobiles', 'Laptops & computers', 'TVs & audio', 'Cameras', 'Accessories', 'Repairs'],
+  Travels: ['Tour packages', 'Flights & trains', 'Hotels & stays', 'Cab & car rental', 'Visa & passport'],
+  'Home Appliance': ['Kitchen appliances', 'Refrigerators', 'Washing machines', 'ACs & coolers', 'Furniture', 'Small appliances'],
+  'Gifts and Toys': ['Toys', 'Gift items', 'Flowers & bouquets', 'Cakes & hampers', 'Stationery'],
+  'Fitness and Sports': ['Gym membership', 'Yoga & zumba', 'Sports gear', 'Sportswear', 'Personal training'],
+  'Food and Restaurant': ['Restaurants', 'Fast food', 'Biryani & non-veg', 'Veg & meals', 'Sweets', 'Catering'],
+  Education: ['Tuition & coaching', 'Computer courses', 'Language classes', 'Skill training', 'Books & stationery'],
+  Grocery: ['Supermarket', 'Fruits & vegetables', 'Dairy & eggs', 'Provisions', 'Snacks & beverages'],
+  Medical: ['Pharmacy', 'Clinics & doctors', 'Diagnostics & labs', 'Dental', 'Optical', 'Wellness'],
+  'Cafe and Bakeries': ['Cafe', 'Bakery', 'Cakes', 'Ice cream & desserts', 'Juice & shakes'],
+  Automobiles: ['Cars', 'Two wheelers', 'Service & repair', 'Spares & accessories', 'Tyres & batteries', 'Car wash'],
+  'Baby Products': ['Baby clothing', 'Diapers & care', 'Baby food', 'Toys & gear', 'Prams & furniture'],
+  'Real Estate': ['Apartments', 'Villas & houses', 'Plots & land', 'Commercial', 'Rentals'],
+  Jewellery: ['Gold', 'Silver', 'Diamond', 'Imitation jewellery', 'Watches'],
+  'Home Made Products': ['Pickles & snacks', 'Sweets & savouries', 'Handicrafts', 'Clothing & tailoring', 'Cosmetics'],
+  Organic: ['Organic vegetables', 'Grains & pulses', 'Oils & spices', 'Personal care', 'Millets & health foods'],
+};

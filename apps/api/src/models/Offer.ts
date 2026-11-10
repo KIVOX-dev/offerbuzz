@@ -7,6 +7,7 @@ const offerSchema = new Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
     category: { type: String, enum: CATEGORIES, required: true, index: true },
+    subcategory: { type: String, trim: true, index: true },
     discountType: { type: String, enum: DISCOUNT_TYPES, required: true },
     discountValue: Number,
     startsAt: { type: Date, required: true },

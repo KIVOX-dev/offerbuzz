@@ -151,7 +151,7 @@ export function SearchBox({
         className={
           mobile
             ? 'h-full min-w-0 flex-1 rounded-2xl bg-transparent pl-12 pr-2 text-body text-ink outline-none placeholder:text-muted'
-            : 'input h-full rounded-none border-r-0'
+            : 'input h-full rounded-l-md rounded-r-none border-r-0'
         }
       />
       {mobile ? (

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CATEGORIES, DISCOUNT_TYPES, OTP, PROMO_THEMES, ROLES, SELF_SERVE_ROLES, USER_STATUSES } from './constants';
+import { CATEGORIES, DISCOUNT_TYPES, OTP, PROMO_THEMES, ROLES, SELF_SERVE_ROLES, SUBCATEGORIES, USER_STATUSES } from './constants';
 
 /** Accepts 10 digits, 91XXXXXXXXXX or +91XXXXXXXXXX (Indian mobiles) and returns +91XXXXXXXXXX, or null. */
 export function normalizePhone(input: string): string | null {
@@ -89,6 +89,7 @@ export const suggestQuerySchema = z.object({ q: z.string().trim().min(2, 'Type a
 export const searchQuerySchema = z.object({
   q: z.string().trim().max(60).optional(),
   category: z.enum(CATEGORIES).optional(),
+  subcategory: z.string().trim().max(40).optional(),
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
   limit: z.coerce.number().int().min(1).max(60).default(40),
@@ -155,6 +156,8 @@ export const offerInputSchema = z
     startsAt: day,
     endsAt: day,
     area: z.string().trim().min(2, 'Enter the area or city').max(100),
+  /** optional: one of the category's sub categories */
+  subcategory: z.string().trim().max(40).optional(),
     /** compulsory: the shop's contact number shown to customers on the offer */
     phone: z.string().min(1, 'Enter the shop phone number').pipe(phoneSchema),
     terms: z.string().trim().max(300).optional(),
@@ -167,6 +170,9 @@ export const offerInputSchema = z
     }
     if (v.discountType === 'percent' && v.discountValue !== undefined && v.discountValue >= 100) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['discountValue'], message: 'Percent must be below 100' });
+    }
+    if (v.subcategory && !(SUBCATEGORIES[v.category] as readonly string[] | undefined)?.includes(v.subcategory)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['subcategory'], message: 'Choose a sub category from the list' });
     }
     if (v.endsAt < v.startsAt) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endsAt'], message: 'End date must be on or after the start date' });
@@ -243,8 +249,8 @@ export const promoCardSchema = z.object({
   color: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, 'Pick a colour').optional().or(z.literal('').transform(() => undefined)),
   /** a photo that ships with the site (starts with /) or an https address */
   image: z.string().trim().max(300).regex(/^(\/[A-Za-z0-9_\-./]+|https:\/\/\S+)$/, 'Pick a photo'),
-  /** tapping the card opens the search for this category */
-  category: z.enum(CATEGORIES).optional().or(z.literal('').transform(() => undefined)),
+  /** tapping the card opens the search for this category: required */
+  category: z.enum(CATEGORIES, { message: 'Choose the category this card opens' }),
   /** show just the photo: no text, sticker, dark shade or zoom effect (the photo already has its own text) */
   imageOnly: z.boolean().default(false),
   active: z.boolean().default(true),

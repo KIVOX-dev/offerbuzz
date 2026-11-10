@@ -50,6 +50,7 @@ export interface OfferDTO {
   title: string;
   description: string;
   category: string;
+  subcategory?: string;
   discountType: DiscountType;
   discountValue?: number;
   /** YYYY-MM-DD */

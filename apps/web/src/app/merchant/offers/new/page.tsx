@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { CATEGORIES, offerInputSchema, type DiscountType } from '@offerbuzz/shared';
+import { CATEGORIES, SUBCATEGORIES, offerInputSchema, type DiscountType } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
 import { Select } from '@/components/Select';
 import { OfferPreview } from '@/components/OfferPreview';
@@ -27,6 +27,7 @@ export default function NewOfferPage() {
     title: '',
     description: '',
     category: user.category ?? '',
+    subcategory: '',
     discountType: 'percent' as DiscountType,
     discountValue: '',
     startsAt: today(),
@@ -121,6 +122,7 @@ export default function NewOfferPage() {
       ...form,
       discountValue: form.discountType === 'deal' || form.discountValue === '' ? undefined : form.discountValue,
       terms: form.terms || undefined,
+      subcategory: form.subcategory || undefined,
       location: offerSpot,
     });
     if (form.shopName.trim().length < 2) return setError('Enter your shop name');
@@ -270,7 +272,7 @@ export default function NewOfferPage() {
                 <Select
                   id="o-cat"
                   value={form.category}
-                  onChange={(v) => set('category', v)}
+                  onChange={(v) => setForm((f) => ({ ...f, category: v, subcategory: '' }))}
                   placeholder="Choose your shop category"
                   options={CATEGORIES.map((c) => ({ value: c as string, label: c }))}
                 />
@@ -278,6 +280,19 @@ export default function NewOfferPage() {
               </>
             )}
           </div>
+
+          {(() => {
+            const cat = (user.category ?? form.category) as keyof typeof SUBCATEGORIES;
+            const subs = SUBCATEGORIES[cat] ?? [];
+            return subs.length ? (
+              <div>
+                <label className="mb-1 block text-small font-semibold" htmlFor="o-sub">Sub category <span className="font-normal text-muted">(optional)</span></label>
+                <Select id="o-sub" value={form.subcategory} onChange={(v) => set('subcategory', v)} placeholder="What kind of offer is it?"
+                  options={[{ value: '', label: 'Not sure / other' }, ...subs.map((c) => ({ value: c, label: c }))]} />
+                <p className="mt-1 text-small text-muted">Helps customers find your offer when they filter.</p>
+              </div>
+            ) : null;
+          })()}
 
           <fieldset>
             <legend className="mb-1 block text-small font-semibold">Discount</legend>
