@@ -1,5 +1,6 @@
 import type { PayoutRequestInput, PayoutRequestDTO,WalletEntryDTO, WalletResponse } from '@offerbuzz/shared';
 import { User } from '../../models/User';
+import { Subscription } from '../../models/Subscription';
 import { WalletEntry, type WalletEntryDoc } from '../../models/WalletEntry';
 import { PayoutRequest, type PayoutRequestDoc } from '../../models/PayoutRequest';
 import { getSettings } from '../../models/Setting';
@@ -89,9 +90,15 @@ export async function getWallet(intermediaryId: string): Promise<WalletResponse>
   const [entries, settings, referred, requested] = await Promise.all([
     WalletEntry.find({ intermediaryId }).sort({ createdAt: -1 }),
     getSettings(),
-    User.find({ referredBy: intermediaryId }).select('name shopName createdAt').sort({ createdAt: -1 }).limit(200),
+    User.find({ referredBy: intermediaryId }).select('name shopName city category website locationAddress createdAt').sort({ createdAt: -1 }).limit(200),
     pendingRequested(intermediaryId),
   ]);
+  const subs = await Subscription.find({ merchantId: { $in: referred.map((u) => u._id) } });
+  const subOf = new Map(subs.map((s) => [String(s.merchantId), s]));
+  const earnedBy = new Map<string, number>();
+  for (const e of entries) {
+    if (e.kind === 'credit' && e.merchantId) earnedBy.set(String(e.merchantId), (earnedBy.get(String(e.merchantId)) ?? 0) + e.credits);
+  }
   const b = calcBalances(entries);
   const shops = new Map(referred.map((u) => [String(u._id), u.shopName || u.name || 'Shop']));
   return {
@@ -104,7 +111,23 @@ export async function getWallet(intermediaryId: string): Promise<WalletResponse>
     commissionPercent: settings.commissionPercent,
     requested,
     requestable: Math.max(0, b.available - requested),
-    shops: referred.map((u) => ({ id: String(u._id), name: u.shopName || u.name || 'Shop', joinedAt: u.createdAt.toISOString() })),
+    shops: referred.map((u) => {
+      const sub = subOf.get(String(u._id));
+      return {
+        id: String(u._id),
+        name: u.shopName || u.name || 'Shop',
+        ownerName: u.name ?? undefined,
+        category: u.category ?? undefined,
+        city: u.city ?? undefined,
+        address: u.locationAddress ?? undefined,
+        website: u.website ?? undefined,
+        joinedAt: u.createdAt.toISOString(),
+        plan: sub?.plan ?? undefined,
+        paidUntil: sub?.paidUntil.toISOString(),
+        subscribed: Boolean(sub && sub.paidUntil.getTime() > Date.now()),
+        earned: earnedBy.get(String(u._id)) ?? 0,
+      };
+    }),
     entries: entries.slice(0, 50).map((e) => toEntryDTO(e, shops)),
   };
 }

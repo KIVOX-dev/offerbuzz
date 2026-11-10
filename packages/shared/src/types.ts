@@ -131,6 +131,25 @@ export interface WalletEntryDTO {
   createdAt: string;
 }
 
+/** A shop a Refer & Earn partner brought in: the shop's public details and what it has earned the partner. */
+export interface ReferredShopDTO {
+  id: string;
+  name: string;
+  ownerName?: string;
+  category?: string;
+  city?: string;
+  address?: string;
+  website?: string;
+  joinedAt: string;
+  /** the plan the shop last paid for, and until when */
+  plan?: 'basic' | 'premium' | 'featured';
+  paidUntil?: string;
+  /** paid up as of now */
+  subscribed: boolean;
+  /** credits this shop has earned the partner so far */
+  earned: number;
+}
+
 /** Credits are rupees: 1 credit = Rs 1. */
 export interface WalletResponse {
   balance: number;
@@ -146,7 +165,7 @@ export interface WalletResponse {
   requested: number;
   /** available minus requested: what can go into a new payout request */
   requestable: number;
-  shops: { id: string; name: string; joinedAt: string }[];
+  shops: ReferredShopDTO[];
   entries: WalletEntryDTO[];
 }
 

@@ -42,6 +42,22 @@ export function QrCard({ title, blurb, target = 'home' }: { title: string; blurb
     a.click();
   }
 
+  const message = `Join OfferBuzz and post your shop's offers to customers nearby. Sign up with my referral code ${user.referralCode}: ${link}`;
+
+  /** The phone's share sheet with the QR picture attached when the browser allows it; otherwise just the message. */
+  async function share() {
+    try {
+      const dataUrl = await QRCode.toDataURL(link, { margin: 2, width: 800, errorCorrectionLevel: 'M', color: { dark: '#2e1065', light: '#ffffff' } });
+      const file = new File([await (await fetch(dataUrl)).blob()], `offerbuzz-${user.referralCode}.png`, { type: 'image/png' });
+      const withFile: ShareData = { title: 'Join OfferBuzz', text: message, files: [file] };
+      if (navigator.canShare?.(withFile)) return await navigator.share(withFile);
+      if (navigator.share) return await navigator.share({ title: 'Join OfferBuzz', text: message });
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return; // the person closed the share sheet
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  }
+
   return (
     <section className="surface max-w-xl p-4 md:p-6" aria-labelledby="qr-title">
       <h2 id="qr-title" className="text-section font-bold">{title}</h2>
@@ -62,6 +78,8 @@ export function QrCard({ title, blurb, target = 'home' }: { title: string; blurb
           <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
             <button type="button" className="btn-secondary btn-sm" onClick={copy}>{copied ? 'Copied!' : 'Copy link'}</button>
             <button type="button" className="btn-outline btn-sm" onClick={download} disabled={!link}>Download PNG</button>
+            <button type="button" className="btn-primary btn-sm" onClick={() => void share()} disabled={!link}>Share</button>
+            <a href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm">WhatsApp</a>
           </div>
         </div>
       </div>

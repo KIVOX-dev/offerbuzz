@@ -16,6 +16,8 @@ import {
 } from '@/lib/api';
 import { shrinkImage } from '@/lib/image';
 
+const PAGE_SIZE = 8;
+
 /** The form: what the admin is typing, before it is saved. `id` is empty for a category that does not exist yet. */
 interface Draft {
   id?: string;
@@ -44,6 +46,7 @@ export default function AdminCategories() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
+  const [page, setPage] = useState(1);
 
   const fail = useCallback(
     (e: unknown) => {
@@ -116,6 +119,9 @@ export default function AdminCategories() {
     });
 
   const move = (c: CategoryTileDTO, position: number) => run(async () => setItems((await moveHomeCategory(c.id, position)).categories));
+  const pages = Math.max(1, Math.ceil((items?.length ?? 0) / PAGE_SIZE));
+  const current = Math.min(page, pages);
+  const visible = items?.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE) ?? [];
   const toggle = (c: CategoryTileDTO) =>
     run(async () => {
       await updateHomeCategory(c.id, toInput({ ...toDraft(c), active: !c.active }));
@@ -150,18 +156,14 @@ export default function AdminCategories() {
             </div>
           ) : (
             <ul className="grid gap-2 sm:grid-cols-2">
-              {items.map((c, i) => (
+              {visible.map((c) => {
+                const i = items.findIndex((x) => x.id === c.id);
+                return (
                 <li key={c.id} className={`surface flex items-center gap-2 p-2 ${draft?.id === c.id ? 'ring-2 ring-purple-500' : ''} ${c.active ? '' : 'opacity-60'}`}>
-                  {/* the tile's place on the home page: pick a number to move it there */}
-                  <select
-                    aria-label={`Position of ${c.name}`}
-                    value={i + 1}
-                    disabled={busy}
-                    onChange={(e) => move(c, Number(e.target.value))}
-                    className="h-9 w-12 shrink-0 rounded-md border border-purple-200 bg-purple-50 text-center text-small font-bold text-purple-800"
-                  >
-                    {items.map((_, n) => <option key={n} value={n + 1}>{n + 1}</option>)}
-                  </select>
+                  <div className="flex shrink-0 flex-col gap-0.5">
+                    <button type="button" className="btn-outline !h-6 !min-h-0 !px-1.5 text-[11px] leading-none" aria-label={`Move ${c.name} up`} disabled={busy || i === 0} onClick={() => move(c, i)}>↑</button>
+                    <button type="button" className="btn-outline !h-6 !min-h-0 !px-1.5 text-[11px] leading-none" aria-label={`Move ${c.name} down`} disabled={busy || i === items.length - 1} onClick={() => move(c, i + 2)}>↓</button>
+                  </div>
                   <img src={c.image} alt="" className="h-10 w-8 shrink-0 rounded-sm object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-small font-semibold">{c.name}</p>
@@ -173,8 +175,18 @@ export default function AdminCategories() {
                     <button type="button" className="btn-outline btn-sm !border-red-300 !px-2 !text-danger" aria-label={`Delete ${c.name}`} disabled={busy} onClick={() => remove(c)}>✕</button>
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
+          )}
+          {items && pages > 1 && (
+            <nav aria-label="Pages" className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
+              <button type="button" className="btn-outline btn-sm" disabled={current === 1} onClick={() => setPage(current - 1)}>‹</button>
+              {Array.from({ length: pages }, (_, n) => n + 1).map((n) => (
+                <button key={n} type="button" aria-current={n === current ? 'page' : undefined} onClick={() => setPage(n)} className={`chip !min-h-0 h-9 w-9 justify-center !px-0 font-bold ${n === current ? 'chip-active' : ''}`}>{n}</button>
+              ))}
+              <button type="button" className="btn-outline btn-sm" disabled={current === pages} onClick={() => setPage(current + 1)}>›</button>
+            </nav>
           )}
         </section>
 
