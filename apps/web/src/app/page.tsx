@@ -142,7 +142,7 @@ export default function Home() {
     headerIndex: categories.findIndex((c) => c.name === t.name),
   }));
   const promos: PromoCardData[] = saved.length ? saved : DEFAULT_PROMO_CARDS.map((c) => ({ ...c, burst: [...c.burst] }) as PromoCardData);
-  const heroTints = ['#6d28d9', ...promos.map((c) => THEME_TINT[c.theme])];
+  const heroTints = ['#6d28d9', ...promos.map((c) => c.color ?? THEME_TINT[c.theme])];
   const theme = active >= 0 ? categories[active] : null;
   const router = useRouter();
   const [query, setQuery] = useState('');

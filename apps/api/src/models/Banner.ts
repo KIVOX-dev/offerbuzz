@@ -9,6 +9,7 @@ const bannerSchema = new Schema(
     offer: { type: String, maxlength: 24 },
     tagline: { type: String, maxlength: 60 },
     burst: { type: [String], default: [] },
+    color: { type: String, match: /^#[0-9a-fA-F]{6}$/ },
     theme: { type: String, enum: PROMO_THEMES, required: true },
     image: { type: String, required: true },
     category: { type: String, enum: CATEGORIES },

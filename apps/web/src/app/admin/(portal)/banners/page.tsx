@@ -34,6 +34,7 @@ interface Draft {
   tagline: string;
   burst: [string, string, string];
   theme: PromoTheme;
+  color: string;
   image: string;
   category: string;
   imageOnly: boolean;
@@ -47,6 +48,7 @@ const blank = (): Draft => ({
   tagline: '',
   burst: ['', '', ''],
   theme: 'blue',
+  color: '',
   image: PROMO_PRESET_IMAGES[0],
   category: '',
   imageOnly: false,
@@ -61,6 +63,7 @@ const toDraft = (c: PromoCardDTO): Draft => ({
   tagline: c.tagline ?? '',
   burst: [c.burst[0] ?? '', c.burst[1] ?? '', c.burst[2] ?? ''],
   theme: c.theme,
+  color: c.color ?? '',
   image: c.image,
   category: c.category ?? '',
   imageOnly: c.imageOnly,
@@ -74,6 +77,7 @@ const toInput = (d: Draft): PromoCardInput => ({
   tagline: d.tagline.trim() || undefined,
   burst: d.burst.map((l) => l.trim()).filter(Boolean),
   theme: d.theme,
+  color: d.color || undefined,
   // an uploaded photo's address carries a "?v=" stamp the API does not accept back
   image: d.image.split('?')[0]!,
   category: (d.category || undefined) as PromoCardInput['category'],
@@ -180,6 +184,7 @@ export default function AdminBanners() {
         tagline: draft.tagline || undefined,
         burst: draft.burst,
         theme: draft.theme,
+        color: draft.color || undefined,
         image: fileUrl ?? draft.image,
         category: undefined,
         imageOnly: draft.imageOnly,
@@ -290,14 +295,19 @@ export default function AdminBanners() {
                       <button
                         key={t}
                         type="button"
-                        aria-pressed={draft.theme === t}
-                        onClick={() => set('theme', t)}
-                        className={`flex items-center gap-2 rounded-full border px-3 py-1 text-small font-semibold ${draft.theme === t ? 'border-purple-600 bg-purple-50' : 'border-purple-100'}`}
+                        aria-pressed={!draft.color && draft.theme === t}
+                        onClick={() => setDraft((d) => d && { ...d, theme: t, color: '' })}
+                        className={`flex items-center gap-2 rounded-full border px-3 py-1 text-small font-semibold ${!draft.color && draft.theme === t ? 'border-purple-600 bg-purple-50' : 'border-purple-100'}`}
                       >
                         <span className="h-4 w-4 rounded-full" style={{ background: THEME_LABEL[t].dot }} />
                         {THEME_LABEL[t].name}
                       </button>
                     ))}
+                    <label className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-small font-semibold ${draft.color ? 'border-purple-600 bg-purple-50' : 'border-purple-100'}`}>
+                      <input type="color" aria-label="Pick any colour" value={draft.color || THEME_LABEL[draft.theme].dot}
+                        onChange={(e) => set('color', e.target.value)} className="h-5 w-7 cursor-pointer rounded border-0 bg-transparent p-0" />
+                      Custom {draft.color && <span className="font-mono font-normal uppercase text-muted">{draft.color}</span>}
+                    </label>
                   </div>
                 </fieldset>
 

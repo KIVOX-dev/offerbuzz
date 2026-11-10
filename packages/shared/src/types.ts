@@ -263,6 +263,8 @@ export interface PromoCardDTO {
   tagline?: string;
   burst: string[];
   theme: 'blue' | 'indigo' | 'teal' | 'orange' | 'gold';
+  /** custom accent colour (#rrggbb), replaces the theme colour */
+  color?: string;
   /** a photo path, or the API address of an uploaded photo */
   image: string;
   category?: string;

@@ -42,7 +42,7 @@ export function SiteHeader({ query = '', activeCategory }: { query?: string; act
           <ul className="flex gap-1 overflow-x-auto [scrollbar-width:none]">
             <li className="w-[84px] shrink-0">
               <Link href="/" className="flex w-full flex-col items-center gap-0.5 py-1 text-small font-medium text-purple-100">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-md"><DuoCategoryIcon slug="all" plain size={24} style={{ color: 'rgba(255,255,255,0.38)' }} /></span>
+                <DuoCategoryIcon slug="all" plain size={24} style={{ color: 'rgba(255,255,255,0.7)' }} />
                 <span className="w-full truncate px-1 text-center">Home</span>
               </Link>
             </li>
@@ -53,7 +53,7 @@ export function SiteHeader({ query = '', activeCategory }: { query?: string; act
                 <li key={c.slug} className="w-[84px] shrink-0">
                   <Link href={href} aria-current={on ? 'page' : undefined}
                     className={`flex w-full flex-col items-center gap-0.5 rounded-xl py-1 text-small ${on ? 'bg-white/25 font-bold text-white ring-1 ring-white/40' : 'font-medium text-purple-100 hover:bg-white/10'}`}>
-                    <span className={`flex h-10 w-10 items-center justify-center rounded-xl border backdrop-blur-md ${on ? 'border-white/50 bg-white/30' : 'border-white/20 bg-white/10'} shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]`}><DuoCategoryIcon slug={c.slug} plain size={24} style={{ color: 'rgba(255,255,255,0.38)' }} /></span>
+                    <DuoCategoryIcon slug={c.slug} plain size={24} style={{ color: 'rgba(255,255,255,0.7)' }} />
                     <span className="w-full truncate px-1 text-center">{c.name}</span>
                   </Link>
                 </li>

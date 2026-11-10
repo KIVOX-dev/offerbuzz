@@ -19,6 +19,13 @@ const THEMES: Record<PromoTheme, { acc: string; pill: string; ink: string }> = {
   gold: { acc: '#fdba74', pill: '#78350f', ink: '#431407' },
 };
 
+/** Accent from a picked colour, with dark shades of it for the pill and the ink. */
+function customTheme(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  const dark = (k: number) => '#' + [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v * k).toString(16).padStart(2, '0')).join('');
+  return { acc: hex, pill: dark(0.3), ink: dark(0.22) };
+}
+
 /**
  * One banner card: a full 5:8 photo with a live headline, an offer pill, a tagline and a sticker on top. The text is
  * animated (slide in, shine, glow, wiggle) and everything scales with the card width. Pass `href` to make the whole
@@ -35,6 +42,7 @@ export function PromoCard({
   label,
   imagePosition = 'center',
   imageOnly = false,
+  color,
 }: {
   theme: PromoTheme;
   image: string;
@@ -50,8 +58,10 @@ export function PromoCard({
   imagePosition?: string;
   /** just the photo: no text, sticker, shade or zoom */
   imageOnly?: boolean;
+  /** custom accent (#rrggbb): replaces the theme colour; the dark pill and ink are derived from it */
+  color?: string;
 }) {
-  const t = THEMES[theme];
+  const t = color ? customTheme(color) : THEMES[theme];
   const body = (
     <div
       className={`promo rounded-md shadow-card ${imageOnly ? 'promo-plain' : ''}`}
@@ -97,6 +107,7 @@ export interface PromoCardData {
   image: string;
   category?: string;
   imageOnly?: boolean;
+  color?: string;
 }
 
 /** A card drawn from its data. With a category it links to that category's search. */
@@ -112,6 +123,7 @@ export function PromoCardView({ card, linked = true }: { card: PromoCardData; li
       tagline={card.tagline}
       burst={lines.length ? ([lines[0]!, lines[1] ?? '', lines[2]] as [string, string, string?]) : undefined}
       imageOnly={card.imageOnly}
+      color={card.color}
       href={linked && card.category ? `/search?category=${encodeURIComponent(card.category)}` : undefined}
     />
   );

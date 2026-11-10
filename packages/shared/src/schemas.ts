@@ -239,6 +239,8 @@ export const promoCardSchema = z.object({
   /** the sticker: up to three short lines */
   burst: z.array(z.string().trim().max(8)).max(3).default([]),
   theme: z.enum(PROMO_THEMES),
+  /** a custom accent colour (#rrggbb) picked with the colour panel; when set it replaces the theme colour */
+  color: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, 'Pick a colour').optional().or(z.literal('').transform(() => undefined)),
   /** a photo that ships with the site (starts with /) or an https address */
   image: z.string().trim().max(300).regex(/^(\/[A-Za-z0-9_\-./]+|https:\/\/\S+)$/, 'Pick a photo'),
   /** tapping the card opens the search for this category */
