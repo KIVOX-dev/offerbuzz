@@ -80,8 +80,8 @@ const SOCIALS = [
     ),
   },
   {
-    label: 'WhatsApp',
-    href: 'https://wa.me/919345975747',
+    label: 'WhatsApp channel',
+    href: 'https://whatsapp.com/channel/0029Vb9Q3EfElagslFfZrE0V',
     icon: (
       <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden>
         <circle cx="20" cy="20" r="20" fill="#25D366" />

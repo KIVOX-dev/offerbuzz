@@ -16,6 +16,7 @@ const CARD = {
   image: '/banners/electronics.webp',
   category: 'Mobile and Electronics',
 };
+const IMAGE_ONLY = { title: '', burst: [], theme: 'blue', color: '#84002A', image: '/banners/fashion.webp', category: 'Fashion', imageOnly: true };
 const auth = (r: request.Test) => r.set('authorization', `Bearer ${token}`);
 
 beforeAll(async () => {
@@ -115,5 +116,14 @@ describe('home page cards', () => {
     // picking a ready made photo again drops the upload
     await auth(request(app).put(`/api/v1/admin/banners/${card.id}`)).send(CARD);
     expect((await request(app).get(`/api/v1/banners/${card.id}/image`)).status).toBe(404);
+  });
+
+  it('saves an image-only card with no headline, a custom colour and a category', async () => {
+    const res = await auth(request(app).post('/api/v1/admin/banners')).send(IMAGE_ONLY);
+    expect(res.status).toBe(201);
+    expect(res.body.card).toMatchObject({ title: '', imageOnly: true, color: '#84002A', category: 'Fashion' });
+    // a normal card still needs a headline, and every card needs a category
+    expect((await auth(request(app).post('/api/v1/admin/banners')).send({ ...IMAGE_ONLY, imageOnly: false })).status).toBe(400);
+    expect((await auth(request(app).post('/api/v1/admin/banners')).send({ ...IMAGE_ONLY, category: '' })).status).toBe(400);
   });
 });

@@ -4,7 +4,8 @@ import { CATEGORIES, PROMO_THEMES } from '@offerbuzz/shared';
 /** A home page promo card, edited by the admin. Lower `order` shows first. */
 const bannerSchema = new Schema(
   {
-    title: { type: String, required: true, maxlength: 40 },
+    // an image-only card has no headline
+    title: { type: String, default: '', maxlength: 40 },
     subtitle: { type: String, maxlength: 24 },
     offer: { type: String, maxlength: 24 },
     tagline: { type: String, maxlength: 60 },
