@@ -146,7 +146,7 @@ export function HomeHeader({
       {/* category tabs */}
       <nav aria-label="Categories" className="relative mt-2 pb-3 md:mt-0 md:pb-3 md:pt-2">
         <div className="container-page">
-        <ul className="flex gap-1 overflow-x-auto rounded-2xl border border-white/25 bg-white/15 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_8px_32px_rgba(27,14,56,0.30)] backdrop-blur-xl backdrop-saturate-150 [scrollbar-width:none]">
+        <ul className="flex gap-1 overflow-x-auto [scrollbar-width:none]">
           {[{ name: 'All', slug: 'all', from: '#e9e4fb', to: '#ffffff' }, ...categories].map((c, i) => {
             const on = active === i - 1;
             return (

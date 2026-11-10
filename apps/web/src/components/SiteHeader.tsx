@@ -39,7 +39,7 @@ export function SiteHeader({ query = '', activeCategory }: { query?: string; act
 
       <nav aria-label="Categories" className="relative pb-2.5">
         <div className="container-page">
-          <ul className="flex gap-1 overflow-x-auto rounded-2xl border border-white/25 bg-white/15 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_8px_32px_rgba(27,14,56,0.30)] backdrop-blur-xl backdrop-saturate-150 [scrollbar-width:none]">
+          <ul className="flex gap-1 overflow-x-auto [scrollbar-width:none]">
             <li className="w-[84px] shrink-0">
               <Link href="/" className="flex w-full flex-col items-center gap-0.5 py-1 text-small font-medium text-purple-100">
                 <DuoCategoryIcon slug="all" plain size={26} style={{ color: '#ffd60a' }} />
