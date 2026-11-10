@@ -115,7 +115,7 @@ export default function AdminCategories() {
       await load();
     });
 
-  const move = (c: CategoryTileDTO, dir: 'up' | 'down') => run(async () => setItems((await moveHomeCategory(c.id, dir)).categories));
+  const move = (c: CategoryTileDTO, position: number) => run(async () => setItems((await moveHomeCategory(c.id, position)).categories));
   const toggle = (c: CategoryTileDTO) =>
     run(async () => {
       await updateHomeCategory(c.id, toInput({ ...toDraft(c), active: !c.active }));
@@ -138,7 +138,7 @@ export default function AdminCategories() {
       {notice && <p role="status" className="text-small font-semibold text-green-700">{notice}</p>}
       {error && <p role="alert" className="text-small text-danger">{error}</p>}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         {/* the list */}
         <section aria-label="Categories" className="space-y-3">
           {!items ? (
@@ -149,20 +149,28 @@ export default function AdminCategories() {
               <button type="button" className="btn-outline" disabled={busy} onClick={seed}>Start from the standard categories</button>
             </div>
           ) : (
-            <ul className="space-y-2">
+            <ul className="grid gap-2 sm:grid-cols-2">
               {items.map((c, i) => (
-                <li key={c.id} className={`surface flex items-center gap-3 p-2.5 ${draft?.id === c.id ? 'ring-2 ring-purple-500' : ''} ${c.active ? '' : 'opacity-60'}`}>
-                  <img src={c.image} alt="" className="h-14 w-11 shrink-0 rounded-sm object-cover" />
+                <li key={c.id} className={`surface flex items-center gap-2 p-2 ${draft?.id === c.id ? 'ring-2 ring-purple-500' : ''} ${c.active ? '' : 'opacity-60'}`}>
+                  {/* the tile's place on the home page: pick a number to move it there */}
+                  <select
+                    aria-label={`Position of ${c.name}`}
+                    value={i + 1}
+                    disabled={busy}
+                    onChange={(e) => move(c, Number(e.target.value))}
+                    className="h-9 w-12 shrink-0 rounded-md border border-purple-200 bg-purple-50 text-center text-small font-bold text-purple-800"
+                  >
+                    {items.map((_, n) => <option key={n} value={n + 1}>{n + 1}</option>)}
+                  </select>
+                  <img src={c.image} alt="" className="h-10 w-8 shrink-0 rounded-sm object-cover" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{c.name}</p>
-                    <p className="truncate text-small text-muted">{c.category ?? 'Searches its name'}{c.active ? '' : ' · hidden'}</p>
+                    <p className="truncate text-small font-semibold">{c.name}</p>
+                    <p className="truncate text-[11px] text-muted">{c.category ?? 'Searches its name'}{c.active ? '' : ' · hidden'}</p>
                   </div>
-                  <div className="flex shrink-0 flex-wrap justify-end gap-1">
-                    <button type="button" className="btn-outline btn-sm" aria-label="Move up" disabled={busy || i === 0} onClick={() => move(c, 'up')}>↑</button>
-                    <button type="button" className="btn-outline btn-sm" aria-label="Move down" disabled={busy || i === items.length - 1} onClick={() => move(c, 'down')}>↓</button>
-                    <button type="button" className="btn-outline btn-sm" disabled={busy} onClick={() => toggle(c)}>{c.active ? 'Hide' : 'Show'}</button>
-                    <button type="button" className="btn-primary btn-sm" onClick={() => open(toDraft(c))}>Edit</button>
-                    <button type="button" className="btn-outline btn-sm !border-red-300 !text-danger" disabled={busy} onClick={() => remove(c)}>Delete</button>
+                  <div className="flex shrink-0 gap-1">
+                    <button type="button" className="btn-outline btn-sm !px-2" disabled={busy} onClick={() => toggle(c)}>{c.active ? 'Hide' : 'Show'}</button>
+                    <button type="button" className="btn-primary btn-sm !px-2" onClick={() => open(toDraft(c))}>Edit</button>
+                    <button type="button" className="btn-outline btn-sm !border-red-300 !px-2 !text-danger" aria-label={`Delete ${c.name}`} disabled={busy} onClick={() => remove(c)}>✕</button>
                   </div>
                 </li>
               ))}

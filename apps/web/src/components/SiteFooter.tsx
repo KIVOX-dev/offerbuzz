@@ -15,10 +15,10 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     ],
   },
   {
-    title: 'Refer & Earn',
+    title: 'Company',
     links: [
-      { label: 'Refer & Earn sign up', href: '/login/intermediary/sign-up' },
-      { label: 'Refer & Earn login', href: '/login/intermediary/sign-in' },
+      { label: 'About us', href: '/about' },
+      { label: 'FAQ', href: '/faq' },
     ],
   },
   {
@@ -29,6 +29,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
       { label: 'Cookie Policy', href: '/cookies' },
     ],
   },
+];
+
+/** Shown under the Merchants links, in the same column. */
+const REFER_LINKS: FooterLink[] = [
+  { label: 'Refer & Earn sign up', href: '/login/intermediary/sign-up' },
+  { label: 'Refer & Earn login', href: '/login/intermediary/sign-in' },
 ];
 
 const SOCIALS = [
@@ -153,6 +159,20 @@ export function SiteFooter() {
                     </li>
                   )}
                 </ul>
+                {col.title === 'Merchants' && (
+                  <div className="mt-8">
+                    <Heading>Refer & Earn</Heading>
+                    <ul className="space-y-3.5">
+                      {REFER_LINKS.map((l) => (
+                        <li key={l.label}>
+                          <Link href={l.href} className="text-body font-medium text-ink transition hover:text-purple-800">
+                            {l.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </nav>
             ))}
           </div>

@@ -216,8 +216,8 @@ export const getAdminHomeCategories = () => authApi<{ categories: CategoryTileDT
 export const createHomeCategory = (body: CategoryTileInput) => authApi<{ category: CategoryTileDTO }>('/admin/home-categories', { method: 'POST', json: body });
 export const updateHomeCategory = (id: string, body: CategoryTileInput) => authApi<{ category: CategoryTileDTO }>(`/admin/home-categories/${id}`, { method: 'PUT', json: body });
 export const deleteHomeCategory = (id: string) => authApi<void>(`/admin/home-categories/${id}`, { method: 'DELETE' });
-export const moveHomeCategory = (id: string, direction: 'up' | 'down') =>
-  authApi<{ categories: CategoryTileDTO[] }>(`/admin/home-categories/${id}/move`, { method: 'POST', json: { direction } });
+export const moveHomeCategory = (id: string, position: number) =>
+  authApi<{ categories: CategoryTileDTO[] }>(`/admin/home-categories/${id}/move`, { method: 'POST', json: { position } });
 export const seedHomeCategories = () => authApi<{ categories: CategoryTileDTO[] }>('/admin/home-categories/seed-defaults', { method: 'POST', json: {} });
 export const uploadHomeCategoryImage = (id: string, image: Blob) =>
   authApi<{ category: CategoryTileDTO }>(`/admin/home-categories/${id}/image`, { method: 'PUT', body: image, headers: { 'content-type': image.type } });

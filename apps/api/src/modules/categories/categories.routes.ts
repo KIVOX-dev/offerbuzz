@@ -92,13 +92,15 @@ categoriesRouter.post(
   '/admin/home-categories/:id/move',
   wrap(async (req, res) => {
     const id = idOf(req.params.id);
+    const wanted = Number(req.body?.position); // 1-based place to move the tile to
     const dir = req.body?.direction === 'up' ? -1 : 1;
     const rows = await CategoryTile.find().sort({ order: 1, createdAt: 1 });
     const i = rows.findIndex((r) => String(r._id) === id);
     if (i < 0) throw notFound('Category not found');
-    const j = i + dir;
-    if (j >= 0 && j < rows.length) {
-      [rows[i], rows[j]] = [rows[j]!, rows[i]!];
+    const j = Number.isInteger(wanted) && wanted >= 1 ? Math.min(wanted, rows.length) - 1 : i + dir;
+    if (j >= 0 && j < rows.length && j !== i) {
+      const [moved] = rows.splice(i, 1);
+      rows.splice(j, 0, moved!);
       await CategoryTile.bulkWrite(rows.map((r, order) => ({ updateOne: { filter: { _id: r._id }, update: { order } } })));
     }
     const fresh = await CategoryTile.find().sort({ order: 1, createdAt: 1 });

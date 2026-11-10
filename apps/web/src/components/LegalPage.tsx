@@ -5,7 +5,7 @@ import { Logo } from './Logo';
 export type LegalSection = { heading: string; body: string[]; bullets?: string[] };
 
 /** Shared shell for the Terms, Privacy and Cookie pages. */
-export function LegalPage({ title, updated, intro, sections }: { title: string; updated: string; intro: string; sections: LegalSection[] }) {
+export function LegalPage({ title, updated, intro, sections }: { title: string; updated?: string; intro: string; sections: LegalSection[] }) {
   const anchor = (i: number) => `s${i + 1}`;
   return (
     <main className="min-h-screen">
@@ -18,7 +18,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
       <article className="container-page max-w-3xl space-y-8 py-8">
         <div>
           <h1 className="text-title font-bold">{title}</h1>
-          <p className="mt-1 text-small text-muted">Last updated: {updated}</p>
+          {updated && <p className="mt-1 text-small text-muted">Last updated: {updated}</p>}
           <p className="mt-3">{intro}</p>
         </div>
 
@@ -48,7 +48,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
         ))}
 
         <p className="border-t border-purple-100 pt-4 text-small text-muted">
-          Questions? Call +91 93459 75747 between 09:00 AM and 09:00 PM, or write to us at #3, 3rd Street, Thiruvallur Nagar, Ramanathapuram, Coimbatore - 641045.
+          Questions? Call +91 93459 75747 between 09:00 AM and 09:00 PM, or write to us at support@offerbuzz.co.
         </p>
       </article>
     </main>
