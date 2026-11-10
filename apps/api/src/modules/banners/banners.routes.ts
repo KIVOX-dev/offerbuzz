@@ -23,6 +23,7 @@ function toDTO(b: BannerDoc): PromoCardDTO {
     // the date in the address makes browsers fetch a replaced photo instead of the cached one
     image: b.hasUpload ? `/api/v1/banners/${b._id}/image?v=${b.updatedAt.getTime()}` : b.image,
     category: b.category || undefined,
+    imageOnly: Boolean(b.imageOnly),
     active: b.active,
     order: b.order,
   };

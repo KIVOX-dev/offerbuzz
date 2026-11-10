@@ -230,7 +230,8 @@ export type RejectPayoutInput = z.infer<typeof rejectPayoutSchema>;
 // ---- Home page promo cards ---------------------------------------------------------------------------------
 const promoText = (max: number) => z.string().trim().max(max).optional().or(z.literal('').transform(() => undefined));
 export const promoCardSchema = z.object({
-  title: z.string().trim().min(1, 'Enter a headline').max(40),
+  /** may be empty only for an image-only card */
+  title: z.string().trim().max(40).default(''),
   /** the small line under the headline, e.g. "of India" */
   subtitle: promoText(24),
   offer: promoText(24),
@@ -242,8 +243,10 @@ export const promoCardSchema = z.object({
   image: z.string().trim().max(300).regex(/^(\/[A-Za-z0-9_\-./]+|https:\/\/\S+)$/, 'Pick a photo'),
   /** tapping the card opens the search for this category */
   category: z.enum(CATEGORIES).optional().or(z.literal('').transform(() => undefined)),
+  /** show just the photo: no text, sticker, dark shade or zoom effect (the photo already has its own text) */
+  imageOnly: z.boolean().default(false),
   active: z.boolean().default(true),
-});
+}).refine((v) => v.imageOnly || v.title.length > 0, { message: 'Enter a headline', path: ['title'] });
 export type PromoCardInput = z.infer<typeof promoCardSchema>;
 
 // ---- Home page "Shop by Category" tiles ----------------------------------------------------------------------

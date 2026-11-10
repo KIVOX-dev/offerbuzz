@@ -36,6 +36,7 @@ interface Draft {
   theme: PromoTheme;
   image: string;
   category: string;
+  imageOnly: boolean;
   active: boolean;
 }
 
@@ -48,6 +49,7 @@ const blank = (): Draft => ({
   theme: 'blue',
   image: PROMO_PRESET_IMAGES[0],
   category: '',
+  imageOnly: false,
   active: true,
 });
 
@@ -61,6 +63,7 @@ const toDraft = (c: PromoCardDTO): Draft => ({
   theme: c.theme,
   image: c.image,
   category: c.category ?? '',
+  imageOnly: c.imageOnly,
   active: c.active,
 });
 
@@ -74,6 +77,7 @@ const toInput = (d: Draft): PromoCardInput => ({
   // an uploaded photo's address carries a "?v=" stamp the API does not accept back
   image: d.image.split('?')[0]!,
   category: (d.category || undefined) as PromoCardInput['category'],
+  imageOnly: d.imageOnly,
   active: d.active,
 });
 
@@ -178,6 +182,7 @@ export default function AdminBanners() {
         theme: draft.theme,
         image: fileUrl ?? draft.image,
         category: undefined,
+        imageOnly: draft.imageOnly,
       },
     [draft, fileUrl],
   );
@@ -211,7 +216,7 @@ export default function AdminBanners() {
                 <li key={c.id} className={`surface flex items-center gap-3 p-2.5 ${draft?.id === c.id ? 'ring-2 ring-purple-500' : ''} ${c.active ? '' : 'opacity-60'}`}>
                   <img src={c.image} alt="" className="h-16 w-10 shrink-0 rounded-sm object-cover" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{c.title}{c.subtitle ? ` ${c.subtitle}` : ''}</p>
+                    <p className="truncate font-semibold">{c.imageOnly ? 'Image only' : `${c.title}${c.subtitle ? ` ${c.subtitle}` : ''}`}</p>
                     <p className="truncate text-small text-muted">{c.offer ?? 'No offer line'} · {c.category ?? 'No link'}{c.active ? '' : ' · hidden'}</p>
                   </div>
                   <div className="flex shrink-0 flex-wrap justify-end gap-1">
@@ -242,9 +247,18 @@ export default function AdminBanners() {
               <div className="order-2 space-y-3 sm:order-1">
                 <h2 className="text-section font-bold">{draft.id ? 'Edit card' : 'New card'}</h2>
 
+                <label className="flex items-start gap-2 rounded-md border border-purple-200 bg-purple-50 p-2.5 text-small font-semibold">
+                  <input type="checkbox" className="mt-0.5" checked={draft.imageOnly} onChange={(e) => set('imageOnly', e.target.checked)} />
+                  <span>
+                    Image only
+                    <span className="block font-normal text-muted">Show just the photo, with no text, sticker, shade or effects. Use it for ready-made designed images.</span>
+                  </span>
+                </label>
+
+                <div className={draft.imageOnly ? 'hidden' : 'space-y-3'}>
                 <label className="block text-small font-semibold">
                   Headline
-                  <input className="input mt-1" required maxLength={40} value={draft.title} onChange={(e) => set('title', e.target.value)} />
+                  <input className="input mt-1" required={!draft.imageOnly} maxLength={40} value={draft.title} onChange={(e) => set('title', e.target.value)} />
                 </label>
                 <label className="block text-small font-semibold">
                   Small line under it <span className="font-normal text-muted">(optional, like "of India")</span>
@@ -267,8 +281,9 @@ export default function AdminBanners() {
                     ))}
                   </div>
                 </fieldset>
+                </div>
 
-                <fieldset>
+                <fieldset className={draft.imageOnly ? 'hidden' : ''}>
                   <legend className="text-small font-semibold">Colour</legend>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {PROMO_THEMES.map((t) => (
@@ -330,7 +345,7 @@ export default function AdminBanners() {
                 </label>
 
                 <div className="flex gap-2">
-                  <button type="submit" className="btn-primary" disabled={busy || !draft.title.trim()}>{busy ? 'Saving...' : 'Save card'}</button>
+                  <button type="submit" className="btn-primary" disabled={busy || (!draft.imageOnly && !draft.title.trim())}>{busy ? 'Saving...' : 'Save card'}</button>
                   <button type="button" className="btn-outline" disabled={busy} onClick={() => setDraft(undefined)}>Cancel</button>
                 </div>
               </div>

@@ -266,6 +266,8 @@ export interface PromoCardDTO {
   /** a photo path, or the API address of an uploaded photo */
   image: string;
   category?: string;
+  /** show just the photo, with no text or effects */
+  imageOnly: boolean;
   active: boolean;
   order: number;
 }

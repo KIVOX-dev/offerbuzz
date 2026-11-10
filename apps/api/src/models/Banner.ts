@@ -12,6 +12,7 @@ const bannerSchema = new Schema(
     theme: { type: String, enum: PROMO_THEMES, required: true },
     image: { type: String, required: true },
     category: { type: String, enum: CATEGORIES },
+    imageOnly: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
     order: { type: Number, default: 0, index: true },
     /** an uploaded photo is stored in BannerImage and served from the API */

@@ -34,6 +34,7 @@ export function PromoCard({
   href,
   label,
   imagePosition = 'center',
+  imageOnly = false,
 }: {
   theme: PromoTheme;
   image: string;
@@ -47,22 +48,26 @@ export function PromoCard({
   label: string;
   /** CSS background-position for the photo, to keep the subject in view */
   imagePosition?: string;
+  /** just the photo: no text, sticker, shade or zoom */
+  imageOnly?: boolean;
 }) {
   const t = THEMES[theme];
   const body = (
     <div
-      className="promo rounded-md shadow-card"
+      className={`promo rounded-md shadow-card ${imageOnly ? 'promo-plain' : ''}`}
       style={{ '--acc': t.acc, '--pill': t.pill, '--ink': t.ink } as CSSProperties}
     >
       <div className="promo-bg" style={{ backgroundImage: `url(${JSON.stringify(image)})`, backgroundPosition: imagePosition }} />
 
-      <div className="promo-text">
-        <h2 className="promo-title">{title}</h2>
-        {offer && <span className="promo-pill">{offer}</span>}
-        {tagline && <p className="promo-tag">{tagline}</p>}
-      </div>
+      {!imageOnly && (
+        <div className="promo-text">
+          <h2 className="promo-title">{title}</h2>
+          {offer && <span className="promo-pill">{offer}</span>}
+          {tagline && <p className="promo-tag">{tagline}</p>}
+        </div>
+      )}
 
-      {burst && (
+      {burst && !imageOnly && (
         <span className="promo-badge" aria-hidden>
           <svg viewBox="0 0 100 100">
             <polygon points={BURST} fill={t.acc} stroke={t.ink} strokeOpacity={0.35} strokeWidth="2" />
@@ -91,6 +96,7 @@ export interface PromoCardData {
   theme: PromoTheme;
   image: string;
   category?: string;
+  imageOnly?: boolean;
 }
 
 /** A card drawn from its data. With a category it links to that category's search. */
@@ -105,6 +111,7 @@ export function PromoCardView({ card, linked = true }: { card: PromoCardData; li
       offer={card.offer}
       tagline={card.tagline}
       burst={lines.length ? ([lines[0]!, lines[1] ?? '', lines[2]] as [string, string, string?]) : undefined}
+      imageOnly={card.imageOnly}
       href={linked && card.category ? `/search?category=${encodeURIComponent(card.category)}` : undefined}
     />
   );
