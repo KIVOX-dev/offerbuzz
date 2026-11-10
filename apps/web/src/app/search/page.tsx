@@ -9,7 +9,7 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { SiteHits } from '@/components/SiteHits';
 import { OfferCard } from '@/components/OfferCard';
 import { Reveal } from '@/components/Reveal';
-import { DuoOffersIcon } from '@/components/Icons';
+import { DuoOffersIcon, FilterIcon } from '@/components/Icons';
 import { searchOffers } from '@/lib/api';
 import { useVisitorLocation } from '@/lib/location';
 
@@ -215,7 +215,7 @@ function Results() {
             </div>
             {/* phones: one Filters button opens everything */}
             <button type="button" onClick={() => setSheet(true)} className="btn-outline gap-2 lg:hidden">
-              Filters{active > 0 && <span className="rounded-full bg-purple-700 px-2 text-small text-white">{active}</span>}
+              <FilterIcon size={18} /> Filters{active > 0 && <span className="rounded-full bg-purple-700 px-2 text-small text-white">{active}</span>}
             </button>
           </div>
 

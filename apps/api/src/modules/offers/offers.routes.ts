@@ -26,6 +26,7 @@ import { forwardGeocode, reverseGeocode } from '../../services/geocode';
 import { ensureGeoIndexes } from '../../services/backfill';
 import { Offer, type OfferDoc } from '../../models/Offer';
 import { OfferImage } from '../../models/OfferImage';
+import { score, searchTerms, wordRegex } from '../../utils/searchTerms';
 
 export const offersRouter = Router();
 
@@ -217,7 +218,8 @@ offersRouter.get(
   validate(suggestQuerySchema, 'query'),
   wrap(async (req, res) => {
     const { q } = req.query as unknown as SuggestQuery;
-    const rx = new RegExp(escapeRegex(q), 'i');
+    const terms = searchTerms(q);
+    const rx = wordRegex(terms.prefixes) ?? new RegExp(escapeRegex(q), 'i');
     const [shops, offers] = await Promise.all([
       User.find({ role: 'merchant', status: 'active', shopName: rx, 'location.coordinates.0': { $exists: true } }).select('shopName').limit(4),
       Offer.find({ ...liveWindow(), title: rx }).select('title merchantId').sort({ createdAt: -1 }).limit(5),
@@ -225,7 +227,7 @@ offersRouter.get(
     const owners = await User.find({ _id: { $in: offers.map((o) => o.merchantId) } }).select('shopName name');
     const ownerName = new Map(owners.map((u) => [String(u._id), u.shopName || u.name || 'Shop']));
     const body: SuggestResponse = {
-      categories: CATEGORIES.filter((c) => rx.test(c)).slice(0, 4),
+      categories: [...new Set([...CATEGORIES.filter((c) => rx.test(c)), ...terms.categories])].slice(0, 4),
       shops: shops.map((u) => ({ id: String(u._id), name: u.shopName as string })),
       offers: offers.map((o) => ({ id: String(o._id), title: o.title, shop: ownerName.get(String(o.merchantId)) ?? 'Shop' })),
     };
@@ -243,10 +245,17 @@ offersRouter.get(
     const filter: Record<string, unknown> = { ...liveWindow() };
     if (q.category) filter.category = q.category;
     if (q.subcategory) filter.subcategory = q.subcategory;
-    if (q.q) {
-      const rx = new RegExp(escapeRegex(q.q), 'i');
+    // the closest results: any word of the search may match (plurals and missing end letters forgiven), and everyday
+    // words point at a category (kurthis -> Fashion). Best matches first.
+    const terms = q.q ? searchTerms(q.q) : undefined;
+    if (q.q && terms) {
+      const rx = wordRegex(terms.prefixes) ?? new RegExp(escapeRegex(q.q), 'i');
       const shopIds = await User.find({ role: 'merchant', status: 'active', shopName: rx }).select('_id').limit(50);
-      filter.$or = [{ title: rx }, { description: rx }, { category: rx }, { area: rx }, { merchantId: { $in: shopIds.map((u) => u._id) } }];
+      filter.$or = [
+        { title: rx }, { description: rx }, { category: rx }, { subcategory: rx }, { area: rx },
+        { merchantId: { $in: shopIds.map((u) => u._id) } },
+        ...(terms.categories.length ? [{ category: { $in: terms.categories } }] : []),
+      ];
     }
     const docs = await Offer.find(filter).sort({ createdAt: -1 }).limit(200);
     const vendors = await User.find({ _id: { $in: docs.map((o) => o.merchantId) }, status: 'active' }).select('name shopName website location locationAddress placeId');
@@ -260,8 +269,15 @@ offersRouter.get(
         const dto = toPublicOffer(o, v, here ? distanceM(here.lat, here.lng, c[1], c[0]) : undefined);
         return dto ? [dto] : [];
       })
-      // newest first from the query above; with a location the nearest shops come first (sort is stable)
-      .sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0))
+      // best text match first; then, with a location, the nearest shops; otherwise newest first (the sort is stable)
+      .sort((a, b) => {
+        if (terms) {
+          const rank = (o: PublicOfferDTO) => score(terms.prefixes, { title: o.title, subcategory: o.subcategory, shop: o.shop.name, category: o.category, description: o.description, area: o.area });
+          const d = rank(b) - rank(a);
+          if (d !== 0) return d;
+        }
+        return (a.distanceKm ?? 0) - (b.distanceKm ?? 0);
+      })
       .slice(0, q.limit);
     const body: NearbyOffersResponse = { offers };
     res.json(body);
