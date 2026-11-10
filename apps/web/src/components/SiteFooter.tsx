@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Logo } from './Logo';
-import { ClockIcon, PhoneIcon, PinIcon } from './Icons';
+import { ClockIcon, MailIcon, PhoneIcon } from './Icons';
 import { CookieSettingsButton } from './CookieBanner';
 import { SiteHits } from './SiteHits';
 
@@ -101,11 +101,9 @@ export function SiteFooter() {
               Your path to the best local offers: shops, deals and savings near you, all in one place.
             </p>
             <ul className="mt-6 space-y-3 text-body font-medium text-ink">
-              <li>
-                <div className="flex items-start gap-3">
-                  <PinIcon size={18} className="mt-0.5 shrink-0 text-purple-900" />
-                  <span>We are in Chennai, Bangalore, Coimbatore</span>
-                </div>
+              <li className="flex items-center gap-3">
+                <MailIcon size={18} className="shrink-0 text-purple-900" />
+                <a href="mailto:support@offerbuzz.co" className="transition hover:text-purple-800">support@offerbuzz.co</a>
               </li>
               <li className="flex items-center gap-3">
                 <PhoneIcon size={18} className="shrink-0 text-purple-900" />

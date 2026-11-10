@@ -305,7 +305,7 @@ export default function AdminBanners() {
                     ))}
                     <label className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-small font-semibold ${draft.color ? 'border-purple-600 bg-purple-50' : 'border-purple-100'}`}>
                       <input type="color" aria-label="Pick any colour" value={draft.color || THEME_LABEL[draft.theme].dot}
-                        onChange={(e) => set('color', e.target.value)} className="h-5 w-7 cursor-pointer rounded border-0 bg-transparent p-0" />
+                        onChange={(e) => set('color', e.target.value)} className="h-4 w-4 cursor-pointer appearance-none overflow-hidden rounded-full border-0 bg-transparent p-0 [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0" />
                       Custom {draft.color && <span className="font-mono font-normal uppercase text-muted">{draft.color}</span>}
                     </label>
                   </div>
