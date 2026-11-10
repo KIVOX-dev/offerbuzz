@@ -10,7 +10,9 @@ import {
   type AdminUsersQuery,
   type AdminUsersResponse,
   type AdminWalletsResponse,
+  type MerchantPlan,
   type PayoutRequestDTO,
+  planAmount,
 } from '@offerbuzz/shared';
 import { User, type UserDoc } from '../../models/User';
 import { Offer } from '../../models/Offer';
@@ -74,6 +76,7 @@ export async function listUsers(q: AdminUsersQuery): Promise<AdminUsersResponse>
     User.find({ _id: { $in: referrerIds } }).select('name email'),
   ]);
   const paidUntil = new Map(subs.map((s) => [String(s.merchantId), s.paidUntil]));
+  const planOf = new Map(subs.map((s) => [String(s.merchantId), s.plan]));
   const refName = new Map(referrers.map((r) => [String(r._id), r.name || r.email || 'Refer & Earn']));
   const now = Date.now();
   const users: AdminUserDTO[] = docs.map((u: UserDoc & { createdAt?: Date }) => {
@@ -89,7 +92,7 @@ export async function listUsers(q: AdminUsersQuery): Promise<AdminUsersResponse>
       city: u.city ?? undefined,
       referredBy: u.referredBy ? refName.get(String(u.referredBy)) : undefined,
       ...(u.role === 'merchant'
-        ? { paidUntil: until?.toISOString(), subscribed: Boolean(until && until.getTime() > now) }
+        ? { paidUntil: until?.toISOString(), plan: planOf.get(String(u._id)) ?? undefined, subscribed: Boolean(until && until.getTime() > now) }
         : {}),
       createdAt: (u.createdAt ?? new Date(0)).toISOString(),
     };
@@ -114,7 +117,7 @@ export async function setUserStatus(adminId: string, userId: string, status: 'ac
  * Records that a vendor paid for `months` of the plan (until a payment gateway calls this itself). Extends the paid
  * period and credits the vendor's referrer once per month.
  */
-export async function recordSubscriptionPayment(merchantId: string, months: number) {
+export async function recordSubscriptionPayment(merchantId: string, months: number, plan: MerchantPlan = 'basic') {
   if (!mongoose.isValidObjectId(merchantId)) throw notFound('Merchant not found');
   const vendor = await User.findById(merchantId).select('role');
   if (!vendor) throw notFound('Merchant not found');
@@ -123,13 +126,16 @@ export async function recordSubscriptionPayment(merchantId: string, months: numb
   const existing = await Subscription.findOne({ merchantId });
   const start = existing && existing.paidUntil > now ? existing.paidUntil : now;
   const paidUntil = addMonths(start, months);
-  await Subscription.findOneAndUpdate({ merchantId }, { paidUntil, lastPaidAt: now }, { upsert: true });
+  await Subscription.findOneAndUpdate({ merchantId }, { paidUntil, lastPaidAt: now, plan }, { upsert: true });
+  // what the merchant paid, spread evenly over the months: the partner earns the commission % of each month's share
+  const amount = planAmount(plan, months);
+  const perMonth = amount / months;
   let credited = 0;
   for (let i = 0; i < months; i++) {
     const period = addMonths(start, i).toISOString().slice(0, 7);
-    if (await creditReferrerForSubscription(merchantId, period)) credited += 1;
+    if (await creditReferrerForSubscription(merchantId, period, perMonth)) credited += 1;
   }
-  return { paidUntil: paidUntil.toISOString(), referrerCredited: credited > 0 };
+  return { paidUntil: paidUntil.toISOString(), plan, amount, referrerCredited: credited > 0 };
 }
 
 export async function walletsOverview(): Promise<AdminWalletsResponse> {

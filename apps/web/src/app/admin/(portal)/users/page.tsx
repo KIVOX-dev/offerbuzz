@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import type { AdminUserDTO, AdminUsersResponse } from '@offerbuzz/shared';
+import { MERCHANT_PLANS, MERCHANT_PLAN_KEYS, planAmount, type AdminUserDTO, type AdminUsersResponse, type MerchantPlan } from '@offerbuzz/shared';
 import { ApiRequestError, getAdminUsers, recordPayment, setUserStatus } from '@/lib/api';
 import { Select } from '@/components/Select';
 
@@ -30,6 +30,7 @@ export default function AdminUsers() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<AdminUsersResponse>();
   const [months, setMonths] = useState<Record<string, number>>({});
+  const [plans, setPlans] = useState<Record<string, MerchantPlan>>({});
   const [busy, setBusy] = useState<string>();
   const [error, setError] = useState<string>();
   const [notice, setNotice] = useState<string>();
@@ -91,7 +92,7 @@ export default function AdminUsers() {
       <td className="p-3 whitespace-nowrap">
         {u.role === 'merchant' ? (
           <span className={`font-semibold ${u.subscribed ? 'text-green-700' : 'text-amber-700'}`}>
-            {u.subscribed ? `Paid until ${fmt(u.paidUntil as string)}` : u.paidUntil ? `Ended ${fmt(u.paidUntil)}` : 'Not subscribed'}
+            {u.subscribed ? `${u.plan ? `${MERCHANT_PLANS[u.plan].name}: ` : ''}Paid until ${fmt(u.paidUntil as string)}` : u.paidUntil ? `Ended ${fmt(u.paidUntil)}` : 'Not subscribed'}
           </span>
         ) : (
           '-'
@@ -103,6 +104,13 @@ export default function AdminUsers() {
             {u.role === 'merchant' && (
               <>
                 <Select
+                  ariaLabel="Plan"
+                  className="h-9 w-auto px-2 text-small"
+                  value={plans[u.id] ?? 'basic'}
+                  onChange={(v) => setPlans((m) => ({ ...m, [u.id]: v }))}
+                  options={MERCHANT_PLAN_KEYS.map((k) => ({ value: k as MerchantPlan, label: `${MERCHANT_PLANS[k].name} Rs ${MERCHANT_PLANS[k].price}` }))}
+                />
+                <Select
                   ariaLabel="Months paid"
                   className="h-9 w-auto px-2 text-small"
                   value={months[u.id] ?? 1}
@@ -110,8 +118,8 @@ export default function AdminUsers() {
                   options={[1, 3, 6, 12].map((m) => ({ value: m, label: `${m} month${m > 1 ? 's' : ''}` }))}
                 />
                 <button type="button" className="btn-secondary btn-sm" disabled={busy === u.id}
-                  onClick={() => act(u.id, () => recordPayment(u.id, months[u.id] ?? 1), `Payment recorded for ${u.name || u.email}`)}>
-                  Record payment
+                  onClick={() => act(u.id, () => recordPayment(u.id, months[u.id] ?? 1, plans[u.id] ?? 'basic'), `Payment of Rs ${planAmount(plans[u.id] ?? 'basic', months[u.id] ?? 1)} recorded for ${u.name || u.email}`)}>
+                  Record payment (Rs {planAmount(plans[u.id] ?? 'basic', months[u.id] ?? 1)})
                 </button>
               </>
             )}

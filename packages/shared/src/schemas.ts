@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CATEGORIES, DISCOUNT_TYPES, OTP, PROMO_THEMES, ROLES, SELF_SERVE_ROLES, SUBCATEGORIES, USER_STATUSES } from './constants';
+import { CATEGORIES, DISCOUNT_TYPES, MERCHANT_PLAN_KEYS, OTP, PROMO_THEMES, ROLES, SELF_SERVE_ROLES, SUBCATEGORIES, USER_STATUSES } from './constants';
 
 /** Accepts 10 digits, 91XXXXXXXXXX or +91XXXXXXXXXX (Indian mobiles) and returns +91XXXXXXXXXX, or null. */
 export function normalizePhone(input: string): string | null {
@@ -198,7 +198,10 @@ export const adminUsersQuerySchema = z.object({
 });
 /** Only these two moves are allowed from the admin screen: approve/unblock, or block. */
 export const setUserStatusSchema = z.object({ status: z.enum(['active', 'blocked']) });
-export const recordPaymentSchema = z.object({ months: z.coerce.number().int().min(1).max(12).default(1) });
+export const recordPaymentSchema = z.object({
+  months: z.coerce.number().int().min(1).max(12).default(1),
+  plan: z.enum(MERCHANT_PLAN_KEYS).default('basic'),
+});
 /** How the intermediary wants to be paid: a UPI mobile number, or full bank details. */
 export const payoutRequestSchema = z.discriminatedUnion('method', [
   z.object({

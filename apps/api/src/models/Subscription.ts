@@ -5,6 +5,7 @@ const subscriptionSchema = new Schema(
   {
     merchantId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     paidUntil: { type: Date, required: true, index: true },
+    plan: { type: String, enum: ['basic', 'premium', 'featured'], default: 'basic' },
     lastPaidAt: { type: Date, required: true },
   },
   { timestamps: true },

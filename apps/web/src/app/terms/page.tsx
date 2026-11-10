@@ -58,7 +58,7 @@ const sections: LegalSection[] = [
   {
     heading: 'Merchant plan and payments',
     body: [
-      'Posting offers requires an active paid plan. The plan is billed monthly. The current price is shown in the app and is currently Rs 100 per month. We may change the price or introduce new plans, and a change will apply to the next billing period after we tell you.',
+      'Posting offers requires an active paid plan. We offer three monthly plans: Basic (currently Rs 149 per month), Premium (currently Rs 349 per month) and Featured (currently Rs 599 per month), as described on our Plans page. Paying for 6 or 12 months at once is currently 10% cheaper. We may change the prices or plans, and a change will apply to the next billing period after we tell you.',
       'A plan runs until its paid-until date. After that date there is a short grace period (currently 3 days) during which your offers stay visible; if the plan is not renewed by then, your offers are hidden until you pay again.',
       'Payments are recorded against your account once we receive them. Plan fees are for access to the platform for the month and are generally non-refundable once the month has started, except where the law requires otherwise or where we agree in writing, for example for a duplicate payment.',
     ],
@@ -75,7 +75,7 @@ const sections: LegalSection[] = [
     body: ['Refer & Earn partners refer shops to OfferBuzz using a personal referral code or QR code. The following rules apply:'],
     bullets: [
       'Refer & Earn partner accounts need our approval before they can earn or withdraw rewards, and we may approve or decline an application at our discretion.',
-      'A reward is earned only when a shop you referred signs up with your code and pays for its plan. When that happens, reward credits (1 credit = Rs 1) are added to your wallet. The credit amount per paid month is set by us and is currently 30 credits; we may change it for future payments.',
+      'A reward is earned only when a shop you referred signs up with your code and pays for its plan. When that happens, reward credits (1 credit = Rs 1) are added to your wallet. The reward is currently 25% of the subscription amount the referred shop pays; we may change the percentage for future payments.',
       'New credits are held before they can be withdrawn. The holding period is currently 365 days from the date the credit is created. Credits on hold are shown in your wallet and cannot be withdrawn until released.',
       'You can request a payout once your available balance reaches the minimum (currently 100 credits). Only one payout request can wait at a time. Payouts are reviewed and paid outside the app (for example by bank transfer or UPI) and the wallet is reduced once we record the payment.',
       'Credits are not a bank balance or e-money, earn no interest, cannot be transferred or sold, and have no cash value except through an approved payout.',

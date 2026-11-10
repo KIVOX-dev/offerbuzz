@@ -13,6 +13,7 @@ import type {
   CategoryTileInput,
   AuthResponse,
   AuthTokens,
+  MerchantPlan,
   MyOffersResponse,
   NearbyOffersResponse,
   PublicOfferDTO,
@@ -183,8 +184,8 @@ export const getAdminUsers = (q: { role?: string; status?: string; q?: string; p
   authApi<AdminUsersResponse>(`/admin/users${qs(q)}`);
 export const setUserStatus = (id: string, status: 'active' | 'blocked') =>
   authApi<{ id: string; status: string }>(`/admin/users/${id}/status`, { method: 'PATCH', json: { status } });
-export const recordPayment = (id: string, months: number) =>
-  authApi<{ paidUntil: string; referrerCredited: boolean }>(`/admin/vendors/${id}/payment`, { method: 'POST', json: { months } });
+export const recordPayment = (id: string, months: number, plan: MerchantPlan) =>
+  authApi<{ paidUntil: string; plan: MerchantPlan; amount: number; referrerCredited: boolean }>(`/admin/vendors/${id}/payment`, { method: 'POST', json: { months, plan } });
 export const getAdminOffers = (q: { view?: string; category?: string }) => authApi<AdminOffersResponse>(`/admin/offers${qs(q)}`);
 export const setOfferStatus = (id: string, status: 'active' | 'rejected') =>
   authApi<{ id: string; status: string }>(`/admin/offers/${id}/status`, { method: 'PATCH', json: { status } });

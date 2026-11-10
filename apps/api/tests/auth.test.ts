@@ -768,12 +768,12 @@ describe('referrals and intermediary wallet', () => {
   it('a paid subscription credits the referrer once per month, held for the hold period', async () => {
     const agent = await referrer();
     const v = await vendorVia(agent.code);
-    const credit = await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11');
+    const credit = await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11', 120);
     expect(credit).toMatchObject({ credits: 30, reason: 'subscription', kind: 'credit' });
     // the same payment delivered twice changes nothing
-    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11')).toBeNull();
+    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11', 120)).toBeNull();
     // a later month is a new commission
-    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-12')).not.toBeNull();
+    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-12', 120)).not.toBeNull();
 
     const w = await wallet(agent.token);
     expect(w.status).toBe(200);
@@ -785,10 +785,10 @@ describe('referrals and intermediary wallet', () => {
   it('credits past the hold period become available; payouts reduce what is available', async () => {
     const agent = await referrer();
     const v = await vendorVia(agent.code);
-    await svc2().creditReferrerForSubscription(v.body.user.id, '2025-01');
+    await svc2().creditReferrerForSubscription(v.body.user.id, '2025-01', 120);
     const WalletEntry = (await import('../src/models/WalletEntry')).WalletEntry;
     await WalletEntry.updateOne({ period: '2025-01' }, { availableAt: new Date(Date.now() - 1000) });
-    await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11');
+    await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11', 120);
 
     let w = (await wallet(agent.token)).body;
     expect(w).toMatchObject({ balance: 60, available: 30, onHold: 30 });
@@ -800,7 +800,7 @@ describe('referrals and intermediary wallet', () => {
 
   it('a vendor with no referrer earns nobody anything, and only intermediaries can open a wallet', async () => {
     const v = await vendorVia(undefined);
-    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11')).toBeNull();
+    expect(await svc2().creditReferrerForSubscription(v.body.user.id, '2026-11', 120)).toBeNull();
     expect((await wallet(v.body.accessToken)).status).toBe(403);
     expect((await request(app).get('/api/v1/wallet')).status).toBe(401);
   });
@@ -868,14 +868,25 @@ describe('admin area', () => {
     o = (await get(t, '/admin/overview')).body;
     expect(o.vendors).toEqual({ total: 2, subscribed: 1, unsubscribed: 1 });
 
-    // two months paid = two commissions of 30 for the intermediary
+    // two months of Basic (Rs 149) = two commissions of 25% (37 each) for the intermediary
     const wallet = await authed(request(app).get('/api/v1/wallet'), agent.accessToken);
-    expect(wallet.body.balance).toBe(60);
+    expect(wallet.body.balance).toBe(74);
     // paying again extends the plan and credits the following months, never the same month twice
     await send2(t, 'post', `/admin/vendors/${vendor.user.id}/payment`, { months: 1 });
-    expect((await authed(request(app).get('/api/v1/wallet'), agent.accessToken)).body.balance).toBe(90);
+    expect((await authed(request(app).get('/api/v1/wallet'), agent.accessToken)).body.balance).toBe(111);
 
     expect((await send2(t, 'post', `/admin/vendors/${agent.user.id}/payment`, {})).status).toBe(400);
+  });
+
+  it('credits the Refer & Earn partner 25% of what the merchant paid, by plan, with the 10% long term discount', async () => {
+    const t = await adminToken();
+    const { agent, vendor } = await agentAndVendor();
+    // Featured for 6 months: 599 x 6 = 3594, less 10% = 3235; 539 a month; 25% = 135 a month; 6 months = 810 credits
+    const paid = await send2(t, 'post', `/admin/vendors/${vendor.user.id}/payment`, { months: 6, plan: 'featured' });
+    expect(paid.body).toMatchObject({ plan: 'featured', amount: 3235 });
+    expect((await authed(request(app).get('/api/v1/wallet'), agent.accessToken)).body).toMatchObject({ balance: 810, commissionPercent: 25 });
+    const users = await get(t, '/admin/users?role=merchant');
+    expect(users.body.users.find((u: { id: string }) => u.id === vendor.user.id)).toMatchObject({ plan: 'featured', subscribed: true });
   });
 
   it('lists users with filters, search and subscription state', async () => {
@@ -918,7 +929,7 @@ describe('admin area', () => {
 
     // 4 commissions of 30 = 120, released from the hold period
     for (const period of ['2025-01', '2025-02', '2025-03', '2025-04']) {
-      await walletSvc.creditReferrerForSubscription(vendor.user.id, period);
+      await walletSvc.creditReferrerForSubscription(vendor.user.id, period, 120);
     }
     await WalletEntry.updateMany({}, { availableAt: new Date(Date.now() - 1000) });
     const ok = await request1();
@@ -945,7 +956,7 @@ describe('admin area', () => {
     const t = await adminToken();
     const { agent, vendor } = await agentAndVendor();
     const WalletEntry = (await import('../src/models/WalletEntry')).WalletEntry;
-    for (const period of ['2025-01', '2025-02', '2025-03', '2025-04']) await walletSvc.creditReferrerForSubscription(vendor.user.id, period);
+    for (const period of ['2025-01', '2025-02', '2025-03', '2025-04']) await walletSvc.creditReferrerForSubscription(vendor.user.id, period, 120);
     await WalletEntry.updateMany({}, { availableAt: new Date(Date.now() - 1000) });
     const req = await authed(request(app).post('/api/v1/wallet/payout-request'), agent.accessToken).send({ method: 'upi', upiNumber: '9876543210' });
     const rej = await send2(t, 'post', `/admin/payouts/${req.body.id}/reject`, { note: 'Bank details missing' });

@@ -48,7 +48,7 @@ adminRouter.post(
   '/admin/vendors/:id/payment',
   validate(recordPaymentSchema),
   wrap(async (req, res) => {
-    res.json(await svc.recordSubscriptionPayment(String(req.params.id), (req.body as RecordPaymentInput).months));
+    res.json(await svc.recordSubscriptionPayment(String(req.params.id), (req.body as RecordPaymentInput).months, (req.body as RecordPaymentInput).plan));
   }),
 );
 

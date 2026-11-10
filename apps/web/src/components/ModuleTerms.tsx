@@ -78,7 +78,7 @@ export const MODULE_TERMS = {
   vendorPlan: {
     title: 'Merchant Plan – Terms & Conditions',
     terms: [
-      'Posting offers requires an active paid plan, billed monthly. The current price is shown in the app.',
+      'Posting offers requires an active paid plan, billed monthly: Basic Rs 149, Premium Rs 349 or Featured Rs 599 per month. Paying for 6 or 12 months at once is 10% cheaper.',
       'Your offers stay visible until the plan’s paid-until date, plus a short grace period.',
       'If the plan is not renewed by the end of the grace period, your offers are hidden until you pay again.',
       'Payments are recorded against your account once OfferBuzz receives them.',

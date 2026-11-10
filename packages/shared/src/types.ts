@@ -130,7 +130,8 @@ export interface WalletResponse {
   totalEarned: number;
   payoutThreshold: number;
   holdDays: number;
-  commissionCredits: number;
+  /** % of each subscription a referred merchant pays that is credited to the partner */
+  commissionPercent: number;
   /** credits in payout requests waiting for the admin */
   requested: number;
   /** available minus requested: what can go into a new payout request */
@@ -181,6 +182,8 @@ export interface AdminUserDTO {
   referredBy?: string;
   /** vendors only: ISO date the paid plan runs until */
   paidUntil?: string;
+  /** the plan the merchant last paid for */
+  plan?: 'basic' | 'premium' | 'featured';
   subscribed?: boolean;
   createdAt: string;
 }

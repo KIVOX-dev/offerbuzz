@@ -48,8 +48,7 @@ export const slugify = (s: string): string =>
 
 /** Defaults for the admin editable settings collection. Never hardcode these in business logic. */
 export const DEFAULT_SETTINGS = {
-  planPrice: 100, // Rs per month
-  commissionCredits: 30, // credits per paid month, 1 credit = Rs 1
+  commissionPercent: 25, // % of every subscription a merchant pays, credited to their Refer & Earn partner (1 credit = Rs 1)
   holdDays: 365,
   payoutThreshold: 100,
   graceDays: 3,
@@ -141,3 +140,22 @@ export const SUBCATEGORIES: Record<(typeof CATEGORIES)[number], readonly string[
   'Home Made Products': ['Pickles & snacks', 'Sweets & savouries', 'Handicrafts', 'Clothing & tailoring', 'Cosmetics'],
   Organic: ['Organic vegetables', 'Grains & pulses', 'Oils & spices', 'Personal care', 'Millets & health foods'],
 };
+
+/** Merchant subscription plans: Rs per month. */
+export const MERCHANT_PLANS = {
+  basic: { name: 'Basic', price: 149 },
+  premium: { name: 'Premium', price: 349 },
+  featured: { name: 'Featured', price: 599 },
+} as const;
+export type MerchantPlan = keyof typeof MERCHANT_PLANS;
+export const MERCHANT_PLAN_KEYS = ['basic', 'premium', 'featured'] as const;
+
+/** Paying for 6 or 12 months at once is 10% cheaper. */
+export const LONG_TERM_DISCOUNT_PERCENT = 10;
+export const LONG_TERM_MIN_MONTHS = 6;
+
+/** What a merchant pays for `months` of a plan, in whole rupees. */
+export function planAmount(plan: MerchantPlan, months: number): number {
+  const gross = MERCHANT_PLANS[plan].price * months;
+  return months >= LONG_TERM_MIN_MONTHS ? Math.round((gross * (100 - LONG_TERM_DISCOUNT_PERCENT)) / 100) : gross;
+}

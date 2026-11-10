@@ -11,10 +11,11 @@ export const currentPeriod = (d = new Date()) => d.toISOString().slice(0, 7);
 /**
  * Called when a referred shop's subscription payment succeeds (the payment webhook, Phase 4, or the admin
  * recording a payment). Pays the shop's intermediary the configured commission, held for `holdDays`. Safe to call
- * twice for the same shop and month: the second call changes nothing and returns null. Returns null when the shop
+ * twice for the same shop and month: the second call changes nothing and returns null. The commission is a percentage
+ * (settings.commissionPercent, 25%) of `paid`, the rupees the shop paid for that month. Returns null when the shop
  * has no referrer.
  */
-export async function creditReferrerForSubscription(merchantId: string, period = currentPeriod()) {
+export async function creditReferrerForSubscription(merchantId: string, period: string, paid: number) {
   const merchant = await User.findById(merchantId).select('referredBy');
   if (!merchant?.referredBy) return null;
   const settings = await getSettings();
@@ -24,7 +25,7 @@ export async function creditReferrerForSubscription(merchantId: string, period =
       merchantId: merchant._id,
       kind: 'credit',
       reason: 'subscription',
-      credits: settings.commissionCredits,
+      credits: Math.round((paid * settings.commissionPercent) / 100),
       period,
       availableAt: new Date(Date.now() + settings.holdDays * DAY),
     });
@@ -100,7 +101,7 @@ export async function getWallet(intermediaryId: string): Promise<WalletResponse>
     totalEarned: b.earned,
     payoutThreshold: settings.payoutThreshold,
     holdDays: settings.holdDays,
-    commissionCredits: settings.commissionCredits,
+    commissionPercent: settings.commissionPercent,
     requested,
     requestable: Math.max(0, b.available - requested),
     shops: referred.map((u) => ({ id: String(u._id), name: u.shopName || u.name || 'Shop', joinedAt: u.createdAt.toISOString() })),

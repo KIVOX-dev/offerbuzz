@@ -5,8 +5,7 @@ import { DEFAULT_SETTINGS } from '@offerbuzz/shared';
 const settingSchema = new Schema(
   {
     key: { type: String, default: 'global', unique: true },
-    planPrice: { type: Number, default: DEFAULT_SETTINGS.planPrice },
-    commissionCredits: { type: Number, default: DEFAULT_SETTINGS.commissionCredits },
+    commissionPercent: { type: Number, default: DEFAULT_SETTINGS.commissionPercent },
     holdDays: { type: Number, default: DEFAULT_SETTINGS.holdDays },
     payoutThreshold: { type: Number, default: DEFAULT_SETTINGS.payoutThreshold },
     graceDays: { type: Number, default: DEFAULT_SETTINGS.graceDays },
