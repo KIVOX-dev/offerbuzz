@@ -153,7 +153,7 @@ export function HomeHeader({
               <li key={c.name} className="w-[84px] shrink-0">
                 <button type="button" aria-pressed={on} onClick={() => onPick(i - 1)} className="flex w-full flex-col items-center gap-1 text-small">
                   <span className={`flex h-12 w-12 items-center justify-center rounded-xl transition duration-300 ${on ? 'scale-110 bg-white/25 ring-1 ring-white/40 md:scale-100' : ''}`}>
-                    <DuoCategoryIcon slug={c.slug} plain size={32} style={{ color: '#ffd60a' }} />
+                    <DuoCategoryIcon slug={c.slug} plain size={32} style={{ color: '#ffffff' }} />
                   </span>
                   <span className={`w-full truncate px-1 text-center ${on ? 'font-bold text-white' : 'font-medium text-purple-100'}`}>{c.name}</span>
                   <span className={`h-[3px] rounded-full bg-accent transition-all duration-300 ${on ? 'w-full' : 'w-0'}`} />

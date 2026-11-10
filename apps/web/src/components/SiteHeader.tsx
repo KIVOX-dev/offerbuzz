@@ -42,7 +42,7 @@ export function SiteHeader({ query = '', activeCategory }: { query?: string; act
           <ul className="flex gap-1 overflow-x-auto [scrollbar-width:none]">
             <li className="w-[84px] shrink-0">
               <Link href="/" className="flex w-full flex-col items-center gap-0.5 py-1 text-small font-medium text-purple-100">
-                <DuoCategoryIcon slug="all" plain size={26} style={{ color: '#ffd60a' }} />
+                <DuoCategoryIcon slug="all" plain size={26} style={{ color: '#ffffff' }} />
                 <span className="w-full truncate px-1 text-center">Home</span>
               </Link>
             </li>
@@ -53,7 +53,7 @@ export function SiteHeader({ query = '', activeCategory }: { query?: string; act
                 <li key={c.slug} className="w-[84px] shrink-0">
                   <Link href={href} aria-current={on ? 'page' : undefined}
                     className={`flex w-full flex-col items-center gap-0.5 rounded-xl py-1 text-small ${on ? 'bg-white/25 font-bold text-white ring-1 ring-white/40' : 'font-medium text-purple-100 hover:bg-white/10'}`}>
-                    <DuoCategoryIcon slug={c.slug} plain size={26} style={{ color: '#ffd60a' }} />
+                    <DuoCategoryIcon slug={c.slug} plain size={26} style={{ color: '#ffffff' }} />
                     <span className="w-full truncate px-1 text-center">{c.name}</span>
                   </Link>
                 </li>
