@@ -53,6 +53,7 @@ export function HomeHeader({
   locationHint,
   onLocation,
   heroIndex = 0,
+  heroColors = [],
 }: {
   categories: HomeCategory[];
   promos: Promo[];
@@ -66,6 +67,8 @@ export function HomeHeader({
   onLocation: () => void;
   /** the hero banner card in view: colours the header while no category is picked */
   heroIndex?: number;
+  /** custom colours picked for the hero cards (same order); they replace the fixed header colour on phones */
+  heroColors?: (string | undefined)[];
 }) {
   // signed in people go to their own area, everyone else to the sign in page (read after mount: no SSR mismatch)
   const [accountHref, setAccountHref] = useState('/login');
@@ -105,6 +108,18 @@ export function HomeHeader({
               key={i}
               className="absolute inset-0 transition-opacity duration-700 ease-out md:hidden"
               style={{ background: bg, opacity: active === -1 && heroIndex === i ? 1 : 0 }}
+            />
+          ) : null,
+        )}
+        {heroColors.map((c, i) =>
+          c ? (
+            <span
+              key={`custom-${i}`}
+              className="absolute inset-0 transition-opacity duration-700 ease-out md:hidden"
+              style={{
+                background: `linear-gradient(160deg, color-mix(in srgb, ${c} 40%, black) 0%, ${c} 60%, color-mix(in srgb, ${c} 70%, white) 130%)`,
+                opacity: active === -1 && heroIndex === i ? 1 : 0,
+              }}
             />
           ) : null,
         )}

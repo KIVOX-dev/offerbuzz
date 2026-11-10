@@ -143,6 +143,9 @@ export default function Home() {
   }));
   const promos: PromoCardData[] = saved.length ? saved : DEFAULT_PROMO_CARDS.map((c) => ({ ...c, burst: [...c.burst] }) as PromoCardData);
   const heroTints = ['#6d28d9', ...promos.map((c) => c.color ?? THEME_TINT[c.theme])];
+  // a colour picked with the colour panel: used as chosen (strong), not as a faint tint
+  const heroCustom = [false, ...promos.map((c) => Boolean(c.color))];
+  const heroColors = [undefined, ...promos.map((c) => c.color)];
   const theme = active >= 0 ? categories[active] : null;
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -218,6 +221,7 @@ export default function Home() {
           if (i >= 0) router.push(`/search?${SEARCH_BY_SLUG[categories[i]!.slug] ?? `q=${encodeURIComponent(categories[i]!.name)}`}`);
         }}
         heroIndex={heroIdx}
+        heroColors={heroColors}
         query={query}
         onQuery={setQuery}
         onScan={onScan}
@@ -228,12 +232,15 @@ export default function Home() {
 
       <div className="relative">
       {/* colour wash behind the page top: one layer per hero card, the one in view fades in */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden md:h-[460px] md:opacity-60">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden md:h-[460px]">
         {heroTints.map((c, i) => (
           <span
             key={c}
-            className="absolute inset-0 transition-opacity duration-700 ease-out"
-            style={{ background: `linear-gradient(180deg, ${c}38 0%, ${c}1f 45%, ${c}00 100%)`, opacity: heroIdx === i ? 1 : 0 }}
+            className={`absolute inset-0 transition-opacity duration-700 ease-out ${heroCustom[i] ? '' : 'md:!opacity-60'}`}
+            style={{
+              background: heroCustom[i] ? `linear-gradient(180deg, ${c}cc 0%, ${c}66 45%, ${c}00 100%)` : `linear-gradient(180deg, ${c}38 0%, ${c}1f 45%, ${c}00 100%)`,
+              opacity: heroIdx === i ? 1 : 0,
+            }}
           />
         ))}
       </div>
