@@ -48,9 +48,13 @@ export default function OfferPage() {
         {offer && (
           <div className="grid gap-6 md:grid-cols-2">
             <article className="surface overflow-hidden">
-              <div className="relative aspect-[4/3] bg-purple-50">
+              <div className="relative aspect-[4/5] overflow-hidden bg-purple-50">
                 {offer.imageUrl ? (
-                  <img src={offer.imageUrl} alt="" className="h-full w-full object-cover" />
+                  <>
+                    {/* the whole photo is always shown; spare space is filled with a soft blur of the same photo */}
+                    <img src={offer.imageUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-125 object-cover opacity-70 blur-xl" />
+                    <img src={offer.imageUrl} alt={offer.title} className="relative h-full w-full object-contain" />
+                  </>
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-purple-300">
                     <TagIcon size={56} />

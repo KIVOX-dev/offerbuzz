@@ -29,9 +29,12 @@ export function OfferPreview({ d }: { d: OfferPreviewData }) {
   const dates = d.startsAt && d.endsAt ? `Valid ${fmt(d.startsAt)} to ${fmt(d.endsAt)}` : d.endsAt ? `Valid until ${fmt(d.endsAt)}` : 'Choose the dates';
   return (
     <article className="surface overflow-hidden" aria-label="Offer preview">
-      <div className="relative aspect-[4/3] bg-purple-50">
+      <div className="relative aspect-[4/5] overflow-hidden bg-purple-50">
         {d.imageSrc ? (
-          <img src={d.imageSrc} alt="" className="h-full w-full object-cover" />
+          <>
+            <img src={d.imageSrc} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-125 object-cover opacity-70 blur-xl" />
+            <img src={d.imageSrc} alt="" className="relative h-full w-full object-contain" />
+          </>
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-purple-300">
             <TagIcon size={48} />
