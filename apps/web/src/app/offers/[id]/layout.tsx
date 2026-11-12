@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
-import type { PublicOfferDTO } from '@offerbuzz/shared';
+import { discountPhrase, type PublicOfferDTO } from '@offerbuzz/shared';
 
 // Same target the browser rewrite in next.config.js uses.
 const API = process.env.API_PROXY_TARGET ?? 'https://offerbuzz-api-50047221232.development.catalystappsail.in';
@@ -17,7 +17,7 @@ async function siteOrigin(): Promise<string> {
 }
 
 const discount = (o: PublicOfferDTO) =>
-  o.discountType === 'deal' ? 'Special deal' : o.discountType === 'percent' ? `${o.discountValue}% off` : `Rs ${o.discountValue} off`;
+  discountPhrase(o.discountType, o.discountValue);
 
 /**
  * Link preview for WhatsApp, Facebook, Telegram and search results: the offer photo, title and shop. Link previews are

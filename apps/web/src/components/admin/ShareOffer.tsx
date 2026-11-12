@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { AdminOfferDTO } from '@offerbuzz/shared';
+import { discountPhrase, type AdminOfferDTO } from '@offerbuzz/shared';
 
 const discount = (o: AdminOfferDTO) =>
-  o.discountType === 'percent' ? `${o.discountValue}% OFF` : o.discountType === 'amount' ? `Rs ${o.discountValue} OFF` : 'Special deal';
+  o.discountType === 'deal' ? 'Special deal' : discountPhrase(o.discountType, o.discountValue).toUpperCase();
 
 /** The post text: title, description, where it is, and the Google Maps link. */
 export function offerCaption(o: AdminOfferDTO, pageUrl: string): string {

@@ -168,7 +168,7 @@ export const offerInputSchema = z
     if (v.discountType !== 'deal' && v.discountValue === undefined) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['discountValue'], message: 'Enter the discount' });
     }
-    if (v.discountType === 'percent' && v.discountValue !== undefined && v.discountValue >= 100) {
+    if ((v.discountType === 'percent' || v.discountType === 'upto_percent') && v.discountValue !== undefined && v.discountValue >= 100) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['discountValue'], message: 'Percent must be below 100' });
     }
     if (v.subcategory && !(SUBCATEGORIES[v.category] as readonly string[] | undefined)?.includes(v.subcategory)) {

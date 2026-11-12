@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import type { DiscountType } from '@offerbuzz/shared';
+import { discountPhrase, type DiscountType } from '@offerbuzz/shared';
 import { TagIcon } from './Icons';
 
 export type OfferPreviewData = {
@@ -19,9 +19,7 @@ export type OfferPreviewData = {
 const fmt = (d: string) => (d ? new Date(`${d}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
 export function discountLabel(type: DiscountType, value: string): string {
-  if (type === 'deal') return 'SPECIAL DEAL';
-  if (!value) return type === 'percent' ? '% OFF' : 'Rs OFF';
-  return type === 'percent' ? `${value}% OFF` : `Rs ${value} OFF`;
+  return type === 'deal' ? 'SPECIAL DEAL' : discountPhrase(type, value).toUpperCase();
 }
 
 /** How the offer will look to customers. Shows placeholders until the vendor fills each field in. */

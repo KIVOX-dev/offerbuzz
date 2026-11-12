@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import type { AdminOffersResponse, OfferDTO } from '@offerbuzz/shared';
+import { discountPhrase, type AdminOffersResponse, type OfferDTO } from '@offerbuzz/shared';
 import { ShareOffer } from '@/components/admin/ShareOffer';
 import { ApiRequestError, getAdminOffers, setOfferStatus } from '@/lib/api';
 
@@ -22,7 +22,7 @@ const STATUS_LABEL: Record<OfferDTO['status'], string> = { pending: 'Waiting for
 
 const fmt = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 const discount = (o: OfferDTO) =>
-  o.discountType === 'percent' ? `${o.discountValue}% off` : o.discountType === 'amount' ? `Rs ${o.discountValue} off` : 'Special deal';
+  discountPhrase(o.discountType, o.discountValue);
 
 export default function AdminOffers() {
   const router = useRouter();

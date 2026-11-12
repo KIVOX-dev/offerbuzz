@@ -16,7 +16,7 @@ import { useVisitorLocation } from '@/lib/location';
 type Filters = {
   /** minimum percent off (percent offers only); 0 = any */
   minPercent: number;
-  /** 'percent' | 'amount' | 'deal' | '' = any */
+  /** 'percent' | 'upto_percent' | 'amount' | 'upto_amount' | 'deal' | '' = any */
   type: string;
   /** days left at most; 0 = any */
   endsInDays: number;
@@ -32,7 +32,7 @@ const daysLeft = (endsAt: string) => {
 
 function matches(o: PublicOfferDTO, f: Filters): boolean {
   if (f.type && o.discountType !== f.type) return false;
-  if (f.minPercent && !(o.discountType === 'percent' && (o.discountValue ?? 0) >= f.minPercent)) return false;
+  if (f.minPercent && !((o.discountType === 'percent' || o.discountType === 'upto_percent') && (o.discountValue ?? 0) >= f.minPercent)) return false;
   if (f.endsInDays && daysLeft(o.endsAt) > f.endsInDays) return false;
   if (f.withinKm && !(o.distanceKm !== undefined && o.distanceKm <= f.withinKm)) return false;
   return true;
@@ -116,7 +116,9 @@ function FilterPanel({
 
       <Group title="Offer type">
         <Choice on={filters.type === 'percent'} onClick={() => set('type', 'percent')}>Percent off</Choice>
+        <Choice on={filters.type === 'upto_percent'} onClick={() => set('type', 'upto_percent')}>Up to % off</Choice>
         <Choice on={filters.type === 'amount'} onClick={() => set('type', 'amount')}>Rupees off</Choice>
+        <Choice on={filters.type === 'upto_amount'} onClick={() => set('type', 'upto_amount')}>Up to Rs off</Choice>
         <Choice on={filters.type === 'deal'} onClick={() => set('type', 'deal')}>Special deals (Buy 1 Get 1, gifts)</Choice>
       </Group>
 

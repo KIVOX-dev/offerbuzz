@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import type { AdminOfferDTO } from '@offerbuzz/shared';
+import { discountPhrase, type AdminOfferDTO } from '@offerbuzz/shared';
 
 /** Fired after an approval decision so the sidebar badge refreshes straight away. */
 export const APPROVALS_EVENT = 'offerbuzz:approvals-changed';
@@ -9,7 +9,7 @@ export const notifyApprovalsChanged = () => window.dispatchEvent(new Event(APPRO
 
 const fmt = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 const discount = (o: AdminOfferDTO) =>
-  o.discountType === 'percent' ? `${o.discountValue}% off` : o.discountType === 'amount' ? `Rs ${o.discountValue} off` : 'Special deal';
+  discountPhrase(o.discountType, o.discountValue);
 
 /** One offer waiting for approval, with Approve / Reject. */
 export function PendingOfferCard({

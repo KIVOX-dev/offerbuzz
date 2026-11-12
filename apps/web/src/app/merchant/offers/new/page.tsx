@@ -307,14 +307,16 @@ export default function NewOfferPage() {
                 onChange={(v) => set('discountType', v)}
                 options={[
                   { value: 'percent' as DiscountType, label: 'Percent off (%)' },
+                  { value: 'upto_percent' as DiscountType, label: 'Up to % off (Up to 30%, Up to 40%...)' },
                   { value: 'amount' as DiscountType, label: 'Amount off (Rs)' },
+                  { value: 'upto_amount' as DiscountType, label: 'Up to Rs off (Up to Rs 500...)' },
                   { value: 'deal' as DiscountType, label: 'Special deal (Buy 1 Get 1, free gift...)' },
                 ]}
               />
               {form.discountType !== 'deal' && (
                 <input aria-label="Discount value" className="input" inputMode="decimal" value={form.discountValue}
                   onChange={(e) => set('discountValue', e.target.value.replace(/[^\d.]/g, ''))}
-                  placeholder={form.discountType === 'percent' ? 'e.g. 30' : 'e.g. 200'} />
+                  placeholder={form.discountType === 'percent' || form.discountType === 'upto_percent' ? 'e.g. 30' : 'e.g. 200'} />
               )}
             </div>
           </fieldset>

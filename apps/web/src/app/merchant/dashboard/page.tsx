@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Spinner } from '@/components/PageLoader';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
-import type { MyOffersResponse, OfferDTO } from '@offerbuzz/shared';
+import { discountPhrase, type MyOffersResponse, type OfferDTO } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
 import { ModuleTerms } from '@/components/ModuleTerms';
 import { DuoClockIcon, DuoOffersIcon, DuoTagIcon, PlusIcon, TagIcon, TrashIcon } from '@/components/Icons';
@@ -25,7 +25,7 @@ const STATUS_LABEL: Record<OfferDTO['status'], string> = {
 };
 
 export const discountText = (o: Pick<OfferDTO, 'discountType' | 'discountValue'>) =>
-  o.discountType === 'percent' ? `${o.discountValue}% off` : o.discountType === 'amount' ? `Rs ${o.discountValue} off` : 'Special deal';
+  discountPhrase(o.discountType, o.discountValue);
 
 const fmt = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 

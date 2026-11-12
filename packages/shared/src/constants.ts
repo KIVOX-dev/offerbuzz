@@ -32,9 +32,32 @@ export const CATEGORIES = [
 export const OFFER_STATUSES = ['pending', 'active', 'rejected', 'expired'] as const;
 export type OfferStatus = (typeof OFFER_STATUSES)[number];
 
-/** percent: 1-99 off, amount: Rs off, deal: free text offer such as "Buy 1 Get 1" (no number). */
-export const DISCOUNT_TYPES = ['percent', 'amount', 'deal'] as const;
+/**
+ * percent: 1-99 off, amount: Rs off, upto_percent: "Up to 40% off", upto_amount: "Up to Rs 500 off",
+ * deal: free text offer such as "Buy 1 Get 1" (no number).
+ */
+export const DISCOUNT_TYPES = ['percent', 'amount', 'upto_percent', 'upto_amount', 'deal'] as const;
 export type DiscountType = (typeof DISCOUNT_TYPES)[number];
+
+/** True for the types that are a percentage (1-99). */
+export const isPercentType = (t: DiscountType) => t === 'percent' || t === 'upto_percent';
+
+/** One wording for a discount everywhere: "30% off", "Up to 40% off", "Rs 200 off", "Up to Rs 500 off", "Special deal". */
+export function discountPhrase(type: DiscountType, value?: number | string | null): string {
+  const v = value === undefined || value === null || value === '' ? undefined : value;
+  switch (type) {
+    case 'deal':
+      return 'Special deal';
+    case 'percent':
+      return v === undefined ? '% off' : `${v}% off`;
+    case 'upto_percent':
+      return v === undefined ? 'Up to % off' : `Up to ${v}% off`;
+    case 'amount':
+      return v === undefined ? 'Rs off' : `Rs ${v} off`;
+    case 'upto_amount':
+      return v === undefined ? 'Up to Rs off' : `Up to Rs ${v} off`;
+  }
+}
 
 export const PAYOUT_STATUSES = ['pending', 'paid', 'rejected'] as const;
 export type PayoutStatus = (typeof PAYOUT_STATUSES)[number];

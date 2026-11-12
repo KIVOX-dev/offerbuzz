@@ -468,6 +468,17 @@ describe('vendor offers and profile', () => {
     expect(mine.body.totals).toEqual({ offers: 1, pending: 1, active: 0, claims: 0 });
   });
 
+  it('accepts "Up to" discounts (percent and rupees) and keeps the 1-99 rule for percent', async () => {
+    const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
+    const t = v.body.accessToken as string;
+    const upto = await post(t, { ...OFFER, discountType: 'upto_percent', discountValue: 40 });
+    expect(upto.status).toBe(201);
+    expect(upto.body.offer).toMatchObject({ discountType: 'upto_percent', discountValue: 40 });
+    expect((await post(t, { ...OFFER, discountType: 'upto_amount', discountValue: 500 })).status).toBe(201);
+    expect((await post(t, { ...OFFER, discountType: 'upto_percent', discountValue: 100 })).status).toBe(400);
+    expect((await post(t, { ...OFFER, discountType: 'upto_percent', discountValue: undefined })).status).toBe(400); // the number is needed
+  });
+
   it('only lets a vendor post in the category chosen at sign up', async () => {
     const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
     expect(v.body.user.category).toBe('Salon and Spa');

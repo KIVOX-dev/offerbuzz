@@ -1,4 +1,4 @@
-import { CATEGORIES, type AiChatInput, type AiChatResponse, type PublicOfferDTO } from '@offerbuzz/shared';
+import { CATEGORIES, discountPhrase, type AiChatInput, type AiChatResponse, type PublicOfferDTO } from '@offerbuzz/shared';
 import { chatJson, type LlmMessage } from '../../services/groq';
 import { findLatestOffers, findNearbyOffers } from '../offers/offers.routes';
 
@@ -55,13 +55,17 @@ export function detectCategory(text: string): (typeof CATEGORIES)[number] | unde
 
 /** A rough "how good is it" number so the best deals come first: bigger discounts and offers ending soon rank higher. */
 function dealScore(o: PublicOfferDTO): number {
-  const discount = o.discountType === 'percent' ? (o.discountValue ?? 0) : o.discountType === 'amount' ? Math.min((o.discountValue ?? 0) / 10, 50) : 30;
+  const discount =
+    o.discountType === 'percent' ? (o.discountValue ?? 0)
+    : o.discountType === 'upto_percent' ? (o.discountValue ?? 0) * 0.8 // "up to" is a ceiling, so it counts a little less
+    : o.discountType === 'amount' ? Math.min((o.discountValue ?? 0) / 10, 50)
+    : o.discountType === 'upto_amount' ? Math.min(((o.discountValue ?? 0) / 10) * 0.8, 50)
+    : 30;
   const days = Math.max(0, (new Date(`${o.endsAt}T00:00:00Z`).getTime() - Date.now()) / 86_400_000);
   return discount + (days < 3 ? 8 : 0) - (o.distanceKm ?? 0) * 0.5;
 }
 
-const discountText = (o: PublicOfferDTO) =>
-  o.discountType === 'percent' ? `${o.discountValue}% off` : o.discountType === 'amount' ? `Rs ${o.discountValue} off` : 'special deal';
+const discountText = (o: PublicOfferDTO) => discountPhrase(o.discountType, o.discountValue).toLowerCase();
 
 // eslint-disable-next-line no-control-regex -- control characters are exactly what is being removed
 const clip = (s: string, n: number) => s.replace(/[\u0000-\u001f]+/g, ' ').slice(0, n);
