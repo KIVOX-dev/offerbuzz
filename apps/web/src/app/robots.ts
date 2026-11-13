@@ -4,7 +4,7 @@ const ORIGIN = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.offerbuzz.co').
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/admin', '/merchant', '/intermediary', '/api/'] }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/admin', '/api/'] }],
     sitemap: `${ORIGIN}/sitemap.xml`,
   };
 }
