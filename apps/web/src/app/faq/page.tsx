@@ -4,7 +4,7 @@ import { LegalPage, type LegalSection } from '@/components/LegalPage';
 export const metadata: Metadata = { title: 'FAQ - OfferBuzz', description: 'Answers to common questions about OfferBuzz for customers, merchants and Refer & Earn partners.' };
 
 const sections: LegalSection[] = [
-  { heading: 'What is OfferBuzz?', body: ['OfferBuzz shows the live offers and deals from local shops near you, all in one place.'] },
+  { heading: 'What is OfferBuzz?', body: ['OfferBuzz is a digital marketing and advertising platform for local businesses. Shops promote their offers here, and people nearby can see them in one place. We do not sell products and there is no checkout on OfferBuzz.'] },
   { heading: 'Is OfferBuzz free for customers?', body: ['Yes. You can browse, search, save offers and get directions without paying anything, and without an account.'] },
   { heading: 'How do I see offers near me?', body: ['Allow your location when the site asks, or tap the location at the top of the home page. Offers from shops around you are then shown nearest first. You can also search or pick a category and filter the results.'] },
   { heading: 'How do I get to the shop?', body: ['Open an offer and tap "Get directions" to open the route in Google Maps. You can also tap the phone number on the offer to call the shop.'] },

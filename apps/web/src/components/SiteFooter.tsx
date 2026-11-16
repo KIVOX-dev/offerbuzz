@@ -28,6 +28,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms & Conditions', href: '/terms' },
+      { label: 'Cancellation & Refund', href: '/refund' },
       { label: 'Cookie Policy', href: '/cookies' },
     ],
   },
@@ -112,7 +113,7 @@ function MobileFooter() {
       <div aria-hidden className="h-2" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #4c1d95 0 4px, transparent 4px 8px)' }} />
       <div className="container-page space-y-5 py-6">
         <Logo height={52} variant="transparent" />
-        <p className="text-small font-medium text-ink/80">Your path to the best local offers: shops, deals and savings near you, all in one place.</p>
+        <p className="text-small font-medium text-ink/80">Digital marketing for local businesses: promote your shop and offers, and let nearby customers find them.</p>
         <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-small font-semibold">
           {links.map((l) => (
             <li key={l.label}>
@@ -160,7 +161,7 @@ function DesktopFooter() {
           <div>
             <Logo height={76} variant="transparent" />
             <p className="mt-5 max-w-sm text-body font-medium leading-relaxed text-ink/80">
-              Your path to the best local offers: shops, deals and savings near you, all in one place.
+              Digital marketing for local businesses: promote your shop and offers, and let nearby customers find them.
             </p>
             <ul className="mt-6 space-y-3 text-body font-medium text-ink">
               <li className="flex items-center gap-3">

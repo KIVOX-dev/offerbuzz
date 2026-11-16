@@ -7,7 +7,7 @@ const sections: LegalSection[] = [
   {
     heading: 'Who we are',
     body: [
-      'OfferBuzz is a local offers platform. We bring the deals, discounts and special offers from neighbourhood shops together in one place, so you can see what is on near you before you step out.',
+      'OfferBuzz is a digital marketing and advertising platform for local businesses. Shops use OfferBuzz to promote their offers online, and people nearby can see those offers in one place before they step out. We do not sell products ourselves, and there is no buying or checkout on OfferBuzz.',
     ],
   },
   {

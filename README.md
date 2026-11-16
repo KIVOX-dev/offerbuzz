@@ -1,6 +1,6 @@
 # OfferBuzz
 
-A hyperlocal offers marketplace. Local shops pay Rs 100 a month to post deals; customers find them by city and area on
+A hyperlocal digital marketing platform for local shops. Local shops pay Rs 100 a month to post deals; customers find them by city and area on
 the website. **Intermediaries** bring shops in with a personal QR code and earn credits for every paid month. An admin
 approves offers and pays out credits.
 

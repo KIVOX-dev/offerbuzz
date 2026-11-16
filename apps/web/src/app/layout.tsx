@@ -8,8 +8,8 @@ import { OfferaAI } from '@/components/agent/OfferaAI';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'OfferBuzz - Offers and deals near you',
-  description: 'Discover discounts and deals from shops in your city and area.',
+  title: 'OfferBuzz - Digital marketing platform for local businesses',
+  description: 'OfferBuzz is a digital marketing and advertising platform where local shops promote their offers to nearby customers. Customers browse offers free.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -14,7 +14,7 @@ const sections: LegalSection[] = [
   {
     heading: 'What OfferBuzz is, and is not',
     body: [
-      'OfferBuzz is an online platform that lets local shops ("Merchants") publish offers and deals, lets people ("Customers") discover them, and lets individuals ("Refer & Earn partners") refer shops to the platform and earn rewards.',
+      'OfferBuzz is a digital marketing and advertising platform that lets local shops ("Merchants") publish offers and deals, lets people ("Customers") discover them, and lets individuals ("Refer & Earn partners") refer shops to the platform and earn rewards.',
       "OfferBuzz is only a listing and referral platform. We do not sell, supply, deliver or guarantee any goods or services shown in an offer, and we are not a party to any purchase between a Customer and a Merchant. Offers are created by Merchants, and their accuracy is the Merchant's responsibility.",
     ],
   },
@@ -58,8 +58,9 @@ const sections: LegalSection[] = [
   {
     heading: 'Merchant plan and payments',
     body: [
-      'Posting offers requires an active paid plan. We offer three monthly plans: Basic (currently Rs 149 per month), Premium (currently Rs 349 per month) and Featured (currently Rs 599 per month), as described on our Plans page. Paying for 6 or 12 months at once is currently 10% cheaper. We may change the prices or plans, and a change will apply to the next billing period after we tell you.',
+      'Posting offers requires an active paid plan. The plan fee pays for digital promotion of your shop and offers on OfferBuzz; it is not a payment for goods. We offer three monthly plans: Basic (currently Rs 149 per month), Premium (currently Rs 349 per month) and Featured (currently Rs 599 per month), as described on our Plans page. Paying for 6 or 12 months at once is currently 10% cheaper. We may change the prices or plans, and a change will apply to the next billing period after we tell you.',
       'A plan runs until its paid-until date. After that date there is a short grace period (currently 3 days) during which your offers stay visible; if the plan is not renewed by then, your offers are hidden until you pay again.',
+      'Our Cancellation & Refund Policy explains cancellations, refunds and how the service is delivered.',
       'Payments are recorded against your account once we receive them. Plan fees are for access to the platform for the month and are generally non-refundable once the month has started, except where the law requires otherwise or where we agree in writing, for example for a duplicate payment.',
     ],
   },
