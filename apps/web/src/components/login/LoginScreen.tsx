@@ -10,9 +10,9 @@ import { OtpLogin } from '@/components/OtpLogin';
 
 export type Role = 'merchant' | 'intermediary';
 
-const CARDS: { role: Role; title: string; tagline: string; icon: ComponentType<{ size?: number }> }[] = [
-  { role: 'merchant', title: 'Merchant', tagline: 'Post your offers and reach nearby customers', icon: DuoStoreIcon },
-  { role: 'intermediary', title: 'Refer & Earn', tagline: 'Refer shops and earn credits', icon: DuoUsersIcon },
+const CARDS: { role: Role; title: string; tagline: string; icon: ComponentType<{ size?: number }>; benefits: string }[] = [
+  { role: 'merchant', title: 'Merchant', tagline: 'Post your offers and reach nearby customers', icon: DuoStoreIcon, benefits: '/benefits/merchant' },
+  { role: 'intermediary', title: 'Refer & Earn', tagline: 'Refer shops and earn credits', icon: DuoUsersIcon, benefits: '/benefits/refer-and-earn' },
 ];
 
 // category art for the side panel
@@ -111,21 +111,25 @@ export function LoginScreen({ forcedRole, forcedMode }: { forcedRole?: Role; for
           ) : (
             <div className="space-y-3">
               {CARDS.map((c) => (
-                <button
-                  key={c.role}
-                  type="button"
-                  onClick={() => router.push(loginPath(c.role, 'signup'))}
-                  className="surface-hover flex w-full items-center gap-4 p-4 text-left"
-                >
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-sky-50 ring-1 ring-sky-100" aria-hidden>
-                    <c.icon size={38} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-section font-bold">{c.title}</span>
-                    <span className="block text-muted">{c.tagline}</span>
-                  </span>
-                  <span aria-hidden className="text-xl text-purple-700">›</span>
-                </button>
+                <div key={c.role} className="surface-hover">
+                  <button
+                    type="button"
+                    onClick={() => router.push(loginPath(c.role, 'signup'))}
+                    className="flex w-full items-center gap-4 p-4 text-left"
+                  >
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-sky-50 ring-1 ring-sky-100" aria-hidden>
+                      <c.icon size={38} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-section font-bold">{c.title}</span>
+                      <span className="block text-muted">{c.tagline}</span>
+                    </span>
+                    <span aria-hidden className="text-xl text-purple-700">›</span>
+                  </button>
+                  <div className="pb-3 pl-[88px] pr-4">
+                    <Link href={c.benefits} className="text-small font-semibold text-purple-700 underline">View benefits</Link>
+                  </div>
+                </div>
               ))}
             </div>
           )}
