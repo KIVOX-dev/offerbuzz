@@ -38,6 +38,12 @@ export default function MerchantSubscription() {
   const { user } = useAccount();
   const [paying, setPaying] = useState<MerchantPlan>();
   const [notice, setNotice] = useState<{ ok: boolean; text: string }>();
+  // sent here from the profile or the post form: say why
+  useEffect(() => {
+    const from = new URLSearchParams(window.location.search).get('from');
+    if (from === 'profile') setNotice({ ok: true, text: 'Your profile is ready. Choose a plan to start posting offers.' });
+    if (from === 'post') setNotice({ ok: false, text: 'You need a paid plan to post offers. Choose a plan below.' });
+  }, []);
   const load = () =>
     getMySubscription()
       .then(setSub)

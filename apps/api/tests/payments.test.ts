@@ -11,6 +11,7 @@ let User: typeof import('../src/models/User').User;
 let Offer: typeof import('../src/models/Offer').Offer;
 let Subscription: typeof import('../src/models/Subscription').Subscription;
 let Payment: typeof import('../src/models/Payment').Payment;
+let WalletEntry: typeof import('../src/models/WalletEntry').WalletEntry;
 let sub: typeof import('../src/modules/subscription/subscription.service');
 let addMonths: typeof import('../src/utils/months').addMonths;
 
@@ -97,6 +98,7 @@ beforeAll(async () => {
   Offer = (await import('../src/models/Offer')).Offer;
   Subscription = (await import('../src/models/Subscription')).Subscription;
   Payment = (await import('../src/models/Payment')).Payment;
+  WalletEntry = (await import('../src/models/WalletEntry')).WalletEntry;
   sub = await import('../src/modules/subscription/subscription.service');
   addMonths = (await import('../src/utils/months')).addMonths;
   (await import('../src/services/geocode')).setReverseGeocoder(async () => ({ address: 'Somewhere', placeId: 'p1' }));
@@ -111,7 +113,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   fakeRazorpay();
-  await Promise.all([User.deleteMany({}), Offer.deleteMany({}), Subscription.deleteMany({}), Payment.deleteMany({})]);
+  await Promise.all([User.deleteMany({}), Offer.deleteMany({}), Subscription.deleteMany({}), Payment.deleteMany({}), WalletEntry.deleteMany({})]);
   await mongoose.connection.collection('otps').deleteMany({});
 });
 
@@ -457,5 +459,44 @@ describe('emails and the days counter', () => {
     s = await get();
     expect(s).toMatchObject({ daysLeft: 0, active: false });
     expect((await authed(request(app).post('/api/v1/offers'), m.token).send(OFFER)).status).toBe(402); // ended means no posting
+  });
+});
+
+describe('Refer & Earn credits', () => {
+  async function referredMerchant() {
+    const agent = await User.create({ email: 'agent@example.com', role: 'intermediary', status: 'active', referralCode: 'AGENT123', name: 'Agent' });
+    const m = await merchant();
+    await User.updateOne({ _id: m.id }, { referredBy: agent._id });
+    return { agent, m };
+  }
+
+  it('credits the partner 25% when a referred merchant pays through Razorpay', async () => {
+    const { agent, m } = await referredMerchant();
+    await pay(m.token, 'basic', 1);
+    const rows = await WalletEntry.find({ intermediaryId: agent._id });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ kind: 'credit', reason: 'subscription', credits: 37 }); // 25% of Rs 149 = 37.25
+    expect(String(rows[0].merchantId)).toBe(m.id);
+  });
+
+  it('a 12 month payment credits the partner for each of the 12 months, once, even if confirmed twice', async () => {
+    const { agent, m } = await referredMerchant();
+    const { order, paymentId } = await pay(m.token, 'premium', 12);
+    await authed(request(app).post('/api/v1/payments/verify'), m.token).send({
+      razorpay_order_id: order.body.orderId,
+      razorpay_payment_id: paymentId,
+      razorpay_signature: sign(order.body.orderId, paymentId),
+    });
+    const rows = await WalletEntry.find({ intermediaryId: agent._id });
+    expect(rows).toHaveLength(12);
+    expect(new Set(rows.map((r) => r.period)).size).toBe(12);
+    // Rs 3769 over 12 months, 25% of each month's share
+    expect(rows.reduce((n, r) => n + r.credits, 0)).toBeGreaterThanOrEqual(940);
+  });
+
+  it('a merchant nobody referred earns nobody a credit', async () => {
+    const m = await merchant();
+    await pay(m.token, 'basic', 1);
+    expect(await WalletEntry.countDocuments()).toBe(0);
   });
 });

@@ -15,6 +15,7 @@ import type { LocationInput } from '@offerbuzz/shared';
 import { ApiRequestError, createOffer, getMySubscription, rewriteDescription, updateProfile, uploadOfferImage } from '@/lib/api';
 import { shrinkImage } from '@/lib/image';
 import { ModuleTerms } from '@/components/ModuleTerms';
+import { Spinner } from '@/components/PageLoader';
 
 /** Offer photos may be up to 1 MB (the server limit); aim a little under it. */
 const MAX_PHOTO_BYTES = 1000 * 1024;
@@ -53,10 +54,18 @@ export default function NewOfferPage() {
 
   // posting needs a paid plan and a free slot this month; find out now, not after the form is filled in
   const [plan, setPlan] = useState<SubscriptionDTO>();
+  const [planChecked, setPlanChecked] = useState(false);
   useEffect(() => {
-    getMySubscription().then(setPlan).catch(() => undefined);
+    getMySubscription()
+      .then(setPlan)
+      .catch(() => undefined) // the server still refuses a post without a plan
+      .finally(() => setPlanChecked(true));
   }, []);
   const blocked = plan ? (!plan.active ? 'plan' : plan.offerQuota.remaining < 1 ? 'limit' : undefined) : undefined;
+  // no paid plan: this page is not for you yet, so go and choose one
+  useEffect(() => {
+    if (plan && !plan.active) router.replace('/merchant/subscription?from=post');
+  }, [plan, router]);
 
   // free the preview image when it is replaced or the page closes
   useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
@@ -171,6 +180,9 @@ export default function NewOfferPage() {
       setBusy(false);
     }
   }
+
+  // no form until we know there is a paid plan: unpaid merchants are sent to choose one instead
+  if (!planChecked || (plan && !plan.active)) return <Spinner label={planChecked ? 'Taking you to the plans' : 'Opening the form'} />;
 
   if (postedNoPhoto) {
     return (
