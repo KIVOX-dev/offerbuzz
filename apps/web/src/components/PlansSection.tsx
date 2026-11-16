@@ -9,7 +9,7 @@ const PLANS = [
     head: 'bg-purple-100 text-purple-900',
     soft: 'bg-purple-50 text-purple-800',
     ring: 'border-purple-200',
-    features: ['Offer published on the OfferBuzz.co website for 30 days'],
+    features: ['Offer published on the OfferBuzz.co website for 30 days', 'Social media promotion'],
   },
   {
     name: 'Premium',
@@ -22,6 +22,7 @@ const PLANS = [
     features: [
       'Offer published on the OfferBuzz.co website',
       'Advertisement on the Dina Idhigai print and digital newspaper (5,000 copies, for a single issue, minimum size)',
+      'Social media promotion',
     ],
   },
   {

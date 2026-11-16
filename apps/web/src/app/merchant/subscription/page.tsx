@@ -15,8 +15,8 @@ const LOOK: Record<MerchantPlan, { head: string; ring: string; button: string }>
   featured: { head: 'bg-hero text-accent', ring: 'border-accent', button: 'btn-accent' },
 };
 const INCLUDES: Record<MerchantPlan, string[]> = {
-  basic: ['Offer published on OfferBuzz.co for 30 days'],
-  premium: ['Offer published on OfferBuzz.co', 'Advertisement on the Dina Idhigai print and digital newspaper'],
+  basic: ['Offer published on OfferBuzz.co for 30 days', 'Social media promotion'],
+  premium: ['Offer published on OfferBuzz.co', 'Advertisement on the Dina Idhigai print and digital newspaper', 'Social media promotion'],
   featured: [
     'Offer published on OfferBuzz.co',
     'Ads on the Dina Idhigai print and digital newspaper',
