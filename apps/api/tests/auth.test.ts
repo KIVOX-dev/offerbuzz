@@ -9,8 +9,11 @@ let svc: typeof import('../src/modules/auth/auth.service');
 let User: typeof import('../src/models/User').User;
 let Otp: typeof import('../src/models/Otp').Otp;
 let Offer: typeof import('../src/models/Offer').Offer;
+let Subscription: typeof import('../src/models/Subscription').Subscription;
 let geocodeCalls = 0;
 
+/** YYYY-MM-DD, n days from today (offers can run 30 days at most) */
+const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
 const EMAIL = 'shopper@example.com';
 const NAME = 'Test Shopper';
 
@@ -31,6 +34,7 @@ beforeAll(async () => {
   User = (await import('../src/models/User')).User;
   Otp = (await import('../src/models/Otp')).Otp;
   Offer = (await import('../src/models/Offer')).Offer;
+  Subscription = (await import('../src/models/Subscription')).Subscription;
   (await import('../src/services/geocode')).setReverseGeocoder(async () => {
     geocodeCalls++;
     return { address: 'Reverse geocoded address', placeId: 'place-1' };
@@ -54,12 +58,19 @@ const verify = (body: Record<string, unknown>) => request(app).post('/api/v1/aut
 
 /** Full sign up: request a code, then verify it. `extra` is merged into both requests. */
 async function signUp(extra: Record<string, unknown> = {}, email = EMAIL) {
-  const sent = await send({ email, mode: 'signup', ...extra });
+  // noPlan: a merchant who has not paid. Every other merchant gets a year of Basic, since posting offers needs a paid plan.
+  const { noPlan, ...body } = extra as { noPlan?: boolean } & Record<string, unknown>;
+  const sent = await send({ email, mode: 'signup', ...body });
   expect(sent.status).toBe(200);
-  const res = await verify({ email, code: sent.body.devOtp, mode: 'signup', name: NAME, ...extra });
+  const res = await verify({ email, code: sent.body.devOtp, mode: 'signup', name: NAME, ...body });
   // vendors that pick a category here are also given a shop pin (Coimbatore), since posting offers needs one
-  if (extra.role === 'merchant' && extra.category) {
+  if (body.role === 'merchant' && body.category) {
     await User.updateOne({ email }, { location: { type: 'Point', coordinates: [76.9558, 11.0168] }, locationAddress: 'Test Street, Coimbatore' });
+  }
+  if (body.role === 'merchant' && !noPlan && res.status === 200) {
+    const u = await User.findOne({ email }).select('_id');
+    const now = new Date();
+    await Subscription.create({ merchantId: u!._id, plan: 'basic', paidUntil: new Date(now.getTime() + 365 * 86_400_000), lastPaidAt: now, periodStart: now });
   }
   return res;
 }
@@ -549,7 +560,7 @@ describe('vendor offers and profile', () => {
     await User.updateOne({ email: 'near@example.com' }, { shopName: 'Near Shop', location: { type: 'Point', coordinates: [76.96, 11.0] } });
     await User.updateOne({ email: 'far@example.com' }, { shopName: 'Far Shop', location: { type: 'Point', coordinates: [77.2, 11.2] } });
     const today = new Date().toISOString().slice(0, 10);
-    const live = { ...OFFER, startsAt: today, endsAt: '2099-01-01' };
+    const live = { ...OFFER, startsAt: today, endsAt: inDays(10) };
     const a = (await post(near.body.accessToken, { ...live, title: 'Near deal' })).body.offer;
     const b = (await post(far.body.accessToken, { ...live, title: 'Far deal' })).body.offer;
     await Offer.updateMany({}, { status: 'active' });
@@ -587,7 +598,7 @@ describe('vendor offers and profile', () => {
     await User.updateOne({ email: 'sa@example.com' }, { shopName: 'Glow Boutique', location: { type: 'Point', coordinates: [76.96, 11.0] } });
     await User.updateOne({ email: 'sb@example.com' }, { shopName: 'Green Basket', location: { type: 'Point', coordinates: [77.2, 11.2] } });
     const today = new Date().toISOString().slice(0, 10);
-    const live = { ...OFFER, startsAt: today, endsAt: '2099-01-01' };
+    const live = { ...OFFER, startsAt: today, endsAt: inDays(10) };
     await post(a.body.accessToken, { ...live, category: 'Fashion', title: 'Festive saree sale' });
     await post(b.body.accessToken, { ...live, category: 'Grocery', title: 'Fresh vegetables combo' });
     await Offer.updateMany({}, { status: 'active' });
@@ -625,12 +636,12 @@ describe('vendor offers and profile', () => {
 
     geocodeCalls = 0;
     const today = new Date().toISOString().slice(0, 10);
-    const branch = await post(t, { ...OFFER, startsAt: today, endsAt: '2099-01-01', title: 'Branch deal', location: { lat: 11.05, lng: 77.0 } });
+    const branch = await post(t, { ...OFFER, startsAt: today, endsAt: inDays(10), title: 'Branch deal', location: { lat: 11.05, lng: 77.0 } });
     expect(branch.status).toBe(201);
     expect(geocodeCalls).toBe(1); // a bare pin gets its address looked up once, now
 
     // a second offer with its own address never calls Geocoding, and the shop pin is unchanged
-    const own = await post(t, { ...OFFER, startsAt: today, endsAt: '2099-01-01', title: 'Other deal', location: { lat: 11.2, lng: 77.1, address: 'Chosen address', placeId: 'pp' } });
+    const own = await post(t, { ...OFFER, startsAt: today, endsAt: inDays(10), title: 'Other deal', location: { lat: 11.2, lng: 77.1, address: 'Chosen address', placeId: 'pp' } });
     expect(own.status).toBe(201);
     expect(geocodeCalls).toBe(1);
     await Offer.updateMany({}, { status: 'active' });
@@ -644,7 +655,8 @@ describe('vendor offers and profile', () => {
 
     // an offer without its own location takes the shop pin
     await User.updateOne({ email: 'branch@example.com' }, { location: { type: 'Point', coordinates: [76.5, 10.5] }, locationAddress: 'Shop address' });
-    const plain = await post(t, { ...OFFER, startsAt: today, endsAt: '2099-01-01', title: 'Plain deal' });
+    await Subscription.updateMany({}, { quotaUsed: 0 }); // this test posts more than the 2 offers a month allows
+    const plain = await post(t, { ...OFFER, startsAt: today, endsAt: inDays(10), title: 'Plain deal' });
     await Offer.updateMany({}, { status: 'active' });
     const p = await request(app).get(`/api/v1/offers/${plain.body.offer.id}`);
     expect(p.body.offer.shop.location).toMatchObject({ lat: 10.5, lng: 76.5, address: 'Shop address' });
@@ -666,7 +678,7 @@ describe('vendor offers and profile', () => {
   it('gives older offers their shop pin so the nearby search still finds them', async () => {
     const { backfillOfferLocations } = await import('../src/services/backfill');
     const v = await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'old@example.com');
-    const created = await post(v.body.accessToken, { ...OFFER, startsAt: new Date().toISOString().slice(0, 10), endsAt: '2099-01-01', title: 'Old offer' });
+    const created = await post(v.body.accessToken, { ...OFFER, startsAt: new Date().toISOString().slice(0, 10), endsAt: inDays(10), title: 'Old offer' });
     await Offer.updateOne({ _id: created.body.offer.id }, { status: 'active', $unset: { location: 1, address: 1, placeId: 1 } }); // as posted before this feature
     expect((await request(app).get('/api/v1/offers/nearby?lat=11.0168&lng=76.9558&radiusKm=5')).body.offers).toHaveLength(0);
     expect(await backfillOfferLocations()).toBe(1);
@@ -702,7 +714,7 @@ describe('vendor offers and profile', () => {
 
   it('an approved offer past its end date reads as expired', async () => {
     const v = await signUp({ role: 'merchant', category: 'Salon and Spa' });
-    const offer = (await post(v.body.accessToken, { ...OFFER, startsAt: '2020-01-01', endsAt: '2020-01-31' })).body.offer;
+    const offer = (await post(v.body.accessToken, { ...OFFER, startsAt: '2020-01-01', endsAt: '2020-01-20' })).body.offer;
     const Offer = (await import('../src/models/Offer')).Offer;
     await Offer.updateOne({ _id: offer.id }, { status: 'active' });
     const mine = await authed(request(app).get('/api/v1/offers/mine'), v.body.accessToken);
@@ -832,8 +844,8 @@ describe('admin area', () => {
     category: 'Salon and Spa',
     discountType: 'percent',
     discountValue: 30,
-    startsAt: '2020-01-01',
-    endsAt: '2099-12-31',
+    startsAt: inDays(-1),
+    endsAt: inDays(20),
     area: 'RS Puram, Coimbatore',
     phone: '9876543210',
   };
@@ -868,7 +880,8 @@ describe('admin area', () => {
   it('counts vendors that have paid, after the admin records a payment', async () => {
     const t = await adminToken();
     const { agent, vendor } = await agentAndVendor();
-    await signUp({ role: 'merchant', category: 'Salon and Spa' }, 'solo@example.com');
+    await signUp({ role: 'merchant', category: 'Salon and Spa', noPlan: true }, 'solo@example.com');
+    await Subscription.deleteMany({}); // these two start unpaid
 
     let o = (await get(t, '/admin/overview')).body;
     expect(o.vendors).toEqual({ total: 2, subscribed: 0, unsubscribed: 2 });
@@ -991,8 +1004,8 @@ describe('admin area', () => {
       authed(request(app).post('/api/v1/offers'), vendors[body.category as string]).send(body);
     const salon = (await post(OFFER)).body.offer;
     const fashion = (await post({ ...OFFER, category: 'Fashion', title: 'Fashion sale' })).body.offer;
-    const future = (await post({ ...OFFER, category: 'Fashion', title: 'Later', startsAt: '2098-01-01' })).body.offer;
-    const old = (await post({ ...OFFER, category: 'Jewellery', title: 'Old', endsAt: '2020-02-01' })).body.offer;
+    const future = (await post({ ...OFFER, category: 'Fashion', title: 'Later', startsAt: inDays(5), endsAt: inDays(15) })).body.offer;
+    const old = (await post({ ...OFFER, category: 'Jewellery', title: 'Old', startsAt: '2020-01-01', endsAt: '2020-01-20' })).body.offer;
 
     // nothing runs until it is approved
     let res = (await get(t, '/admin/offers')).body;

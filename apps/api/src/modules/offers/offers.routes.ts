@@ -27,6 +27,7 @@ import { ensureGeoIndexes } from '../../services/backfill';
 import { Offer, type OfferDoc } from '../../models/Offer';
 import { OfferImage } from '../../models/OfferImage';
 import { score, searchTerms, wordRegex } from '../../utils/searchTerms';
+import { takeOfferSlot } from '../subscription/subscription.service';
 
 export const offersRouter = Router();
 
@@ -63,45 +64,53 @@ offersRouter.post(
   validate(offerInputSchema),
   wrap(async (req, res) => {
     const b = req.body as OfferInput;
-    // a shop only posts into the category it chose at sign up
-    const vendor = await User.findById(req.auth!.id).select('category location locationAddress placeId');
-    if (!vendor?.category) {
-      throw new HttpError(409, 'CATEGORY_REQUIRED', 'Choose your shop category in your profile before posting offers');
+    // no paid plan, no posting; and each paid month allows OFFERS_PER_MONTH offers
+    const giveBack = await takeOfferSlot(req.auth!.id);
+    try {
+      // a shop only posts into the category it chose at sign up
+      const vendor = await User.findById(req.auth!.id).select('category location locationAddress placeId');
+      if (!vendor?.category) {
+        throw new HttpError(409, 'CATEGORY_REQUIRED', 'Choose your shop category in your profile before posting offers');
+      }
+      if (b.category !== vendor.category) {
+        throw new HttpError(400, 'CATEGORY_MISMATCH', `Your shop posts offers in ${vendor.category} only`);
+      }
+      // the exact spot for directions: the one given with the offer (auto-detected or picked from suggestions); else the
+      // area the merchant typed by hand, looked up once now; else the shop's saved pin
+      let spot = b.location
+        ? { lat: b.location.lat, lng: b.location.lng, address: b.location.address || undefined, placeId: b.location.placeId || undefined }
+        : ((await forwardGeocode(b.area)) ?? toLocationDTO(vendor));
+      if (!spot) {
+        throw new HttpError(409, 'LOCATION_REQUIRED', 'We could not find that location. Pick a suggestion, tap "Auto-detect my location", or save your shop location in your profile');
+      }
+      if (b.location && !spot.address) {
+        // a pin without an address (GPS or a dragged pin): look the address up once now and store it
+        const found = await reverseGeocode(spot.lat, spot.lng);
+        spot = { ...spot, address: found.address, placeId: found.placeId };
+      }
+      const offer = await Offer.create({
+        merchantId: req.auth!.id,
+        title: b.title,
+        description: b.description,
+        category: b.category,
+        subcategory: b.subcategory || undefined,
+        discountType: b.discountType,
+        discountValue: b.discountType === 'deal' ? undefined : b.discountValue,
+        startsAt: new Date(`${b.startsAt}T00:00:00.000Z`),
+        endsAt: new Date(`${b.endsAt}T00:00:00.000Z`),
+        area: b.area,
+        phone: b.phone,
+        terms: b.terms || undefined,
+        location: { type: 'Point', coordinates: [spot.lng, spot.lat] },
+        address: spot.address,
+        placeId: spot.placeId,
+      });
+      res.status(201).json({ offer: toOfferDTO(offer) });
+    } catch (e) {
+      // the offer was not saved, so the slot is not used
+      await giveBack();
+      throw e;
     }
-    if (b.category !== vendor.category) {
-      throw new HttpError(400, 'CATEGORY_MISMATCH', `Your shop posts offers in ${vendor.category} only`);
-    }
-    // the exact spot for directions: the one given with the offer (auto-detected or picked from suggestions); else the
-    // area the merchant typed by hand, looked up once now; else the shop's saved pin
-    let spot = b.location
-      ? { lat: b.location.lat, lng: b.location.lng, address: b.location.address || undefined, placeId: b.location.placeId || undefined }
-      : ((await forwardGeocode(b.area)) ?? toLocationDTO(vendor));
-    if (!spot) {
-      throw new HttpError(409, 'LOCATION_REQUIRED', 'We could not find that location. Pick a suggestion, tap "Auto-detect my location", or save your shop location in your profile');
-    }
-    if (b.location && !spot.address) {
-      // a pin without an address (GPS or a dragged pin): look the address up once now and store it
-      const found = await reverseGeocode(spot.lat, spot.lng);
-      spot = { ...spot, address: found.address, placeId: found.placeId };
-    }
-    const offer = await Offer.create({
-      merchantId: req.auth!.id,
-      title: b.title,
-      description: b.description,
-      category: b.category,
-      subcategory: b.subcategory || undefined,
-      discountType: b.discountType,
-      discountValue: b.discountType === 'deal' ? undefined : b.discountValue,
-      startsAt: new Date(`${b.startsAt}T00:00:00.000Z`),
-      endsAt: new Date(`${b.endsAt}T00:00:00.000Z`),
-      area: b.area,
-      phone: b.phone,
-      terms: b.terms || undefined,
-      location: { type: 'Point', coordinates: [spot.lng, spot.lat] },
-      address: spot.address,
-      placeId: spot.placeId,
-    });
-    res.status(201).json({ offer: toOfferDTO(offer) });
   }),
 );
 

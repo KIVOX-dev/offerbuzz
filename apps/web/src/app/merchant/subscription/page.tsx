@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LONG_TERM_DISCOUNT_PERCENT, LONG_TERM_MIN_MONTHS, MERCHANT_PLANS, MERCHANT_PLAN_KEYS, planAmount, type MerchantPlan, type SubscriptionDTO } from '@offerbuzz/shared';
+import Link from 'next/link';
+import { LONG_TERM_DISCOUNT_PERCENT, LONG_TERM_MIN_MONTHS, MERCHANT_PLANS, MERCHANT_PLAN_KEYS, OFFERS_PER_MONTH, PAYMENT_MONTH_OPTIONS, planAmount, type MerchantPlan, type SubscriptionDTO } from '@offerbuzz/shared';
+import { useAccount } from '@/components/account/AccountShell';
+import { PlanCountdown } from '@/components/PlanCountdown';
 import { Spinner } from '@/components/PageLoader';
-import { getMySubscription } from '@/lib/api';
+import { ApiRequestError, createPaymentOrder, getMySubscription, verifyPayment } from '@/lib/api';
+import { openCheckout } from '@/lib/razorpay';
 
 const fmt = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-const daysLeft = (d: string) => Math.ceil((new Date(d).getTime() - Date.now()) / 86_400_000);
 
 // brand colours only: soft purple, solid purple, and the dark hero purple with the yellow accent
 const LOOK: Record<MerchantPlan, { head: string; ring: string; button: string }> = {
@@ -14,10 +17,12 @@ const LOOK: Record<MerchantPlan, { head: string; ring: string; button: string }>
   premium: { head: 'bg-purple-700 text-white', ring: 'border-purple-700', button: 'btn-primary' },
   featured: { head: 'bg-hero text-accent', ring: 'border-accent', button: 'btn-accent' },
 };
+const POST = `Post up to ${OFFERS_PER_MONTH} offers every month`;
 const INCLUDES: Record<MerchantPlan, string[]> = {
-  basic: ['Offer published on OfferBuzz.co for 30 days', 'Social media promotion'],
-  premium: ['Offer published on OfferBuzz.co', 'Advertisement on the Dina Idhigai print and digital newspaper', 'Social media promotion'],
+  basic: [POST, 'Offer published on OfferBuzz.co for 30 days', 'Social media promotion'],
+  premium: [POST, 'Offer published on OfferBuzz.co', 'Advertisement on the Dina Idhigai print and digital newspaper', 'Social media promotion'],
   featured: [
+    POST,
     'Offer published on OfferBuzz.co',
     'Ads on the Dina Idhigai print and digital newspaper',
     'Digital newscard strip ads',
@@ -26,26 +31,48 @@ const INCLUDES: Record<MerchantPlan, string[]> = {
   ],
 };
 
-/** Payment is arranged with the team for now; the button opens WhatsApp with the plan already written. */
-const payLink = (plan: MerchantPlan, months: number) =>
-  `https://wa.me/919345975747?text=${encodeURIComponent(
-    `Hi OfferBuzz, I want to subscribe to the ${MERCHANT_PLANS[plan].name} plan for ${months} month${months > 1 ? 's' : ''} (Rs ${planAmount(plan, months)}).`,
-  )}`;
-
 export default function MerchantSubscription() {
   const [sub, setSub] = useState<SubscriptionDTO>();
   const [error, setError] = useState('');
   const [months, setMonths] = useState(1);
-  useEffect(() => {
+  const { user } = useAccount();
+  const [paying, setPaying] = useState<MerchantPlan>();
+  const [notice, setNotice] = useState<{ ok: boolean; text: string }>();
+  const load = () =>
     getMySubscription()
       .then(setSub)
       .catch(() => setError('Could not load your subscription. Please try again.'));
+  useEffect(() => {
+    void load();
   }, []);
+
+  /** Order on our server, pay in Razorpay's window, then confirm on our server so the plan starts at once. */
+  async function pay(plan: MerchantPlan) {
+    setNotice(undefined);
+    setPaying(plan);
+    try {
+      const order = await createPaymentOrder({ plan, months });
+      const done = await openCheckout(order, { name: user.name, email: user.email, contact: user.phone });
+      if (!done) return; // the window was closed
+      try {
+        const r = await verifyPayment(done);
+        setNotice({ ok: true, text: `Payment received. Your ${MERCHANT_PLANS[r.plan].name} plan is active until ${fmt(r.paidUntil)}. You can post ${OFFERS_PER_MONTH} offers every month.` });
+      } catch {
+        // paid, but we could not confirm here: Razorpay also tells our server, so the plan still starts
+        setNotice({ ok: true, text: 'Payment received. Your plan will be active in a minute. If it does not show, write to support@offerbuzz.co with your payment id.' });
+      }
+      await load();
+    } catch (e) {
+      setNotice({ ok: false, text: e instanceof Error ? e.message : 'Could not start the payment. Please try again.' });
+      if (e instanceof ApiRequestError && e.status === 401) setNotice({ ok: false, text: 'Please sign in again to pay.' });
+    } finally {
+      setPaying(undefined);
+    }
+  }
 
   if (error) return <p role="alert" className="text-danger">{error}</p>;
   if (!sub) return <Spinner label="Loading your subscription" />;
 
-  const left = sub.paidUntil ? daysLeft(sub.paidUntil) : 0;
   return (
     <div className="mx-auto max-w-6xl space-y-5">
       <div>
@@ -53,28 +80,17 @@ export default function MerchantSubscription() {
         <p className="text-small text-muted md:text-body">Pick a plan to post and keep your offers live.</p>
       </div>
 
-      <section aria-label="Current plan" className={`surface p-4 ${sub.active ? 'border-l-4 border-green-600' : 'border-l-4 border-amber-500'}`}>
-        <p className="text-small font-semibold uppercase text-muted">Current plan</p>
-        {sub.paidUntil ? (
-          <>
-            <p className="text-section font-bold">{sub.plan ? MERCHANT_PLANS[sub.plan].name : 'Basic'}</p>
-            <p className={`text-small font-semibold ${sub.active ? 'text-green-700' : 'text-amber-700'}`}>
-              {sub.active
-                ? `Active until ${fmt(sub.paidUntil)} (${left} day${left === 1 ? '' : 's'} left)`
-                : `Ended on ${fmt(sub.paidUntil)}. Offers stay visible for ${sub.graceDays} more days after that, then are hidden until you renew.`}
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="text-section font-bold">Not subscribed</p>
-            <p className="text-small text-amber-700">Choose a plan below to publish your offers.</p>
-          </>
-        )}
-      </section>
+      <PlanCountdown sub={sub} />
+
+      {notice && (
+        <p role={notice.ok ? 'status' : 'alert'} className={`rounded-md p-3 text-small font-semibold ${notice.ok ? 'bg-green-50 text-green-800' : 'bg-red-50 text-danger'}`}>
+          {notice.text}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 text-small font-semibold">
         <span>Pay for</span>
-        {[1, 3, 6, 12].map((m) => (
+        {PAYMENT_MONTH_OPTIONS.map((m) => (
           <button key={m} type="button" aria-pressed={months === m} onClick={() => setMonths(m)} className={`chip ${months === m ? 'chip-active' : ''}`}>
             {m} month{m > 1 ? 's' : ''}
             {m >= LONG_TERM_MIN_MONTHS ? ` (${LONG_TERM_DISCOUNT_PERCENT}% off)` : ''}
@@ -94,7 +110,11 @@ export default function MerchantSubscription() {
                 ₹{MERCHANT_PLANS[k].price}
                 <span className="text-body font-semibold text-muted"> / month</span>
               </p>
-              {months > 1 && <p className="mt-1 text-small font-semibold text-muted">₹{planAmount(k, months)} for {months} months</p>}
+              {months > 1 && (
+                <p className="mt-1 text-small font-semibold text-muted">
+                  ₹{planAmount(k, months)} for {months} months · {OFFERS_PER_MONTH * months} offers in all
+                </p>
+              )}
             </div>
             <ul className="flex-1 space-y-2 px-4 py-4 text-small">
               {INCLUDES[k].map((f) => (
@@ -105,17 +125,17 @@ export default function MerchantSubscription() {
               ))}
             </ul>
             <div className="p-4 pt-0">
-              <a href={payLink(k, months)} target="_blank" rel="noopener noreferrer" className={`${LOOK[k].button} w-full`}>
-                {sub.active && sub.plan === k ? 'Renew' : 'Subscribe'} via WhatsApp
-              </a>
+              <button type="button" onClick={() => pay(k)} disabled={Boolean(paying)} className={`${LOOK[k].button} w-full`}>
+                {paying === k ? 'Opening payment...' : `${sub.active && sub.plan === k ? 'Renew' : 'Pay'} ₹${planAmount(k, months)}`}
+              </button>
             </div>
           </section>
         ))}
       </div>
 
       <p className="text-small text-muted">
-        Online payment is coming soon. For now, tap Subscribe to message our team on WhatsApp, pay as they tell you, and your plan is activated as soon as the payment is recorded.
-        Questions? support@offerbuzz.co.
+        Pay securely online with UPI, card or net banking through Razorpay. Your plan starts the moment the payment goes through. Each paid month lets you post {OFFERS_PER_MONTH} offers, and an offer can run for 30 days at most.
+        Paying for 6 or 12 months at once is {LONG_TERM_DISCOUNT_PERCENT}% cheaper (for example, 12 months gives you {OFFERS_PER_MONTH * 12} offers). Questions? support@offerbuzz.co. See our <Link href="/refund" className="underline">Cancellation &amp; Refund Policy</Link>.
       </p>
     </div>
   );

@@ -3,6 +3,7 @@ import { connectDb } from './config/db';
 import { createApp } from './app';
 import { backfillOfferLocations, ensureGeoIndexes } from './services/backfill';
 import { startOfferExpiryJob } from './services/offerExpiry';
+import { startPlanReminderJob } from './services/planEmails';
 
 async function main() {
   const PORT = env().X_ZOHO_CATALYST_LISTEN_PORT ?? env().PORT;
@@ -16,8 +17,10 @@ async function main() {
     .catch((err) => console.error('Initial MongoDB connection failed:', err.message));
 
   const stopExpiryJob = startOfferExpiryJob();
+  const stopPlanJob = startPlanReminderJob();
   const shutdown = () => {
     stopExpiryJob();
+    stopPlanJob();
     server.close(() => process.exit(0));
   };
   process.on('SIGTERM', shutdown);

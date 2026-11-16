@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { CATEGORIES, SUBCATEGORIES, offerInputSchema, type DiscountType } from '@offerbuzz/shared';
+import type { SubscriptionDTO } from '@offerbuzz/shared';
+import { CATEGORIES, OFFER_MAX_DAYS, SUBCATEGORIES, maxOfferEnd, offerInputSchema, type DiscountType } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
 import { Select } from '@/components/Select';
 import { OfferPreview } from '@/components/OfferPreview';
@@ -11,7 +12,7 @@ import { OfferaMark } from '@/components/agent/OfferaMark';
 import { AreaPicker, areaFromCoords } from '@/components/maps/AreaPicker';
 import { LocationPicker } from '@/components/maps/LocationPicker';
 import type { LocationInput } from '@offerbuzz/shared';
-import { ApiRequestError, createOffer, rewriteDescription, updateProfile, uploadOfferImage } from '@/lib/api';
+import { ApiRequestError, createOffer, getMySubscription, rewriteDescription, updateProfile, uploadOfferImage } from '@/lib/api';
 import { shrinkImage } from '@/lib/image';
 import { ModuleTerms } from '@/components/ModuleTerms';
 
@@ -49,6 +50,13 @@ export default function NewOfferPage() {
   const [postedNoPhoto, setPostedNoPhoto] = useState(false);
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  // posting needs a paid plan and a free slot this month; find out now, not after the form is filled in
+  const [plan, setPlan] = useState<SubscriptionDTO>();
+  useEffect(() => {
+    getMySubscription().then(setPlan).catch(() => undefined);
+  }, []);
+  const blocked = plan ? (!plan.active ? 'plan' : plan.offerQuota.remaining < 1 ? 'limit' : undefined) : undefined;
 
   // free the preview image when it is replaced or the page closes
   useEffect(() => () => { if (photoUrl) URL.revokeObjectURL(photoUrl); }, [photoUrl]);
@@ -121,6 +129,7 @@ export default function NewOfferPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(undefined);
+    if (blocked) return setError(blocked === 'plan' ? 'Choose and pay for a plan to post offers.' : 'You have used your offers for this month.');
     const parsed = offerInputSchema.safeParse({
       ...form,
       discountValue: form.discountType === 'deal' || form.discountValue === '' ? undefined : form.discountValue,
@@ -179,6 +188,22 @@ export default function NewOfferPage() {
     <div className="mx-auto max-w-6xl">
       <h1 className="text-title font-bold">Post an offer</h1>
       <p className="mt-1 text-muted">New offers are reviewed by our team before customers can see them.</p>
+
+      {blocked === 'plan' && (
+        <div role="alert" className="mt-4 rounded-md border-l-4 border-amber-500 bg-amber-50 p-4">
+          <p className="font-bold text-amber-900">You need a paid plan to post offers</p>
+          <p className="mt-1 text-small text-amber-900">Each paid month lets you post {plan?.offerQuota.limit} offers.</p>
+          <Link href="/merchant/subscription" className="btn-primary mt-3 inline-flex">Choose a plan</Link>
+        </div>
+      )}
+      {blocked === 'limit' && plan && (
+        <div role="alert" className="mt-4 rounded-md border-l-4 border-amber-500 bg-amber-50 p-4">
+          <p className="font-bold text-amber-900">You have used your {plan.offerQuota.limit} offers for this month</p>
+          <p className="mt-1 text-small text-amber-900">
+            You can post again from {plan.offerQuota.resetsAt ? new Date(plan.offerQuota.resetsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'next month'}.
+          </p>
+        </div>
+      )}
 
       <div className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <form onSubmit={submit} className="surface space-y-4 p-4 md:p-6" noValidate>
@@ -325,13 +350,14 @@ export default function NewOfferPage() {
             <div>
               <label className="mb-1 block text-small font-semibold" htmlFor="o-start">Starts on</label>
               <input id="o-start" type="date" className="input" value={form.startsAt} min={today()}
-                onChange={(e) => set('startsAt', e.target.value)} />
+                onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value, endsAt: f.endsAt && f.endsAt > maxOfferEnd(e.target.value) ? maxOfferEnd(e.target.value) : f.endsAt }))} />
             </div>
             <div>
               <label className="mb-1 block text-small font-semibold" htmlFor="o-end">Ends on</label>
-              <input id="o-end" type="date" className="input" value={form.endsAt} min={form.startsAt || today()}
+              <input id="o-end" type="date" className="input" value={form.endsAt} min={form.startsAt || today()} max={form.startsAt ? maxOfferEnd(form.startsAt) : undefined}
                 onChange={(e) => set('endsAt', e.target.value)} />
             </div>
+            <p className="text-small text-muted sm:col-span-2">An offer can run for {OFFER_MAX_DAYS} days at most.</p>
           </div>
 
           <fieldset>
@@ -403,7 +429,7 @@ export default function NewOfferPage() {
           {error && <p role="alert" className="text-small text-danger">{error}</p>}
 
           <div className="flex flex-wrap gap-3">
-            <button className="btn-primary" disabled={busy || photoBusy}>{busy ? 'Posting...' : 'Post offer'}</button>
+            <button className="btn-primary" disabled={busy || photoBusy || Boolean(blocked)}>{busy ? 'Posting...' : 'Post offer'}</button>
             <Link href="/merchant/dashboard" className="btn-outline">Cancel</Link>
           </div>
         </form>

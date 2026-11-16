@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { Spinner } from '@/components/PageLoader';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from 'react';
-import { discountPhrase, type MyOffersResponse, type OfferDTO } from '@offerbuzz/shared';
+import { discountPhrase, type MyOffersResponse, type OfferDTO, type SubscriptionDTO } from '@offerbuzz/shared';
 import { useAccount } from '@/components/account/AccountShell';
 import { ModuleTerms } from '@/components/ModuleTerms';
 import { DuoClockIcon, DuoOffersIcon, DuoTagIcon, PlusIcon, TagIcon, TrashIcon } from '@/components/Icons';
-import { ApiRequestError, deleteOffer, getMyOffers } from '@/lib/api';
+import { PlanCountdown } from '@/components/PlanCountdown';
+import { ApiRequestError, deleteOffer, getMyOffers, getMySubscription } from '@/lib/api';
 
 const STATUS_STYLE: Record<OfferDTO['status'], string> = {
   pending: 'bg-amber-100 text-amber-800',
@@ -72,6 +73,7 @@ export default function MerchantDashboard() {
   const [error, setError] = useState<string>();
   const [removing, setRemoving] = useState<string>();
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [plan, setPlan] = useState<SubscriptionDTO>();
 
   const load = useCallback(async () => {
     try {
@@ -84,6 +86,7 @@ export default function MerchantDashboard() {
 
   useEffect(() => {
     void load();
+    getMySubscription().then(setPlan).catch(() => undefined);
   }, [load]);
 
   async function remove(o: OfferDTO) {
@@ -117,6 +120,8 @@ export default function MerchantDashboard() {
           <PlusIcon size={18} /> Post an offer
         </Link>
       </section>
+
+      {plan && <PlanCountdown sub={plan} compact />}
 
       {!user.location && (
         <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-small text-amber-900">

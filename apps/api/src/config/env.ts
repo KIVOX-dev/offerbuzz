@@ -37,6 +37,13 @@ const schema = z
     BREVO_API_KEY: z.string().optional(),
     BREVO_SENDER_EMAIL: z.string().default('no-reply@offerbuzz.co'),
     BREVO_SENDER_NAME: z.string().default('OfferBuzz'),
+    // Razorpay: key id + secret from Dashboard > Account & Settings > API keys; the webhook secret is the one you type
+    // when adding the webhook (event payment.captured, URL https://<api>/api/v1/payments/webhook)
+    RAZORPAY_KEY_ID: z.string().optional(),
+    RAZORPAY_KEY_SECRET: z.string().optional(),
+    RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+    // the OfferBuzz team inbox that is told about every new subscription
+    ADMIN_NOTIFY_EMAIL: z.string().default('offerbuzzdotin@gmail.com'),
     ADMIN_EMAIL: z.string().optional(),
     ADMIN_PASSWORD: z.string().optional(),
   })

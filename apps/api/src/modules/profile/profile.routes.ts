@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { updateProfileSchema, type UpdateProfileInput } from '@offerbuzz/shared';
 import { authenticate, requireRole } from '../../middleware/auth';
 import { Subscription } from '../../models/Subscription';
+import { countdown, isActive, quotaOf } from '../subscription/subscription.service';
 import { getSettings } from '../../models/Setting';
 import { validate } from '../../middleware/validate';
 import { wrap } from '../../utils/async';
@@ -22,8 +23,10 @@ profileRouter.get(
     res.json({
       plan: sub?.plan ?? undefined,
       paidUntil: sub?.paidUntil.toISOString(),
-      active: Boolean(sub && sub.paidUntil.getTime() > Date.now()),
+      active: isActive(sub),
       graceDays: settings.graceDays,
+      offerQuota: quotaOf(sub),
+      ...countdown(sub),
     });
   }),
 );

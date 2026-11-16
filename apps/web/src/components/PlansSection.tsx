@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { MERCHANT_PLANS } from '@/lib/plans';
+import { OFFERS_PER_MONTH } from '@offerbuzz/shared';
+
+const POST = `Post up to ${OFFERS_PER_MONTH} offers every month`;
 
 const PLANS = [
   {
@@ -9,7 +12,7 @@ const PLANS = [
     head: 'bg-purple-100 text-purple-900',
     soft: 'bg-purple-50 text-purple-800',
     ring: 'border-purple-200',
-    features: ['Offer published on the OfferBuzz.co website for 30 days', 'Social media promotion'],
+    features: [POST, 'Offer published on the OfferBuzz.co website for 30 days', 'Social media promotion'],
   },
   {
     name: 'Premium',
@@ -20,6 +23,7 @@ const PLANS = [
     ring: 'border-purple-700',
     popular: true,
     features: [
+      POST,
       'Offer published on the OfferBuzz.co website',
       'Advertisement on the Dina Idhigai print and digital newspaper (5,000 copies, for a single issue, minimum size)',
       'Social media promotion',
@@ -33,6 +37,7 @@ const PLANS = [
     soft: 'bg-amber-50 text-amber-900',
     ring: 'border-accent',
     features: [
+      POST,
       'Offer published on the OfferBuzz.co website',
       'Ads on the Dina Idhigai print and digital newspaper (5,000 copies, for a single issue, minimum size)',
       'Dina Idhigai digital newscard strip ads',

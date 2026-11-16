@@ -86,6 +86,49 @@ export const TEMPLATES: EmailTemplate[] = [
     ],
     cta: { label: 'Go to my dashboard', url: '{{ params.url }}' },
   }),
+  t(
+    'plan-subscribed',
+    4,
+    'Thank you for subscribing to the OfferBuzz {{ params.planName }} plan',
+    ['name', 'planName', 'months', 'amount', 'startDate', 'endDate', 'offersPerMonth', 'totalOffers', 'paymentId', 'url'],
+    {
+      preheader: 'Your {{ params.planName }} plan is active until {{ params.endDate }}.',
+      heading: 'Thank you for subscribing',
+      paragraphs: [
+        'Hi {{ params.name }},',
+        'Thank you for subscribing to the <b>{{ params.planName }}</b> plan on OfferBuzz. Your payment of <b>Rs {{ params.amount }}</b> for <b>{{ params.months }}</b> has been received and your plan is now active.',
+        'Plan: <b>{{ params.planName }}</b><br>Period: <b>{{ params.startDate }}</b> to <b>{{ params.endDate }}</b><br>Amount paid: <b>Rs {{ params.amount }}</b><br>Payment ID: {{ params.paymentId }}',
+        'You can post <b>{{ params.offersPerMonth }} offers every month</b> of your plan ({{ params.totalOffers }} offers in all), and each offer can run for up to 30 days. Your plan ends on <b>{{ params.endDate }}</b>, and we will remind you 2 days before.',
+      ],
+      cta: { label: 'Post my first offer', url: '{{ params.url }}' },
+      note: 'Keep this email as your receipt.',
+    },
+  ),
+  t(
+    'plan-subscribed-team',
+    4,
+    'New subscription: {{ params.shopName }} ({{ params.planName }}, {{ params.months }})',
+    ['merchantName', 'shopName', 'merchantEmail', 'merchantPhone', 'city', 'planName', 'months', 'amount', 'startDate', 'endDate', 'offersPerMonth', 'totalOffers', 'paymentId', 'paidAt'],
+    {
+      preheader: '{{ params.shopName }} subscribed to {{ params.planName }} until {{ params.endDate }}.',
+      heading: 'New merchant subscription',
+      paragraphs: [
+        '<b>Merchant</b><br>Name: {{ params.merchantName }}<br>Shop: {{ params.shopName }}<br>Email: {{ params.merchantEmail }}<br>Phone: {{ params.merchantPhone }}<br>City: {{ params.city }}',
+        '<b>Subscription</b><br>Plan: {{ params.planName }}<br>Term: {{ params.months }}<br>Amount paid: Rs {{ params.amount }}<br>Active from: {{ params.startDate }}<br>Active until: <b>{{ params.endDate }}</b><br>Offers allowed: {{ params.offersPerMonth }} per month ({{ params.totalOffers }} in all)',
+        'Payment ID: {{ params.paymentId }}<br>Received: {{ params.paidAt }}',
+      ],
+    },
+  ),
+  t('plan-ending-soon', 4, 'Your OfferBuzz plan ends in {{ params.daysLeft }}', ['name', 'planName', 'endDate', 'daysLeft', 'url'], {
+    preheader: 'Your {{ params.planName }} plan ends on {{ params.endDate }}. Renew to keep posting offers.',
+    heading: 'Your plan is ending soon',
+    paragraphs: [
+      'Hi {{ params.name }},',
+      'Your <b>{{ params.planName }}</b> plan ends in <b>{{ params.daysLeft }}</b>, on <b>{{ params.endDate }}</b>. After that you will not be able to post new offers, and your offers will be hidden from customers once the short grace period is over.',
+      'Renew now to keep your offers live and keep posting.',
+    ],
+    cta: { label: 'Renew my plan', url: '{{ params.url }}' },
+  }),
   t('plan-receipt', 4, 'Payment received: OfferBuzz plan', ['name', 'amount', 'periodStart', 'periodEnd', 'paymentId'], {
     preheader: 'We received Rs {{ params.amount }} for your OfferBuzz plan.',
     heading: 'Payment received',

@@ -177,6 +177,20 @@ export const MERCHANT_PLAN_KEYS = ['basic', 'premium', 'featured'] as const;
 export const LONG_TERM_DISCOUNT_PERCENT = 10;
 export const LONG_TERM_MIN_MONTHS = 6;
 
+/** An offer can run for 30 days at most (start and end day both counted). */
+export const OFFER_MAX_DAYS = 30;
+/** The last day an offer starting on `start` (YYYY-MM-DD) may end. */
+export function maxOfferEnd(start: string): string {
+  const d = new Date(`${start}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + OFFER_MAX_DAYS - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Every paid month lets a merchant post this many offers (all plans). 6 months = 12 offers, 12 months = 24 offers. */
+export const OFFERS_PER_MONTH = 2;
+/** Terms a merchant can pay for in one go. 6 and 12 months get the long term discount. */
+export const PAYMENT_MONTH_OPTIONS = [1, 3, 6, 12] as const;
+
 /** What a merchant pays for `months` of a plan, in whole rupees. */
 export function planAmount(plan: MerchantPlan, months: number): number {
   const gross = MERCHANT_PLANS[plan].price * months;

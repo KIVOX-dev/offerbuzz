@@ -15,6 +15,9 @@ import { adminRouter } from './modules/admin/admin.routes';
 import { analyticsRouter } from './modules/analytics/analytics.routes';
 import { categoriesRouter } from './modules/categories/categories.routes';
 import { bannersRouter } from './modules/banners/banners.routes';
+import { paymentsRouter } from './modules/payments/payments.routes';
+import { handleWebhook } from './modules/payments/payments.service';
+import { webhookLimiter } from './middleware/rateLimit';
 import { wrap } from './utils/async';
 
 export function createApp() {
@@ -25,7 +28,17 @@ export function createApp() {
   app.use(helmet());
   const origins = env().CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean);
   app.use(cors({ origin: origins, credentials: true }));
-  // Webhook routes (Phase 4) mount BEFORE this with express.raw so signatures can be verified.
+  // Razorpay webhook: mounted BEFORE express.json with express.raw, because the signature is over the exact raw bytes.
+  app.post(
+    '/api/v1/payments/webhook',
+    webhookLimiter(),
+    express.raw({ type: '*/*', limit: '200kb' }),
+    wrap(async (req, res) => {
+      await connectDb();
+      await handleWebhook(Buffer.isBuffer(req.body) ? req.body : Buffer.from(''), req.header('x-razorpay-signature'));
+      res.json({ ok: true });
+    }),
+  );
   app.use(express.json({ limit: '100kb' }));
 
   // Liveness: no DB call, so Docker HEALTHCHECK and UptimeRobot stay green during a DB blip.
@@ -45,6 +58,7 @@ export function createApp() {
   app.use('/api/v1', authRouter);
   app.use('/api/v1', profileRouter);
   app.use('/api/v1', offersRouter);
+  app.use('/api/v1', paymentsRouter);
   app.use('/api/v1', aiRouter);
   app.use('/api/v1', walletRouter);
   app.use('/api/v1', adminRouter);

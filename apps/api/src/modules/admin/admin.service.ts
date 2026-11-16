@@ -23,16 +23,11 @@ import { RefreshToken } from '../../models/RefreshToken';
 import { WalletEntry } from '../../models/WalletEntry';
 import { getSettings } from '../../models/Setting';
 import { HttpError, badRequest, notFound } from '../../utils/errors';
-import { calcBalances, creditReferrerForSubscription, toPayoutDTO } from '../wallet/wallet.service';
+import { calcBalances, toPayoutDTO } from '../wallet/wallet.service';
+import { extendSubscription } from '../subscription/subscription.service';
 
 const PAGE_SIZE = 25;
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-function addMonths(from: Date, n: number): Date {
-  const d = new Date(from);
-  d.setUTCMonth(d.getUTCMonth() + n);
-  return d;
-}
 
 export async function overview(): Promise<AdminOverview> {
   const now = new Date();
@@ -113,29 +108,9 @@ export async function setUserStatus(adminId: string, userId: string, status: 'ac
   return user;
 }
 
-/**
- * Records that a vendor paid for `months` of the plan (until a payment gateway calls this itself). Extends the paid
- * period and credits the vendor's referrer once per month.
- */
+/** Records that a vendor paid for `months` of the plan outside Razorpay (cash or bank transfer). */
 export async function recordSubscriptionPayment(merchantId: string, months: number, plan: MerchantPlan = 'basic') {
-  if (!mongoose.isValidObjectId(merchantId)) throw notFound('Merchant not found');
-  const vendor = await User.findById(merchantId).select('role');
-  if (!vendor) throw notFound('Merchant not found');
-  if (vendor.role !== 'merchant') throw badRequest('Only merchants have a subscription', 'NOT_A_VENDOR');
-  const now = new Date();
-  const existing = await Subscription.findOne({ merchantId });
-  const start = existing && existing.paidUntil > now ? existing.paidUntil : now;
-  const paidUntil = addMonths(start, months);
-  await Subscription.findOneAndUpdate({ merchantId }, { paidUntil, lastPaidAt: now, plan }, { upsert: true });
-  // what the merchant paid, spread evenly over the months: the partner earns the commission % of each month's share
-  const amount = planAmount(plan, months);
-  const perMonth = amount / months;
-  let credited = 0;
-  for (let i = 0; i < months; i++) {
-    const period = addMonths(start, i).toISOString().slice(0, 7);
-    if (await creditReferrerForSubscription(merchantId, period, perMonth)) credited += 1;
-  }
-  return { paidUntil: paidUntil.toISOString(), plan, amount, referrerCredited: credited > 0 };
+  return extendSubscription(merchantId, months, plan);
 }
 
 export async function walletsOverview(): Promise<AdminWalletsResponse> {

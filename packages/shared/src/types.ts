@@ -112,6 +112,31 @@ export interface SubscriptionDTO {
   /** paid up as of now */
   active: boolean;
   graceDays: number;
+  /** whole days left on the plan (0 once it has ended) and the length of the current paid run, for the countdown */
+  daysLeft: number;
+  totalDays: number;
+  /** offers this month: posting is only allowed while `remaining` is above 0 */
+  offerQuota: { limit: number; used: number; remaining: number; resetsAt?: string };
+}
+
+/** Returned by POST /payments/create-order: what the Razorpay checkout needs to open. */
+export interface CreateOrderResponse {
+  orderId: string;
+  keyId: string;
+  /** in paise */
+  amount: number;
+  currency: 'INR';
+  plan: 'basic' | 'premium' | 'featured';
+  months: number;
+  description: string;
+}
+
+/** Returned once a payment is verified and the plan is active. */
+export interface VerifyPaymentResponse {
+  paidUntil: string;
+  plan: 'basic' | 'premium' | 'featured';
+  months: number;
+  amount: number;
 }
 
 export interface MyOffersResponse {

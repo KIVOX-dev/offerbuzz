@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CATEGORIES, DISCOUNT_TYPES, MERCHANT_PLAN_KEYS, OTP, PROMO_THEMES, ROLES, SELF_SERVE_ROLES, SUBCATEGORIES, USER_STATUSES } from './constants';
+import { CATEGORIES, DISCOUNT_TYPES, MERCHANT_PLAN_KEYS, OFFER_MAX_DAYS, OTP, PAYMENT_MONTH_OPTIONS, PROMO_THEMES, ROLES, SELF_SERVE_ROLES, SUBCATEGORIES, USER_STATUSES, maxOfferEnd } from './constants';
 
 /** Accepts 10 digits, 91XXXXXXXXXX or +91XXXXXXXXXX (Indian mobiles) and returns +91XXXXXXXXXX, or null. */
 export function normalizePhone(input: string): string | null {
@@ -176,6 +176,8 @@ export const offerInputSchema = z
     }
     if (v.endsAt < v.startsAt) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endsAt'], message: 'End date must be on or after the start date' });
+    } else if (v.endsAt > maxOfferEnd(v.startsAt)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['endsAt'], message: `An offer can run for ${OFFER_MAX_DAYS} days at most. Pick an end date within ${OFFER_MAX_DAYS} days of the start date.` });
     }
   });
 
@@ -201,6 +203,17 @@ export const setUserStatusSchema = z.object({ status: z.enum(['active', 'blocked
 export const recordPaymentSchema = z.object({
   months: z.coerce.number().int().min(1).max(12).default(1),
   plan: z.enum(MERCHANT_PLAN_KEYS).default('basic'),
+});
+/** Start a Razorpay payment for a plan. */
+export const createOrderSchema = z.object({
+  plan: z.enum(MERCHANT_PLAN_KEYS),
+  months: z.coerce.number().int().refine((m) => (PAYMENT_MONTH_OPTIONS as readonly number[]).includes(m), 'Choose 1, 3, 6 or 12 months'),
+});
+/** What Razorpay checkout hands back in the browser after a successful payment. */
+export const verifyPaymentSchema = z.object({
+  razorpay_order_id: z.string().min(5).max(64),
+  razorpay_payment_id: z.string().min(5).max(64),
+  razorpay_signature: z.string().min(10).max(128),
 });
 /** How the intermediary wants to be paid: a UPI mobile number, or full bank details. */
 export const payoutRequestSchema = z.discriminatedUnion('method', [
@@ -233,6 +246,8 @@ export type AdminOffersQuery = z.infer<typeof adminOffersQuerySchema>;
 export type SetOfferStatusInput = z.infer<typeof setOfferStatusSchema>;
 export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
 export type SetUserStatusInput = z.infer<typeof setUserStatusSchema>;
+export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
 export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
 export type RejectPayoutInput = z.infer<typeof rejectPayoutSchema>;
 

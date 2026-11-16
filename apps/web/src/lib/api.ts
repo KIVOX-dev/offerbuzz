@@ -13,6 +13,10 @@ import type {
   CategoryTileInput,
   AuthResponse,
   AuthTokens,
+  CreateOrderInput,
+  CreateOrderResponse,
+  VerifyPaymentInput,
+  VerifyPaymentResponse,
   MerchantPlan,
   MyOffersResponse,
   NearbyOffersResponse,
@@ -146,6 +150,8 @@ export const getNearbyOffers = (lat: number, lng: number, radiusKm = 10) =>
   api<NearbyOffersResponse>(`/offers/nearby?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`);
 
 export const getMySubscription = () => authApi<SubscriptionDTO>('/subscription');
+export const createPaymentOrder = (body: CreateOrderInput) => authApi<CreateOrderResponse>('/payments/create-order', { method: 'POST', json: body });
+export const verifyPayment = (body: VerifyPaymentInput) => authApi<VerifyPaymentResponse>('/payments/verify', { method: 'POST', json: body });
 export const getSiteHits = () => api<SiteHitsResponse>('/stats/hits');
 export const suggestSearch = (q: string) => api<SuggestResponse>(`/search/suggest?q=${encodeURIComponent(q)}`);
 export const searchOffers = (p: { q?: string; category?: string; subcategory?: string; lat?: number; lng?: number }) => {
