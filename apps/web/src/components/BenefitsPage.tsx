@@ -9,7 +9,7 @@ export type BenefitsData = {
   benefits: { title: string; text: string }[];
   extra?: { heading: string; items: { title: string; text?: string }[] };
   steps?: { heading: string; items: { title: string; text: string }[] };
-  chips?: { heading: string; items: string[] };
+  chips?: { heading: string; items: string[]; art?: ReactNode };
   note?: { heading: string; lines: string[]; footnote: string };
   closing: { heading: string; text: string };
   cta: { label: string; href: string };
@@ -86,13 +86,16 @@ export function BenefitsPage({ d }: { d: BenefitsData }) {
         )}
 
         {d.chips && (
-          <section className="space-y-3">
-            <h2 className="text-section font-bold">{d.chips.heading}</h2>
-            <ul className="flex flex-wrap gap-2">
-              {d.chips.items.map((c) => (
-                <li key={c} className="rounded-full bg-purple-50 px-3 py-1.5 text-small font-semibold text-purple-700 ring-1 ring-purple-100">{c}</li>
-              ))}
-            </ul>
+          <section className="grid items-center gap-6 md:grid-cols-[1fr_minmax(0,300px)]">
+            <div className="space-y-3">
+              <h2 className="text-section font-bold">{d.chips.heading}</h2>
+              <ul className="flex flex-wrap gap-2">
+                {d.chips.items.map((c) => (
+                  <li key={c} className="rounded-full bg-purple-50 px-3 py-1.5 text-small font-semibold text-purple-700 ring-1 ring-purple-100">{c}</li>
+                ))}
+              </ul>
+            </div>
+            {d.chips.art && <div className="mx-auto w-full max-w-[300px] md:max-w-none">{d.chips.art}</div>}
           </section>
         )}
 

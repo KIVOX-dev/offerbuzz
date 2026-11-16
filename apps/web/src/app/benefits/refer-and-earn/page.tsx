@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ReferIllustration } from '@/components/ReferIllustration';
 import { BenefitsPage, type BenefitsData } from '@/components/BenefitsPage';
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ const data: BenefitsData = {
   ],
   chips: {
     heading: 'Who can join?',
+    art: <ReferIllustration className="h-auto w-full" />,
     items: [
       'College Students',
       'Freelancers',
