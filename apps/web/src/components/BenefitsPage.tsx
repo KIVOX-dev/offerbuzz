@@ -86,7 +86,7 @@ export function BenefitsPage({ d }: { d: BenefitsData }) {
         )}
 
         {d.chips && (
-          <section className="grid items-center gap-6 md:grid-cols-[1fr_minmax(0,300px)]">
+          <section className="grid items-center gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,400px)]">
             <div className="space-y-3">
               <h2 className="text-section font-bold">{d.chips.heading}</h2>
               <ul className="flex flex-wrap gap-2">
@@ -95,7 +95,7 @@ export function BenefitsPage({ d }: { d: BenefitsData }) {
                 ))}
               </ul>
             </div>
-            {d.chips.art && <div className="mx-auto w-full max-w-[300px] md:max-w-none">{d.chips.art}</div>}
+            {d.chips.art && <div className="mx-auto w-full max-w-[400px] md:max-w-none">{d.chips.art}</div>}
           </section>
         )}
 
