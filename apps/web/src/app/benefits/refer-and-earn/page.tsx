@@ -14,7 +14,7 @@ const data: BenefitsData = {
     heading: 'How Refer & Earn works',
     items: [
       { title: 'Register on OfferBuzz', text: 'Create your account and access your referral details.' },
-      { title: 'Share Your Referral', text: 'Share your referral link with friends, shop owners and business contacts.' },
+      { title: 'Share Your Referral', text: 'Share your QR Code or referral link with shop owners, friends, and business contacts to encourage them to register on OfferBuzz.co.' },
       { title: 'Refer Merchants', text: 'Encourage local businesses to register and promote their offers on OfferBuzz.' },
       { title: 'Successful Registration', text: 'Once the referred merchant completes the eligible registration and payment process, the referral qualifies according to programme rules.' },
       { title: 'Earn Commission', text: "Receive the applicable referral commission based on the programme's earning structure." },
