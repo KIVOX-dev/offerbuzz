@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 
@@ -12,6 +13,8 @@ export type BenefitsData = {
   note?: { heading: string; lines: string[]; footnote: string };
   closing: { heading: string; text: string };
   cta: { label: string; href: string };
+  /** Optional block (e.g. the merchant plans) shown after the benefits. */
+  plans?: { heading: string; node: ReactNode };
 };
 
 /** Shared shell for the "View benefits" pages linked from the login role cards. */
@@ -25,7 +28,7 @@ export function BenefitsPage({ d }: { d: BenefitsData }) {
         </div>
       </header>
 
-      <article className="container-page max-w-3xl space-y-10 py-8">
+      <article className={`container-page space-y-10 py-8 ${d.plans ? 'max-w-5xl' : 'max-w-3xl'}`}>
         <div>
           <h1 className="text-title font-bold">{d.headline}</h1>
           <p className="mt-3 text-body">{d.intro}</p>
@@ -72,6 +75,13 @@ export function BenefitsPage({ d }: { d: BenefitsData }) {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {d.plans && (
+          <section id="plans" className="scroll-mt-6 space-y-4">
+            <h2 className="text-section font-bold">{d.plans.heading}</h2>
+            {d.plans.node}
           </section>
         )}
 

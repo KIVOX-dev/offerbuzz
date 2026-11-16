@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PlansSection } from '@/components/PlansSection';
 import { BenefitsPage, type BenefitsData } from '@/components/BenefitsPage';
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ const data: BenefitsData = {
       { title: 'Digital Business Presence', text: 'Take your traditional shop promotion into the digital world.' },
     ],
   },
+  plans: { heading: 'Merchant plans', node: <PlansSection /> },
   chips: {
     heading: 'What makes OfferBuzz different?',
     items: ['Built for local businesses', 'Budget-friendly platform', 'Simple & convenient', 'Connecting shops & customers'],
