@@ -95,7 +95,7 @@ export function ProfileForm({ showShop, doneHref }: { showShop?: boolean; /** wh
           {showShop && (
             <div className="sm:col-span-2">
               <label className={field} htmlFor="p-web">Website link <span className="font-normal text-muted">(optional)</span></label>
-              <input id="p-web" type="url" inputMode="url" className={`input ${compact}`} value={website} onChange={(e) => setWebsite(e.target.value)}
+              <input id="p-web" type="text" inputMode="url" autoComplete="url" className={`input ${compact}`} value={website} onChange={(e) => setWebsite(e.target.value)}
                 maxLength={200} placeholder="www.myshop.com" />
             </div>
           )}

@@ -7,9 +7,14 @@ import { OfferaAI } from '@/components/agent/OfferaAI';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
+const TITLE = 'OfferBuzz - Digital marketing platform for local businesses';
+const DESCRIPTION = 'OfferBuzz helps you discover the latest local offers, discounts, and deals from nearby shops. Explore by city, area, and category.';
+
 export const metadata: Metadata = {
-  title: 'OfferBuzz - Digital marketing platform for local businesses',
-  description: 'OfferBuzz is a digital marketing and advertising platform where local shops promote their offers to nearby customers. Customers browse offers free.',
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: { type: 'website', siteName: 'OfferBuzz', title: TITLE, description: DESCRIPTION },
+  twitter: { card: 'summary', title: TITLE, description: DESCRIPTION },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
