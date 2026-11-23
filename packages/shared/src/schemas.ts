@@ -148,14 +148,14 @@ const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a date');
 
 export const offerInputSchema = z
   .object({
-    title: z.string().trim().min(3, 'Title must be at least 3 characters').max(100),
-    description: z.string().trim().min(10, 'Describe the offer in at least 10 characters').max(600),
+    title: z.string().trim().min(3, 'Title must be at least 3 characters').max(100, 'Title must be 100 characters or fewer'),
+    description: z.string().trim().min(10, 'Describe the offer in at least 10 characters').max(600, 'Description must be 600 characters or fewer'),
     category: z.enum(CATEGORIES, { message: 'Choose a category' }),
     discountType: z.enum(DISCOUNT_TYPES),
     discountValue: z.coerce.number().positive('Enter the discount').max(1_000_000).optional(),
     startsAt: day,
     endsAt: day,
-    area: z.string().trim().min(2, 'Enter the area or city').max(100),
+    area: z.string().trim().min(2, 'Enter the area or city').max(200, 'Area must be 200 characters or fewer'),
   /** optional: one of the category's sub categories */
   subcategory: z.string().trim().max(40).optional(),
     /** compulsory: the shop's contact number shown to customers on the offer */
